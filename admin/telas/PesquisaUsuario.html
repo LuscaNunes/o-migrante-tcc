@@ -274,7 +274,7 @@
 
             usuarios.forEach(usuario => {
                 const row = `
-                <tr>
+                 <tr>
                     <td class="py-2 px-4 border-b text-left">${usuario.id_usuario}</td>
                     <td class="py-2 px-4 border-b text-left">${usuario.nome}</td>
                     <td class="py-2 px-4 border-b text-left">${usuario.email}</td>
@@ -283,8 +283,8 @@
                     <td class="py-2 px-4 border-b text-left">${usuario.fase_atual}</td>
                     <td class="py-2 px-4 border-b text-left">
                         <button 
-                            class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
-                            onclick="editarUsuario(${usuario.id_usuario})"
+    class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 min-w-[80px] text-center"
+              onclick="editarUsuario(${usuario.id_usuario})"
                         >
                             Editar
                         </button>
