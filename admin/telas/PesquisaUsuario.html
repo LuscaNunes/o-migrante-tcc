@@ -149,6 +149,9 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'https://o-migrante.onrender.com';
+        const API_USER_PATH = '/usuarios';
+
         // Função para exibir mensagens de feedback
         function showFeedback(message, isError = true) {
             const feedbackDiv = document.createElement('div');
@@ -158,10 +161,8 @@
             setTimeout(() => feedbackDiv.remove(), 3000);
         }
 
-        // Verifica autenticação e tipo de usuário
+        // Verifica autenticação e tipo de usuário (OK)
         document.addEventListener("DOMContentLoaded", async () => {
-
-
             try {
                 console.log('Verificando autenticação via Cookie...');
                 const response = await fetch("/auth/verifyToken", {
@@ -210,7 +211,7 @@
             }
         });
 
-        // Busca de usuário por ID, nome ou e-mail
+        // Busca de usuário por ID, nome ou e-mail (OK)
         document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const busca = document.getElementById('buscaUsuario').value.trim();
@@ -224,16 +225,34 @@
 
             try {
                 console.log('Buscando usuário:', busca);
-                // 🚨 CORREÇÃO: Adicionando o prefixo '/api' de volta para a rota de busca.
-                const response = await fetch(`/api/usuarios?busca=${encodeURIComponent(busca)}`, {
-                    // Se a rota no backend for só `/usuarios`, use: const response = await fetch(`/usuarios?busca=${encodeURIComponent(busca)}`, {
-                    // Se a rota no backend for `/api/usuarios`, use: const response = await fetch(`/api/usuarios?busca=${encodeURIComponent(busca)}`, {
+                // Usa a URL completa CONFIRMADA
+                const urlBusca = `${API_BASE_URL}${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
+                console.log('URL de Busca Final:', urlBusca);
+
+                const response = await fetch(urlBusca, {
+                    // Garante que o cookie de autenticação JWT seja enviado
+                    credentials: 'include',
                 });
+
                 console.log('Resposta da busca:', response.status, response.statusText);
+
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || "Erro ao buscar usuários");
+                    let errorMessage = "Erro ao buscar usuários";
+                    // Tenta obter a mensagem de erro do JSON do backend (ex: Erro 400 ou 500)
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorData.message || errorMessage;
+                    } catch (jsonError) {
+                        // Se a resposta não for JSON (como no 404 estático), usa a mensagem padrão
+                        if (response.status === 404) {
+                            errorMessage = "Recurso da API de busca não encontrado (404). Verifique a URL.";
+                        } else if (response.status === 401 || response.status === 403) {
+                            errorMessage = "Não autorizado. Verifique seu login/permissão.";
+                        }
+                    }
+                    throw new Error(errorMessage);
                 }
+
                 const data = await response.json();
                 console.log('Usuários encontrados:', data);
                 renderUsuarios(data.usuarios);
@@ -242,7 +261,8 @@
                 showFeedback("Erro ao buscar usuários: " + error.message);
             }
         });
-        // Função para renderizar usuários na tabela
+
+        // Função para renderizar usuários na tabela (OK)
         function renderUsuarios(usuarios) {
             const tbody = document.getElementById('usuariosTableBody');
             tbody.innerHTML = '';
@@ -254,23 +274,23 @@
 
             usuarios.forEach(usuario => {
                 const row = `
-                <tr>
-                    <td class="py-2 px-4 border-b text-left">${usuario.id_usuario}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.nome}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.email}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.tipo}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.xp_total}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.fase_atual}</td>
-                    <td class="py-2 px-4 border-b text-left">
-                        <button 
-                            class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
-                            onclick="editarUsuario(${usuario.id_usuario})"
-                        >
-                            Editar
-                        </button>
-                    </td>
-                </tr>
-            `;
+                <tr>
+                    <td class="py-2 px-4 border-b text-left">${usuario.id_usuario}</td>
+                    <td class="py-2 px-4 border-b text-left">${usuario.nome}</td>
+                    <td class="py-2 px-4 border-b text-left">${usuario.email}</td>
+                    <td class="py-2 px-4 border-b text-left">${usuario.tipo}</td>
+                    <td class="py-2 px-4 border-b text-left">${usuario.xp_total}</td>
+                    <td class="py-2 px-4 border-b text-left">${usuario.fase_atual}</td>
+                    <td class="py-2 px-4 border-b text-left">
+                        <button 
+                            class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
+                            onclick="editarUsuario(${usuario.id_usuario})"
+                        >
+                            Editar
+                        </button>
+                    </td>
+                </tr>
+            `;
                 tbody.innerHTML += row;
             });
 
@@ -285,17 +305,20 @@
             }
 
             try {
-                // 🛑 REMOVER: const token = localStorage.getItem('token'); <--- REMOVA
                 console.log('Carregando usuário para edição:', id);
-                // 🛑 CORREÇÃO: Remova o `http://localhost:3000` e o cabeçalho Authorization.
-                const response = await fetch(`/usuarios/${id}`, {
-                    // 🛑 REMOVER: headers: { "Authorization": `Bearer ${token}` } <--- REMOVA
+
+                // Usa a URL completa para garantir o funcionamento
+                const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
+                    credentials: 'include', // Necessário para o cookie de autenticação
                 });
+
                 console.log('Resposta do usuário:', response.status, response.statusText);
+
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.message || "Erro ao buscar usuário");
                 }
+
                 const data = await response.json();
                 console.log('Dados do usuário:', data);
 
@@ -310,9 +333,9 @@
                 console.error("Erro ao carregar dados do usuário:", error);
                 showFeedback("Erro ao carregar dados do usuário: " + error.message);
             }
-        }
+        } // 🛑 ESTE É O FECHAMENTO CORRETO DA FUNÇÃO
 
-        // Salvamento da edição do usuário
+        // Salvamento da edição do usuário (OK)
         document.getElementById('editaUsuarioForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('editaUsuarioId').value;
@@ -336,15 +359,17 @@
 
             try {
                 console.log('Salvando edição do usuário:', id, { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum });
-                // 🛑 CORREÇÃO: Remova o `http://localhost:3000` e o cabeçalho Authorization.
-                const response = await fetch(`/usuarios/${id}`, {
+
+                // Usa a URL completa para garantir o funcionamento em produção
+                const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
                     method: "PUT",
+                    credentials: 'include',
                     headers: {
                         "Content-Type": "application/json",
-                        // 🛑 REMOVER: "Authorization": `Bearer ${token}` <--- REMOVA
                     },
                     body: JSON.stringify({ nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum })
                 });
+
                 console.log('Resposta da edição:', response.status, response.statusText);
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
@@ -352,21 +377,25 @@
                 }
                 const data = await response.json();
                 showFeedback(data.message, false);
+
                 document.getElementById('editaUsuarioForm').reset();
                 document.getElementById('editaUsuarioForm').classList.add('hidden');
+
+                // Re-executa a busca para atualizar a tabela
                 document.getElementById('buscaUsuarioForm').submit();
+
             } catch (error) {
                 console.error("Erro ao salvar edição:", error);
                 showFeedback("Erro ao salvar edição: " + error.message);
             }
         });
 
-        // Fechar o formulário de edição
+        // Fechar o formulário de edição (OK)
         document.getElementById('editaUsuarioForm').addEventListener('reset', () => {
             document.getElementById('editaUsuarioForm').classList.add('hidden');
         });
 
-        // Logout
+        // Logout (OK)
         document.getElementById('logoutButton').addEventListener('click', () => {
             console.log('Efetuando logout...');
             fetch('/auth/logout', { method: 'POST' })
