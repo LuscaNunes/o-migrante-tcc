@@ -149,263 +149,260 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'https://o-migrante.onrender.com';
-        const API_USER_PATH = '/usuarios';
+    const API_BASE_URL = 'https://o-migrante.onrender.com';
+    const API_USER_PATH = '/usuarios';
 
-        // Função para exibir mensagens de feedback
-        function showFeedback(message, isError = true) {
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
-            feedbackDiv.textContent = message;
-            document.body.appendChild(feedbackDiv);
-            setTimeout(() => feedbackDiv.remove(), 3000);
+    // Função para exibir mensagens de feedback
+    function showFeedback(message, isError = true) {
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
+        feedbackDiv.textContent = message;
+        document.body.appendChild(feedbackDiv);
+        setTimeout(() => feedbackDiv.remove(), 3000);
+    }
+
+    // Verifica autenticação e tipo de usuário
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            console.log('Verificando autenticação via Cookie...');
+            const response = await fetch("/auth/verifyToken", {
+                method: "GET",
+            });
+            console.log('Resposta da verificação:', response.status, response.statusText);
+            if (response.status === 401 || response.status === 403 || !response.ok) {
+                // Se falhar, redireciona para o login.
+                localStorage.removeItem('token'); // Limpa o antigo, por segurança.
+                showFeedback("Sessão expirada ou acesso restrito a administradores.");
+                setTimeout(() => window.location.href = "/", 3000); 
+                return; // Interrompe a execução
+            }
+            const data = await response.json();
+            console.log('Dados do usuário autenticado:', data);
+            if (!data.auth || data.user.tipo !== 'admin') {
+                localStorage.removeItem('token');
+                showFeedback("Acesso restrito a administradores.");
+                fetch('/auth/logout', { method: 'POST' }).finally(() => {
+                    setTimeout(() => window.location.href = "/", 3000);
+                });
+            } else {
+                // Configura menu admin
+                const adminDropdown = document.getElementById('adminDropdown');
+                adminDropdown.classList.remove('hidden');
+
+                const adminMenuButton = document.getElementById('adminMenuButton');
+                const adminMenuItems = document.getElementById('adminMenuItems');
+
+                adminMenuButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    adminMenuItems.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!adminMenuButton.contains(e.target) && !adminMenuItems.contains(e.target)) {
+                        adminMenuItems.classList.add('hidden');
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Erro ao verificar token:", error);
+            showFeedback("Erro ao verificar autenticação: " + error.message);
+            localStorage.removeItem('token');
+            setTimeout(() => window.location.href = "/", 3000);
+        }
+    });
+
+    // Busca de usuário por ID, nome ou e-mail
+    document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const busca = document.getElementById('buscaUsuario').value.trim();
+
+        document.getElementById('editaUsuarioForm').classList.add('hidden');
+
+        if (!busca) {
+            showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.");
+            return;
         }
 
-        // Verifica autenticação e tipo de usuário (OK)
-        document.addEventListener("DOMContentLoaded", async () => {
-            try {
-                console.log('Verificando autenticação via Cookie...');
-                const response = await fetch("/auth/verifyToken", {
-                    method: "GET",
-                });
-                console.log('Resposta da verificação:', response.status, response.statusText);
-                if (response.status === 401 || response.status === 403 || !response.ok) {
-                    // Se falhar, redireciona para o login.
-                    localStorage.removeItem('token'); // Limpa o antigo, por segurança.
-                    showFeedback("Sessão expirada ou acesso restrito a administradores.");
-                    setTimeout(() => window.location.href = "/", 3000); // 🛑 CORREÇÃO: Redireciona para /
-                    return; // Interrompe a execução
-                }
-                const data = await response.json();
-                console.log('Dados do usuário autenticado:', data);
-                if (!data.auth || data.user.tipo !== 'admin') {
-                    localStorage.removeItem('token');
-                    showFeedback("Acesso restrito a administradores.");
-                    fetch('/auth/logout', { method: 'POST' }).finally(() => {
-                        setTimeout(() => window.location.href = "/", 3000);
-                    });
-                } else {
-                    // Configura menu admin
-                    const adminDropdown = document.getElementById('adminDropdown');
-                    adminDropdown.classList.remove('hidden');
+        try {
+            console.log('Buscando usuário:', busca);
+            // CORRETO: Usa a URL completa 
+            const urlBusca = `${API_BASE_URL}${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
+            console.log('URL de Busca Final:', urlBusca);
 
-                    const adminMenuButton = document.getElementById('adminMenuButton');
-                    const adminMenuItems = document.getElementById('adminMenuItems');
-
-                    adminMenuButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        adminMenuItems.classList.toggle('hidden');
-                    });
-
-                    document.addEventListener('click', (e) => {
-                        if (!adminMenuButton.contains(e.target) && !adminMenuItems.contains(e.target)) {
-                            adminMenuItems.classList.add('hidden');
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error("Erro ao verificar token:", error);
-                showFeedback("Erro ao verificar autenticação: " + error.message);
-                localStorage.removeItem('token');
-                setTimeout(() => window.location.href = "/", 3000);
-            }
-        });
-
-        // Busca de usuário por ID, nome ou e-mail (OK)
-        document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const busca = document.getElementById('buscaUsuario').value.trim();
-
-            document.getElementById('editaUsuarioForm').classList.add('hidden');
-
-            if (!busca) {
-                showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.");
-                return;
-            }
-
-            try {
-                console.log('Buscando usuário:', busca);
-                // Usa a URL completa CONFIRMADA
-                const urlBusca = `${API_BASE_URL}${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
-                console.log('URL de Busca Final:', urlBusca);
-
-                const response = await fetch(urlBusca, {
-                    // Garante que o cookie de autenticação JWT seja enviado
-                    credentials: 'include',
-                });
-
-                console.log('Resposta da busca:', response.status, response.statusText);
-
-                if (!response.ok) {
-                    let errorMessage = "Erro ao buscar usuários";
-                    // Tenta obter a mensagem de erro do JSON do backend (ex: Erro 400 ou 500)
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.error || errorData.message || errorMessage;
-                    } catch (jsonError) {
-                        // Se a resposta não for JSON (como no 404 estático), usa a mensagem padrão
-                        if (response.status === 404) {
-                            errorMessage = "Recurso da API de busca não encontrado (404). Verifique a URL.";
-                        } else if (response.status === 401 || response.status === 403) {
-                            errorMessage = "Não autorizado. Verifique seu login/permissão.";
-                        }
-                    }
-                    throw new Error(errorMessage);
-                }
-
-                const data = await response.json();
-                console.log('Usuários encontrados:', data);
-                renderUsuarios(data.usuarios);
-            } catch (error) {
-                console.error("Erro ao buscar usuários:", error);
-                showFeedback("Erro ao buscar usuários: " + error.message);
-            }
-        });
-
-        // Função para renderizar usuários na tabela (OK)
-        function renderUsuarios(usuarios) {
-            const tbody = document.getElementById('usuariosTableBody');
-            tbody.innerHTML = '';
-
-            if (usuarios.length === 0) {
-                showFeedback("Nenhum usuário encontrado.");
-                return;
-            }
-
-            usuarios.forEach(usuario => {
-                const row = `
-                 <tr>
-                    <td class="py-2 px-4 border-b text-left">${usuario.id_usuario}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.nome}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.email}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.tipo}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.xp_total}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.fase_atual}</td>
-                    <td class="py-2 px-4 border-b text-left">
-                        <button 
-    class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 min-w-[80px] text-center"
-              onclick="editarUsuario(${usuario.id_usuario})"
-                        >
-                            Editar
-                        </button>
-                    </td>
-                </tr>
-            `;
-                tbody.innerHTML += row;
+            const response = await fetch(urlBusca, {
+                // Garante que o cookie de autenticação JWT seja enviado
+                credentials: 'include',
             });
 
-            document.getElementById('usuariosTable').classList.remove('hidden');
+            console.log('Resposta da busca:', response.status, response.statusText);
+
+            if (!response.ok) {
+                let errorMessage = "Erro ao buscar usuários";
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorData.message || errorMessage;
+                } catch (jsonError) {
+                    if (response.status === 404) {
+                        errorMessage = "Recurso da API de busca não encontrado (404). Verifique a URL.";
+                    } else if (response.status === 401 || response.status === 403) {
+                        errorMessage = "Não autorizado. Verifique seu login/permissão.";
+                    }
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await response.json();
+            console.log('Usuários encontrados:', data);
+            renderUsuarios(data.usuarios);
+        } catch (error) {
+            console.error("Erro ao buscar usuários:", error);
+            showFeedback("Erro ao buscar usuários: " + error.message);
+        }
+    });
+
+    // Função para renderizar usuários na tabela
+    function renderUsuarios(usuarios) {
+        const tbody = document.getElementById('usuariosTableBody');
+        tbody.innerHTML = '';
+
+        if (usuarios.length === 0) {
+            showFeedback("Nenhum usuário encontrado.");
+            return;
         }
 
-        // Função para carregar dados do usuário para edição
-        async function editarUsuario(id) {
-            if (!id || isNaN(id)) {
-                showFeedback("ID inválido.");
-                return;
-            }
-
-            try {
-                console.log('Carregando usuário para edição:', id);
-
-                // Usa a URL completa para garantir o funcionamento
-                const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
-                    credentials: 'include', // Necessário para o cookie de autenticação
-                });
-
-                console.log('Resposta do usuário:', response.status, response.statusText);
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || "Erro ao buscar usuário");
-                }
-
-                const data = await response.json();
-                console.log('Dados do usuário:', data);
-
-                document.getElementById('editaUsuarioId').value = data.id_usuario;
-                document.getElementById('editaUsuarioNome').value = data.nome;
-                document.getElementById('editaUsuarioEmail').value = data.email;
-                document.getElementById('editaUsuarioTipo').value = data.tipo;
-                document.getElementById('editaUsuarioXpTotal').value = data.xp_total;
-                document.getElementById('editaUsuarioFaseAtual').value = data.fase_atual;
-                document.getElementById('editaUsuarioForm').classList.remove('hidden');
-            } catch (error) {
-                console.error("Erro ao carregar dados do usuário:", error);
-                showFeedback("Erro ao carregar dados do usuário: " + error.message);
-            }
-        } // 🛑 ESTE É O FECHAMENTO CORRETO DA FUNÇÃO
-
-        // Salvamento da edição do usuário (OK)
-        document.getElementById('editaUsuarioForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('editaUsuarioId').value;
-            const nome = document.getElementById('editaUsuarioNome').value.trim();
-            const email = document.getElementById('editaUsuarioEmail').value.trim();
-            const tipo = document.getElementById('editaUsuarioTipo').value;
-            const xp_total = document.getElementById('editaUsuarioXpTotal').value;
-            const fase_atual = document.getElementById('editaUsuarioFaseAtual').value;
-
-            if (!nome || !email || !tipo || !xp_total || !fase_atual) {
-                showFeedback("Por favor, preencha todos os campos.");
-                return;
-            }
-
-            const xpTotalNum = parseInt(xp_total);
-            const faseAtualNum = parseInt(fase_atual);
-            if (isNaN(xpTotalNum) || isNaN(faseAtualNum)) {
-                showFeedback("XP Total e Fase Atual devem ser números válidos.");
-                return;
-            }
-
-            try {
-                console.log('Salvando edição do usuário:', id, { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum });
-
-                // Usa a URL completa para garantir o funcionamento em produção
-                const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
-                    method: "PUT",
-                    credentials: 'include',
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum })
-                });
-
-                console.log('Resposta da edição:', response.status, response.statusText);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || "Erro ao salvar edição");
-                }
-                const data = await response.json();
-                showFeedback(data.message, false);
-
-                document.getElementById('editaUsuarioForm').reset();
-                document.getElementById('editaUsuarioForm').classList.add('hidden');
-
-                // Re-executa a busca para atualizar a tabela
-                document.getElementById('buscaUsuarioForm').submit();
-
-            } catch (error) {
-                console.error("Erro ao salvar edição:", error);
-                showFeedback("Erro ao salvar edição: " + error.message);
-            }
+        usuarios.forEach(usuario => {
+            const row = `
+            <tr>
+                <td class="py-2 px-4 border-b text-left">${usuario.id_usuario}</td>
+                <td class="py-2 px-4 border-b text-left">${usuario.nome}</td>
+                <td class="py-2 px-4 border-b text-left">${usuario.email}</td>
+                <td class="py-2 px-4 border-b text-left">${usuario.tipo}</td>
+                <td class="py-2 px-4 border-b text-left">${usuario.xp_total}</td>
+                <td class="py-2 px-4 border-b text-left">${usuario.fase_atual}</td>
+                <td class="py-2 px-4 border-b text-left">
+                    <button 
+                        class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
+                        onclick="editarUsuario(${usuario.id_usuario})"
+                    >
+                        Editar
+                    </button>
+                </td>
+            </tr>
+        `;
+            tbody.innerHTML += row;
         });
 
-        // Fechar o formulário de edição (OK)
-        document.getElementById('editaUsuarioForm').addEventListener('reset', () => {
+        document.getElementById('usuariosTable').classList.remove('hidden');
+    }
+
+    // Função para carregar dados do usuário para edição
+    async function editarUsuario(id) {
+        console.log('Botão Editar Clicado. Tentando carregar usuário:', id); // Adicionei este log
+
+        if (!id || isNaN(id)) {
+            showFeedback("ID inválido.");
+            return;
+        }
+
+        try {
+            console.log('Carregando usuário para edição:', id);
+
+            // CORRETO: Usa a URL completa 
+            const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
+                credentials: 'include', // Necessário para o cookie de autenticação
+            });
+
+            console.log('Resposta do usuário:', response.status, response.statusText);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Erro ao buscar usuário");
+            }
+
+            const data = await response.json();
+            console.log('Dados do usuário:', data);
+
+            document.getElementById('editaUsuarioId').value = data.id_usuario;
+            document.getElementById('editaUsuarioNome').value = data.nome;
+            document.getElementById('editaUsuarioEmail').value = data.email;
+            document.getElementById('editaUsuarioTipo').value = data.tipo;
+            document.getElementById('editaUsuarioXpTotal').value = data.xp_total;
+            document.getElementById('editaUsuarioFaseAtual').value = data.fase_atual;
+            document.getElementById('editaUsuarioForm').classList.remove('hidden');
+        } catch (error) {
+            console.error("Erro ao carregar dados do usuário:", error);
+            showFeedback("Erro ao carregar dados do usuário: " + error.message);
+        }
+    } // FECHAMENTO CORRETO
+
+    // Salvamento da edição do usuário
+    document.getElementById('editaUsuarioForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editaUsuarioId').value;
+        const nome = document.getElementById('editaUsuarioNome').value.trim();
+        const email = document.getElementById('editaUsuarioEmail').value.trim();
+        const tipo = document.getElementById('editaUsuarioTipo').value;
+        const xp_total = document.getElementById('editaUsuarioXpTotal').value;
+        const fase_atual = document.getElementById('editaUsuarioFaseAtual').value;
+
+        if (!nome || !email || !tipo || !xp_total || !fase_atual) {
+            showFeedback("Por favor, preencha todos os campos.");
+            return;
+        }
+
+        const xpTotalNum = parseInt(xp_total);
+        const faseAtualNum = parseInt(fase_atual);
+        if (isNaN(xpTotalNum) || isNaN(faseAtualNum)) {
+            showFeedback("XP Total e Fase Atual devem ser números válidos.");
+            return;
+        }
+
+        try {
+            console.log('Salvando edição do usuário:', id, { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum });
+
+            // CORRETO: Usa a URL completa para PUT
+            const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
+                method: "PUT",
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum })
+            });
+
+            console.log('Resposta da edição:', response.status, response.statusText);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Erro ao salvar edição");
+            }
+            const data = await response.json();
+            showFeedback(data.message, false);
+
+            document.getElementById('editaUsuarioForm').reset();
             document.getElementById('editaUsuarioForm').classList.add('hidden');
-        });
 
-        // Logout (OK)
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            console.log('Efetuando logout...');
-            fetch('/auth/logout', { method: 'POST' })
-                .finally(() => {
-                    localStorage.removeItem('token'); // Opcional, mas bom para limpar o antigo
-                    showFeedback("Logout realizado com sucesso!", false);
-                    setTimeout(() => window.location.href = "/", 2000); // 🛑 CORREÇÃO: Redireciona para /
-                });
-        });
-    </script>
-</body>
+            // Re-executa a busca para atualizar a tabela
+            document.getElementById('buscaUsuarioForm').submit();
 
-</html>
+        } catch (error) {
+            console.error("Erro ao salvar edição:", error);
+            showFeedback("Erro ao salvar edição: " + error.message);
+        }
+    });
+
+    // Fechar o formulário de edição
+    document.getElementById('editaUsuarioForm').addEventListener('reset', () => {
+        document.getElementById('editaUsuarioForm').classList.add('hidden');
+    });
+
+    // Logout
+    document.getElementById('logoutButton').addEventListener('click', () => {
+        console.log('Efetuando logout...');
+        fetch('/auth/logout', { method: 'POST' })
+            .finally(() => {
+                localStorage.removeItem('token'); 
+                showFeedback("Logout realizado com sucesso!", false);
+                setTimeout(() => window.location.href = "/", 2000); 
+            });
+    });
+</script>
