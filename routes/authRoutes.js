@@ -66,6 +66,18 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// Logout route
+router.post('/logout', (req, res) => {
+    // 🛑 Remove o cookie 'token'
+    res.clearCookie('token', { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: 'strict' 
+    });
+    // Remove o token antigo do front-end (apenas para limpar)
+    res.json({ auth: false, message: 'Logout bem-sucedido.' });
+});
+
 // Verify token route
 router.get('/verifyToken', authenticateToken, async (req, res) => {
     console.log('Rota /verifyToken acessada, usuário:', req.user);
