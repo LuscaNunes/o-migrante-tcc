@@ -224,7 +224,10 @@
 
             try {
                 console.log('Buscando usuário:', busca);
-                const response = await fetch(`/api/usuarios?busca=${encodeURIComponent(busca)}`, { // Exemplo: /api/usuarios
+                // 🚨 CORREÇÃO: Adicionando o prefixo '/api' de volta para a rota de busca.
+                const response = await fetch(`/api/usuarios?busca=${encodeURIComponent(busca)}`, {
+                    // Se a rota no backend for só `/usuarios`, use: const response = await fetch(`/usuarios?busca=${encodeURIComponent(busca)}`, {
+                    // Se a rota no backend for `/api/usuarios`, use: const response = await fetch(`/api/usuarios?busca=${encodeURIComponent(busca)}`, {
                 });
                 console.log('Resposta da busca:', response.status, response.statusText);
                 if (!response.ok) {
@@ -239,7 +242,6 @@
                 showFeedback("Erro ao buscar usuários: " + error.message);
             }
         });
-
         // Função para renderizar usuários na tabela
         function renderUsuarios(usuarios) {
             const tbody = document.getElementById('usuariosTableBody');
