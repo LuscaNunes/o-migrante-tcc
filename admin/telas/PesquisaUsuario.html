@@ -45,7 +45,7 @@
                         <i class="fas fa-book mr-3"></i> Biblioteca
                     </a>
                 </li>
-                
+
                 <li id="adminDropdown" class="mb-4 hidden">
                     <div class="relative">
                         <button id="adminMenuButton"
@@ -60,15 +60,18 @@
                             </li>
                             <li>
                                 <a href="CaPerguntas.html"
-                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Cadastrar Perguntas</a>
+                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Cadastrar
+                                    Perguntas</a>
                             </li>
                             <li>
                                 <a href="DadosFases.html"
-                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Dados das Fases</a>
+                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Dados
+                                    das Fases</a>
                             </li>
                             <li>
                                 <a href="DadosNiveis.html"
-                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Busca de Níveis e Edição</a>
+                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Busca de
+                                    Níveis e Edição</a>
                             </li>
                         </ul>
                     </div>
@@ -146,114 +149,109 @@
     </div>
 
     <script>
-    // Função para exibir mensagens de feedback
-    function showFeedback(message, isError = true) {
-        const feedbackDiv = document.createElement('div');
-        feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
-        feedbackDiv.textContent = message;
-        document.body.appendChild(feedbackDiv);
-        setTimeout(() => feedbackDiv.remove(), 3000);
-    }
-
-    // Verifica autenticação e tipo de usuário
-    document.addEventListener("DOMContentLoaded", async () => {
-        const token = localStorage.getItem('token');
-        console.log('Token on load:', token ? 'Presente' : 'Ausente');
-
-        if (!token) {
-            showFeedback("Você precisa estar logado para acessar esta página.");
-            setTimeout(() => window.location.href = "index.html", 3000);
-            return;
+        // Função para exibir mensagens de feedback
+        function showFeedback(message, isError = true) {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
+            feedbackDiv.textContent = message;
+            document.body.appendChild(feedbackDiv);
+            setTimeout(() => feedbackDiv.remove(), 3000);
         }
 
-        try {
-            console.log('Verificando token...');
-            const response = await fetch("http://localhost:3000/verifyToken", {
-                method: "GET",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            console.log('Resposta da verificação:', response.status, response.statusText);
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || "Erro ao verificar token");
-            }
-            const data = await response.json();
-            console.log('Dados do token:', data);
-            if (!data.auth || data.user.tipo !== 'admin') {
+        // Verifica autenticação e tipo de usuário
+        document.addEventListener("DOMContentLoaded", async () => {
+
+
+            try {
+                console.log('Verificando autenticação via Cookie...');
+                const response = await fetch("/auth/verifyToken", {
+                    method: "GET",
+                });
+                console.log('Resposta da verificação:', response.status, response.statusText);
+                if (response.status === 401 || response.status === 403 || !response.ok) {
+                    // Se falhar, redireciona para o login.
+                    localStorage.removeItem('token'); // Limpa o antigo, por segurança.
+                    showFeedback("Sessão expirada ou acesso restrito a administradores.");
+                    setTimeout(() => window.location.href = "/", 3000); // 🛑 CORREÇÃO: Redireciona para /
+                    return; // Interrompe a execução
+                }
+                const data = await response.json();
+                console.log('Dados do usuário autenticado:', data);
+                if (!data.auth || data.user.tipo !== 'admin') {
+                    localStorage.removeItem('token');
+                    showFeedback("Acesso restrito a administradores.");
+                    fetch('/auth/logout', { method: 'POST' }).finally(() => {
+                        setTimeout(() => window.location.href = "/", 3000);
+                    });
+                } else {
+                    // Configura menu admin
+                    const adminDropdown = document.getElementById('adminDropdown');
+                    adminDropdown.classList.remove('hidden');
+
+                    const adminMenuButton = document.getElementById('adminMenuButton');
+                    const adminMenuItems = document.getElementById('adminMenuItems');
+
+                    adminMenuButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        adminMenuItems.classList.toggle('hidden');
+                    });
+
+                    document.addEventListener('click', (e) => {
+                        if (!adminMenuButton.contains(e.target) && !adminMenuItems.contains(e.target)) {
+                            adminMenuItems.classList.add('hidden');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Erro ao verificar token:", error);
+                showFeedback("Erro ao verificar autenticação: " + error.message);
                 localStorage.removeItem('token');
-                showFeedback("Acesso restrito a administradores.");
-                setTimeout(() => window.location.href = "index.html", 3000);
-            } else {
-                // Configura menu admin
-                const adminDropdown = document.getElementById('adminDropdown');
-                adminDropdown.classList.remove('hidden');
-
-                const adminMenuButton = document.getElementById('adminMenuButton');
-                const adminMenuItems = document.getElementById('adminMenuItems');
-
-                adminMenuButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    adminMenuItems.classList.toggle('hidden');
-                });
-
-                document.addEventListener('click', (e) => {
-                    if (!adminMenuButton.contains(e.target) && !adminMenuItems.contains(e.target)) {
-                        adminMenuItems.classList.add('hidden');
-                    }
-                });
+                setTimeout(() => window.location.href = "/", 3000);
             }
-        } catch (error) {
-            console.error("Erro ao verificar token:", error);
-            showFeedback("Erro ao verificar autenticação: " + error.message);
-            localStorage.removeItem('token');
-            setTimeout(() => window.location.href = "index.html", 3000);
-        }
-    });
+        });
 
-    // Busca de usuário por ID, nome ou e-mail
-    document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const busca = document.getElementById('buscaUsuario').value.trim();
-        const token = localStorage.getItem('token');
+        // Busca de usuário por ID, nome ou e-mail
+        document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const busca = document.getElementById('buscaUsuario').value.trim();
 
-        document.getElementById('editaUsuarioForm').classList.add('hidden');
+            document.getElementById('editaUsuarioForm').classList.add('hidden');
 
-        if (!busca) {
-            showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.");
-            return;
-        }
-
-        try {
-            console.log('Buscando usuário:', busca);
-            const response = await fetch(`http://localhost:3000/usuarios?busca=${encodeURIComponent(busca)}`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            console.log('Resposta da busca:', response.status, response.statusText);
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || "Erro ao buscar usuários");
+            if (!busca) {
+                showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.");
+                return;
             }
-            const data = await response.json();
-            console.log('Usuários encontrados:', data);
-            renderUsuarios(data.usuarios);
-        } catch (error) {
-            console.error("Erro ao buscar usuários:", error);
-            showFeedback("Erro ao buscar usuários: " + error.message);
-        }
-    });
 
-    // Função para renderizar usuários na tabela
-    function renderUsuarios(usuarios) {
-        const tbody = document.getElementById('usuariosTableBody');
-        tbody.innerHTML = '';
+            try {
+                console.log('Buscando usuário:', busca);
+                const response = await fetch(`/api/usuarios?busca=${encodeURIComponent(busca)}`, { // Exemplo: /api/usuarios
+                });
+                console.log('Resposta da busca:', response.status, response.statusText);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || "Erro ao buscar usuários");
+                }
+                const data = await response.json();
+                console.log('Usuários encontrados:', data);
+                renderUsuarios(data.usuarios);
+            } catch (error) {
+                console.error("Erro ao buscar usuários:", error);
+                showFeedback("Erro ao buscar usuários: " + error.message);
+            }
+        });
 
-        if (usuarios.length === 0) {
-            showFeedback("Nenhum usuário encontrado.");
-            return;
-        }
+        // Função para renderizar usuários na tabela
+        function renderUsuarios(usuarios) {
+            const tbody = document.getElementById('usuariosTableBody');
+            tbody.innerHTML = '';
 
-        usuarios.forEach(usuario => {
-            const row = `
+            if (usuarios.length === 0) {
+                showFeedback("Nenhum usuário encontrado.");
+                return;
+            }
+
+            usuarios.forEach(usuario => {
+                const row = `
                 <tr>
                     <td class="py-2 px-4 border-b text-left">${usuario.id_usuario}</td>
                     <td class="py-2 px-4 border-b text-left">${usuario.nome}</td>
@@ -271,108 +269,112 @@
                     </td>
                 </tr>
             `;
-            tbody.innerHTML += row;
+                tbody.innerHTML += row;
+            });
+
+            document.getElementById('usuariosTable').classList.remove('hidden');
+        }
+
+        // Função para carregar dados do usuário para edição
+        async function editarUsuario(id) {
+            if (!id || isNaN(id)) {
+                showFeedback("ID inválido.");
+                return;
+            }
+
+            try {
+                // 🛑 REMOVER: const token = localStorage.getItem('token'); <--- REMOVA
+                console.log('Carregando usuário para edição:', id);
+                // 🛑 CORREÇÃO: Remova o `http://localhost:3000` e o cabeçalho Authorization.
+                const response = await fetch(`/usuarios/${id}`, {
+                    // 🛑 REMOVER: headers: { "Authorization": `Bearer ${token}` } <--- REMOVA
+                });
+                console.log('Resposta do usuário:', response.status, response.statusText);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || "Erro ao buscar usuário");
+                }
+                const data = await response.json();
+                console.log('Dados do usuário:', data);
+
+                document.getElementById('editaUsuarioId').value = data.id_usuario;
+                document.getElementById('editaUsuarioNome').value = data.nome;
+                document.getElementById('editaUsuarioEmail').value = data.email;
+                document.getElementById('editaUsuarioTipo').value = data.tipo;
+                document.getElementById('editaUsuarioXpTotal').value = data.xp_total;
+                document.getElementById('editaUsuarioFaseAtual').value = data.fase_atual;
+                document.getElementById('editaUsuarioForm').classList.remove('hidden');
+            } catch (error) {
+                console.error("Erro ao carregar dados do usuário:", error);
+                showFeedback("Erro ao carregar dados do usuário: " + error.message);
+            }
+        }
+
+        // Salvamento da edição do usuário
+        document.getElementById('editaUsuarioForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editaUsuarioId').value;
+            const nome = document.getElementById('editaUsuarioNome').value.trim();
+            const email = document.getElementById('editaUsuarioEmail').value.trim();
+            const tipo = document.getElementById('editaUsuarioTipo').value;
+            const xp_total = document.getElementById('editaUsuarioXpTotal').value;
+            const fase_atual = document.getElementById('editaUsuarioFaseAtual').value;
+
+            if (!nome || !email || !tipo || !xp_total || !fase_atual) {
+                showFeedback("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            const xpTotalNum = parseInt(xp_total);
+            const faseAtualNum = parseInt(fase_atual);
+            if (isNaN(xpTotalNum) || isNaN(faseAtualNum)) {
+                showFeedback("XP Total e Fase Atual devem ser números válidos.");
+                return;
+            }
+
+            try {
+                console.log('Salvando edição do usuário:', id, { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum });
+                // 🛑 CORREÇÃO: Remova o `http://localhost:3000` e o cabeçalho Authorization.
+                const response = await fetch(`/usuarios/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        // 🛑 REMOVER: "Authorization": `Bearer ${token}` <--- REMOVA
+                    },
+                    body: JSON.stringify({ nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum })
+                });
+                console.log('Resposta da edição:', response.status, response.statusText);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || "Erro ao salvar edição");
+                }
+                const data = await response.json();
+                showFeedback(data.message, false);
+                document.getElementById('editaUsuarioForm').reset();
+                document.getElementById('editaUsuarioForm').classList.add('hidden');
+                document.getElementById('buscaUsuarioForm').submit();
+            } catch (error) {
+                console.error("Erro ao salvar edição:", error);
+                showFeedback("Erro ao salvar edição: " + error.message);
+            }
         });
 
-        document.getElementById('usuariosTable').classList.remove('hidden');
-    }
-
-    // Função para carregar dados do usuário para edição
-    async function editarUsuario(id) {
-        if (!id || isNaN(id)) {
-            showFeedback("ID inválido.");
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('token');
-            console.log('Carregando usuário para edição:', id);
-            const response = await fetch(`http://localhost:3000/usuarios/${id}`, {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            console.log('Resposta do usuário:', response.status, response.statusText);
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || "Erro ao buscar usuário");
-            }
-            const data = await response.json();
-            console.log('Dados do usuário:', data);
-
-            document.getElementById('editaUsuarioId').value = data.id_usuario;
-            document.getElementById('editaUsuarioNome').value = data.nome;
-            document.getElementById('editaUsuarioEmail').value = data.email;
-            document.getElementById('editaUsuarioTipo').value = data.tipo;
-            document.getElementById('editaUsuarioXpTotal').value = data.xp_total;
-            document.getElementById('editaUsuarioFaseAtual').value = data.fase_atual;
-            document.getElementById('editaUsuarioForm').classList.remove('hidden');
-        } catch (error) {
-            console.error("Erro ao carregar dados do usuário:", error);
-            showFeedback("Erro ao carregar dados do usuário: " + error.message);
-        }
-    }
-
-    // Salvamento da edição do usuário
-    document.getElementById('editaUsuarioForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('editaUsuarioId').value;
-        const nome = document.getElementById('editaUsuarioNome').value.trim();
-        const email = document.getElementById('editaUsuarioEmail').value.trim();
-        const tipo = document.getElementById('editaUsuarioTipo').value;
-        const xp_total = document.getElementById('editaUsuarioXpTotal').value;
-        const fase_atual = document.getElementById('editaUsuarioFaseAtual').value;
-        const token = localStorage.getItem('token');
-
-        if (!nome || !email || !tipo || !xp_total || !fase_atual) {
-            showFeedback("Por favor, preencha todos os campos.");
-            return;
-        }
-
-        const xpTotalNum = parseInt(xp_total);
-        const faseAtualNum = parseInt(fase_atual);
-        if (isNaN(xpTotalNum) || isNaN(faseAtualNum)) {
-            showFeedback("XP Total e Fase Atual devem ser números válidos.");
-            return;
-        }
-
-        try {
-            console.log('Salvando edição do usuário:', id, { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum });
-            const response = await fetch(`http://localhost:3000/usuarios/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({ nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum })
-            });
-            console.log('Resposta da edição:', response.status, response.statusText);
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || "Erro ao salvar edição");
-            }
-            const data = await response.json();
-            showFeedback(data.message, false);
-            document.getElementById('editaUsuarioForm').reset();
+        // Fechar o formulário de edição
+        document.getElementById('editaUsuarioForm').addEventListener('reset', () => {
             document.getElementById('editaUsuarioForm').classList.add('hidden');
-            document.getElementById('buscaUsuarioForm').submit();
-        } catch (error) {
-            console.error("Erro ao salvar edição:", error);
-            showFeedback("Erro ao salvar edição: " + error.message);
-        }
-    });
+        });
 
-    // Fechar o formulário de edição
-    document.getElementById('editaUsuarioForm').addEventListener('reset', () => {
-        document.getElementById('editaUsuarioForm').classList.add('hidden');
-    });
-
-    // Logout
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        console.log('Efetuando logout...');
-        localStorage.removeItem('token');
-        showFeedback("Logout realizado com sucesso!", false);
-        setTimeout(() => window.location.href = "index.html", 2000);
-    });
-</script>
+        // Logout
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            console.log('Efetuando logout...');
+            fetch('/auth/logout', { method: 'POST' })
+                .finally(() => {
+                    localStorage.removeItem('token'); // Opcional, mas bom para limpar o antigo
+                    showFeedback("Logout realizado com sucesso!", false);
+                    setTimeout(() => window.location.href = "/", 2000); // 🛑 CORREÇÃO: Redireciona para /
+                });
+        });
+    </script>
 </body>
 
 </html>
