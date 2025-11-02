@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Defined' : 'Undefined');
 
@@ -26,6 +27,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // --- 1. ROTAS PÚBLICAS (Login/Cadastro e Arquivo Index) ---
 

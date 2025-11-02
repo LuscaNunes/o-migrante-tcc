@@ -2,7 +2,6 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // Login route
@@ -26,7 +25,18 @@ router.post('/login', async (req, res) => {
 
         const token = jwt.sign({ id: user.id_usuario, tipo: user.tipo }, process.env.JWT_SECRET, { expiresIn: '1h' });
         console.log('Token gerado para usuário:', user.id_usuario);
-        res.json({ auth: true, token });
+        
+        // 🛑 MUDANÇA CRUCIAL 1: Define o token como um cookie HTTP-only
+        res.cookie('token', token, { 
+            httpOnly: true, // Impedir acesso via JS (Segurança)
+            secure: process.env.NODE_ENV === 'production', // Apenas em HTTPS (Render)
+            sameSite: 'strict', // Proteção contra CSRF
+            maxAge: 3600000 // 1 hora em milissegundos
+        });
+
+        // 🛑 MUDANÇA CRUCIAL 2: Retorna uma resposta de sucesso sem o token
+        res.json({ auth: true, message: 'Login bem-sucedido.' }); // Token removido do JSON!
+        
     } catch (error) {
         console.error('Erro no login:', error);
         res.status(500).json({ auth: false, message: 'Erro no servidor' });
