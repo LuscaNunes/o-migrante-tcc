@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login e Cadastro - O Migrante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center min-h-screen p-4">
+    <div class="absolute top-4 left-4 text-white text-4xl font-extrabold tracking-widest">
+        O Migrante
+    </div>
+    
+    <!-- Container do Login -->
+    <div id="loginContainer" class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm transform transition-all duration-500">
+        <h2 class="text-3xl font-extrabold mb-6 text-center text-gray-800">Login</h2>
+        <form id="loginForm">
+            <div class="mb-4">
+                <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="loginEmail" placeholder="seu.email@exemplo.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150" aria-label="Email" required>
+            </div>
+            <div class="mb-6">
+                <label for="loginPassword" class="block text-sm font-medium text-gray-700">Senha</label>
+                <input type="password" id="loginPassword" placeholder="********" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150" aria-label="Senha" required>
+            </div>
+            <button type="submit" id="loginButton" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition duration-200 flex justify-center items-center">
+                <span id="loginButtonText">Entrar</span>
+                <svg id="loginSpinner" class="animate-spin h-5 w-5 ml-2 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            </button>
+        </form>
+        <p class="mt-4 text-center text-sm text-gray-600">Não tem uma conta? <a href="#" id="showRegister" class="text-blue-600 font-medium hover:text-blue-800 transition duration-150">Cadastre-se</a></p>
+        <p id="loginError" class="text-red-500 text-sm mt-4 text-center hidden"></p>
+    </div>
+
+    <!-- Container do Cadastro (Oculto inicialmente) -->
+    <div id="registerContainer" class="hidden bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm transform transition-all duration-500">
+        <h2 class="text-3xl font-extrabold mb-6 text-center text-gray-800">Cadastro</h2>
+        <form id="registerForm">
+            <div class="mb-4">
+                <label for="registerName" class="block text-sm font-medium text-gray-700">Nome</label>
+                <input type="text" id="registerName" placeholder="Seu Nome Completo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150" aria-label="Nome" required>
+            </div>
+            <div class="mb-4">
+                <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="registerEmail" placeholder="seu.email@exemplo.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150" aria-label="Email" required>
+            </div>
+            <div class="mb-6">
+                <label for="registerPassword" class="block text-sm font-medium text-gray-700">Senha</label>
+                <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150" aria-label="Senha" required>
+            </div>
+            <button type="submit" id="registerButton" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold shadow-md hover:bg-green-700 transition duration-200 flex justify-center items-center">
+                <span id="registerButtonText">Cadastrar</span>
+                <svg id="registerSpinner" class="animate-spin h-5 w-5 ml-2 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            </button>
+        </form>
+        <p class="mt-4 text-center text-sm text-gray-600">Já tem uma conta? <a href="#" id="showLogin" class="text-blue-600 font-medium hover:text-blue-800 transition duration-150">Faça login</a></p>
+        <p id="registerError" class="text-red-500 text-sm mt-4 text-center hidden"></p>
+    </div>
+
+    <!-- Container de Mensagem (Substitui alert()) -->
+    <div id="messageBox" class="fixed top-4 right-4 p-4 rounded-lg shadow-xl text-white z-50 transition-transform duration-300 transform translate-x-full hidden">
+        <p id="messageText" class="font-medium"></p>
+    </div>
+
+    <script>
+        // -------------------------------------------------------------
+        // VARIÁVEL GLOBAL (MANTIDA)
+        // -------------------------------------------------------------
+        // A API_BASE_URL é necessária para as chamadas de register e login
+        const API_BASE_URL = 'https://o-migrante.onrender.com';
+        
+        // -------------------------------------------------------------
+        // FUNÇÕES GLOBAIS (APRIMORADAS)
+        // -------------------------------------------------------------
+
+        // Substitui o alert()
+        function showMessage(message, isSuccess = false) {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            
+            messageText.textContent = message;
+            messageBox.classList.remove('bg-red-500', 'bg-green-500', 'translate-x-full', 'hidden');
+            
+            if (isSuccess) {
+                messageBox.classList.add('bg-green-500');
+            } else {
+                messageBox.classList.add('bg-red-500');
+            }
+
+            // Mostra a caixa de mensagem
+            messageBox.classList.remove('translate-x-full', 'hidden');
+            messageBox.classList.add('translate-x-0');
+
+            setTimeout(() => {
+                // Esconde a caixa de mensagem
+                messageBox.classList.remove('translate-x-0');
+                messageBox.classList.add('translate-x-full');
+                setTimeout(() => messageBox.classList.add('hidden'), 300); // Esconde depois da transição
+            }, 4000);
+        }
+
+        function mostrarErro(containerId, mensagem) {
+            console.log(`Exibindo erro em ${containerId}: ${mensagem}`);
+            const erro = document.getElementById(containerId);
+            if (erro) {
+                erro.textContent = mensagem;
+                erro.classList.remove('hidden');
+            } else {
+                console.error(`Elemento de erro ${containerId} não encontrado`);
+            }
+        }
+
+        function toggleLoading(buttonId, spinnerId, textId, isLoading) {
+            const button = document.getElementById(buttonId);
+            const spinner = document.getElementById(spinnerId);
+            const text = document.getElementById(textId);
+            if (button && spinner && text) {
+                button.disabled = isLoading;
+                spinner.classList.toggle('hidden', !isLoading);
+                text.textContent = isLoading ? '' : (buttonId === 'loginButton' ? 'Entrar' : 'Cadastrar');
+            }
+        }
+
+        function validarEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
+        }
+
+        // -------------------------------------------------------------
+        // LÓGICA DE INTERFACE
+        // -------------------------------------------------------------
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginContainer = document.getElementById('loginContainer');
+            const registerContainer = document.getElementById('registerContainer');
+            const showRegister = document.getElementById('showRegister');
+            const showLogin = document.getElementById('showLogin');
+            
+            // Alternar entre Login e Cadastro
+            if (showRegister) {
+                showRegister.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    loginContainer.classList.add('hidden');
+                    registerContainer.classList.remove('hidden');
+                    document.getElementById('loginError').classList.add('hidden');
+                });
+            }
+            if (showLogin) {
+                showLogin.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    registerContainer.classList.add('hidden');
+                    loginContainer.classList.remove('hidden');
+                    document.getElementById('registerError').classList.add('hidden');
+                });
+            }
+
+            // -------------------------------------------------------------
+            // CADASTRO (REGISTER)
+            // -------------------------------------------------------------
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const nome = document.getElementById('registerName').value.trim();
+                    const email = document.getElementById('registerEmail').value.trim();
+                    const senha = document.getElementById('registerPassword').value;
+
+                    document.getElementById('registerError').classList.add('hidden');
+
+                    if (!nome || !email || !senha) {
+                        mostrarErro('registerError', 'Preencha todos os campos.');
+                        return;
+                    }
+
+                    if (!validarEmail(email)) {
+                        mostrarErro('registerError', 'Email inválido.');
+                        return;
+                    }
+
+                    if (senha.length < 6) {
+                        mostrarErro('registerError', 'A senha deve ter pelo menos 6 caracteres.');
+                        return;
+                    }
+
+                    toggleLoading('registerButton', 'registerSpinner', 'registerButtonText', true);
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ nome, email, senha })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            // Substituindo alert() por showMessage()
+                            showMessage(data.message || 'Cadastro realizado com sucesso! Faça login.', true); 
+                            
+                            document.getElementById('registerForm').reset();
+                            
+                            // Redireciona para o formulário de login
+                            registerContainer.classList.add('hidden');
+                            loginContainer.classList.remove('hidden');
+
+                        } else {
+                            mostrarErro('registerError', data.message || 'Erro no cadastro.');
+                        }
+                    } catch (error) {
+                        console.error('Erro na requisição de cadastro:', error);
+                        mostrarErro('registerError', 'Erro no cadastro. Verifique a conexão.');
+                    } finally {
+                        toggleLoading('registerButton', 'registerSpinner', 'registerButtonText', false);
+                    }
+                });
+            }
+
+            // -------------------------------------------------------------
+            // LOGIN
+            // -------------------------------------------------------------
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const email = document.getElementById('loginEmail').value.trim();
+                    const senha = document.getElementById('loginPassword').value;
+
+                    document.getElementById('loginError').classList.add('hidden');
+
+                    if (!email || !senha) {
+                        mostrarErro('loginError', 'Preencha todos os campos.');
+                        return;
+                    }
+
+                    if (!validarEmail(email)) {
+                        mostrarErro('loginError', 'Email inválido.');
+                        return;
+                    }
+
+                    toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', true);
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, senha })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.auth) {
+                            console.log('Login bem-sucedido, salvando token');
+                            // O token é automaticamente salvo como cookie no backend,
+                            // mas manteremos o localStorage por segurança, se precisar.
+                            localStorage.setItem('token', data.token); 
+                            
+                            // 🔑 CORREÇÃO CRÍTICA: REDIRECIONANDO PARA A ROTA EXPRESS EJS
+                            console.log('Redirecionando para /app/painel'); 
+                            window.location.href = '/app/painel'; 
+                            
+                        } else {
+                            mostrarErro('loginError', data.message || 'Email ou senha incorretos.');
+                        }
+                    } catch (error) {
+                        console.error('Erro na requisição de login:', error);
+                        mostrarErro('loginError', 'Erro ao fazer login. Verifique a conexão.');
+                    } finally {
+                        toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
