@@ -75,16 +75,38 @@ app.use('/amizades', authenticateToken, amizadeRoutes);
 // 🔑 ROTAS DE VISUALIZAÇÃO (USANDO EJS)
 // =======================================================
 
+function renderViewToString(appInstance, viewName, data) {
+    return new Promise((resolve, reject) => {
+        // app.render() aceita o callback 'done' que estava faltando na chamada direta
+        appInstance.render(viewName, data, (err, html) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(html);
+        });
+    });
+}
 // Rota para a área do usuário logado (ex: Painel.ejs)
 // Agora renderiza o template .ejs em vez de servir o arquivo estático.
-app.get('/app/painel', authenticateToken, (req, res) => {
-    // O EJS irá procurar por 'painel.ejs' no array de views configurado.
-    // Você deve criar 'layout.ejs' e 'sidebar.ejs' no mesmo diretório ou em um central.
-    res.render('layout', { 
-        title: 'Painel do Usuário', 
-        // Renderiza Painel.ejs como string (o true é para retornar o HTML, não enviar)
-        body: res.render('Painel', { /* dados */ }, true) 
-    });
+app.get('/app/painel', authenticateToken, async (req, res) => {
+    try {
+        // Captura o HTML puro de Painel.ejs como string
+        const bodyContent = await renderViewToString(req.app, 'Painel', { 
+            // Passa o objeto do usuário (obtido do JWT) para a view Painel.ejs
+            user: req.user
+        });
+
+        // Renderiza o layout principal, injetando o Painel.ejs (bodyContent) no layout
+        res.render('layout', { 
+            title: 'Painel do Usuário | O Migrante', // Título para o <title> do HTML
+            body: bodyContent, // O conteúdo completo do Painel.ejs (incluindo o script, mas sem <html>)
+            user: req.user // O objeto user para ser usado dentro de layout.ejs (como na sidebar)
+        });
+    } catch (error) {
+        // Se houver um erro de renderização no Painel ou no Layout
+        console.error('Erro ao renderizar Painel:', error);
+        res.status(500).send('Erro interno ao carregar a página: ' + error.message);
+    }
 });
 
 // Rota para a área de ADMIN (Exemplo: Pesquisa de Usuários)
