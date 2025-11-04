@@ -1,175 +1,180 @@
-<%
-/* * Painel.ejs: Versão Corrigida
- * Este arquivo contém APENAS o HTML da seção principal do Dashboard.
- * As tags <html>, <head>, <body>, Sidebar, Mobile Header e scripts de layout foram removidos.
- * As variáveis 'user' e 'body' (neste contexto, não usada) são passadas pelo server.js.
-*/
-%>
+<% /* * Painel.ejs: Versão Corrigida * Este arquivo contém APENAS o HTML da seção principal do Dashboard. * As tags
+  <html>,
 
-<section class="max-w-5xl mx-auto space-y-8">
-    <div
+  <head>,
+
+  <body>, Sidebar, Mobile Header e scripts de layout foram removidos.
+    * As variáveis 'user' e 'body' (neste contexto, não usada) são passadas pelo server.js.
+    */
+    %>
+
+    <section class="max-w-5xl mx-auto space-y-8">
+      <div
         class="flex flex-col md:flex-row md:justify-between md:items-center bg-white rounded-2xl shadow-sm p-8 fadeInUp delay-100">
         <div>
-            <h1 class="text-3xl font-semibold text-[#111827] mb-1 select-none">
-                Bem-vindo,
-                <span id="userName"><%= user ? user.nome : 'Usuário' %></span>!
-            </h1>
-            <p class="text-gray-600 select-none">Você está logado com sucesso.</p>
+          <h1 class="text-3xl font-semibold text-[#111827] mb-1 select-none">
+            Bem-vindo,
+            <span class="font-bold">
+              <%= user ? user.nome : 'Usuário' %>
+            </span>!
+          </h1>
+          <p class="text-gray-600 select-none">Você está logado com sucesso.</p>
         </div>
-        <button
-            class="mt-6 md:mt-0 bg-[#2563eb] hover:bg-[#1e40af] text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#1e40af] flex items-center select-none"
-            id="logoutButtonConteudo">
-            <i class="fas fa-sign-out-alt mr-2"></i>Sair
-        </button>
-    </div>
+      </div>
+      <button
+        class="mt-6 md:mt-0 bg-[#2563eb] hover:bg-[#1e40af] text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#1e40af] flex items-center select-none"
+        id="logoutButtonConteudo">
+        <i class="fas fa-sign-out-alt mr-2"></i>Sair
+      </button>
+      </div>
 
-    <section aria-label="Acesso rápido" class="grid grid-cols-1 gap-6 fadeInUp delay-200 max-w-6xl mx-auto">
+      <section aria-label="Acesso rápido" class="grid grid-cols-1 gap-6 fadeInUp delay-200 max-w-6xl mx-auto">
         <div id="mensagemDiaria"
-            class="bg-white rounded-2xl shadow-sm p-6 flex flex-col text-left hover:shadow-md transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-[#2563eb] cursor-pointer select-none"
-            tabindex="0">
-            <div class="flex items-center mb-2">
-                <span class="font-semibold text-[#2563eb] text-lg">Mensagem Diária</span>
-            </div>
-            <h3 id="mensagemTitulo" class="font-semibold text-[#111827] text-xl mb-2"></h3>
-            <p id="mensagemTextoBase" class="text-sm text-gray-600 mb-2"></p>
-            <p id="mensagemDescricao" class="text-gray-700"></p>
-            <p id="mensagemErro" class="text-gray-500 hidden">
-                Nenhuma mensagem disponível hoje.
-            </p>
+          class="bg-white rounded-2xl shadow-sm p-6 flex flex-col text-left hover:shadow-md transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-[#2563eb] cursor-pointer select-none"
+          tabindex="0">
+          <div class="flex items-center mb-2">
+            <span class="font-semibold text-[#2563eb] text-lg">Mensagem Diária</span>
+          </div>
+          <h3 id="mensagemTitulo" class="font-semibold text-[#111827] text-xl mb-2"></h3>
+          <p id="mensagemTextoBase" class="text-sm text-gray-600 mb-2"></p>
+          <p id="mensagemDescricao" class="text-gray-700"></p>
+          <p id="mensagemErro" class="text-gray-500 hidden">
+            Nenhuma mensagem disponível hoje.
+          </p>
         </div>
-    </section>
+      </section>
 
-    <section aria-label="Atividades recentes do usuário"
+      <section aria-label="Atividades recentes do usuário"
         class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm p-8 fadeInUp delay-400">
         <h2 class="text-xl font-semibold text-[#111827] mb-6 select-none">
-            notificações
+          notificações
         </h2>
         <ul class="space-y-4 text-gray-700">
-            <li class="flex items-center space-x-3">
-                <i aria-hidden="true" class="fas fa-check-circle text-[#2563eb]"></i>
-                <span>
-                    Você completou a missão
-                    <strong class="text-[#111827]">"Descobrir o Novo Testamento"</strong>.
-                </span>
-            </li>
-            <li class="flex items-center space-x-3">
-                <i aria-hidden="true" class="fas fa-save text-[#2563eb]"></i>
-                <span>
-                    Você salvou uma anotação na
-                    <strong class="text-[#111827]">Biblioteca Bíblica</strong>.
-                </span>
-            </li>
-            <li class="flex items-center space-x-3">
-                <i aria-hidden="true" class="fas fa-comment-alt text-[#2563eb]"></i>
-                <span>Você enviou uma mensagem diária para o grupo.</span>
-            </li>
-            <li class="flex items-center space-x-3">
-                <i aria-hidden="true" class="fas fa-cog text-[#2563eb]"></i>
-                <span>Você atualizou suas configurações de perfil.</span>
-            </li>
-            <li class="flex items-center space-x-3">
-                <i aria-hidden="true" class="fas fa-flag-checkered text-[#2563eb]"></i>
-                <span>
-                    Você iniciou a missão
-                    <strong class="text-[#111827]">"Estudo do Antigo Testamento"</strong>.
-                </span>
-            </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-check-circle text-[#2563eb]"></i>
+            <span>
+              Você completou a missão
+              <strong class="text-[#111827]">"Descobrir o Novo Testamento"</strong>.
+            </span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-save text-[#2563eb]"></i>
+            <span>
+              Você salvou uma anotação na
+              <strong class="text-[#111827]">Biblioteca Bíblica</strong>.
+            </span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-comment-alt text-[#2563eb]"></i>
+            <span>Você enviou uma mensagem diária para o grupo.</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-cog text-[#2563eb]"></i>
+            <span>Você atualizou suas configurações de perfil.</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-flag-checkered text-[#2563eb]"></i>
+            <span>
+              Você iniciou a missão
+              <strong class="text-[#111827]">"Estudo do Antigo Testamento"</strong>.
+            </span>
+          </li>
         </ul>
+      </section>
     </section>
-</section>
 
-<script>
-    console.log("Script do Painel.ejs carregado");
+    <script>
+      console.log("Script do Painel.ejs carregado");
 
-    // Lógica que era feita pelo verifyToken, mas agora é redundante 
-    // pois o Express já autenticou antes de renderizar a página.
+      // Lógica que era feita pelo verifyToken, mas agora é redundante 
+      // pois o Express já autenticou antes de renderizar a página.
 
-    function showFeedback(message, isError = true) {
+      function showFeedback(message, isError = true) {
         const feedbackDiv = document.createElement("div");
         feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? "bg-red-500" : "bg-green-500"
-            } text-white z-50`;
+          } text-white z-50`;
         feedbackDiv.textContent = message;
         document.body.appendChild(feedbackDiv);
         setTimeout(() => feedbackDiv.remove(), 3000);
-    }
+      }
 
-    function getVersionName(version) {
+      function getVersionName(version) {
         const versions = {
-            acf: "Almeida Corrigida Fiel",
-            nvi: "Nova Versão Internacional",
-            aa: "Almeida Atualizada",
+          acf: "Almeida Corrigida Fiel",
+          nvi: "Nova Versão Internacional",
+          aa: "Almeida Atualizada",
         };
         return versions[version] || version;
-    }
+      }
 
-    async function loadMensagemDiaria() {
+      async function loadMensagemDiaria() {
         try {
-            // Mantenha o localhost para testes, mas use API_BASE_URL se estiver definido globalmente ou um caminho relativo /mensagens/diaria se a rota estiver no mesmo servidor
-            const response = await fetch("/mensagens/diaria", {
-                method: "GET",
+          // Mantenha o localhost para testes, mas use API_BASE_URL se estiver definido globalmente ou um caminho relativo /mensagens/diaria se a rota estiver no mesmo servidor
+          const response = await fetch("/mensagens/diaria", {
+            method: "GET",
+          });
+          console.log("Resposta de /mensagens/diaria:", response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          console.log("Dados de /mensagens/diaria:", data);
+
+          const mensagemTitulo = document.getElementById("mensagemTitulo");
+          const mensagemTextoBase = document.getElementById("mensagemTextoBase");
+          const mensagemDescricao = document.getElementById("mensagemDescricao");
+          const mensagemErro = document.getElementById("mensagemErro");
+
+          if (!data.success || !data.mensagem) {
+            if (mensagemErro) mensagemErro.classList.remove("hidden");
+            return;
+          }
+
+          const {
+            versao,
+            livro,
+            capitulo,
+            versiculo,
+            descricao,
+          } = data.mensagem;
+
+          if (mensagemTitulo) mensagemTitulo.textContent = data.mensagem.titulo;
+          if (mensagemTextoBase) mensagemTextoBase.textContent = `${livro} ${capitulo}:${versiculo} (${getVersionName(versao)})`;
+          if (mensagemDescricao) mensagemDescricao.textContent = descricao;
+
+
+          // Correção: Mude o link para rotas Express EJS (idealmente /app/biblia) ou mantenha o caminho estático se necessário:
+          const mensagemDiaria = document.getElementById("mensagemDiaria");
+          if (mensagemDiaria) {
+            mensagemDiaria.addEventListener("click", () => {
+              // IDEAL: window.location.href = `/app/biblia?versao=${versao}&livro=${encodeURIComponent(livro)}&capitulo=${capitulo}&versiculo=${versiculo}`;
+              window.location.href = `/biblia/Biblia.html?versao=${versao}&livro=${encodeURIComponent(
+                livro
+              )}&capitulo=${capitulo}&versiculo=${versiculo}`; // Mantendo o caminho estático temporariamente
             });
-            console.log("Resposta de /mensagens/diaria:", response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            const data = await response.json();
-            console.log("Dados de /mensagens/diaria:", data);
-            
-            const mensagemTitulo = document.getElementById("mensagemTitulo");
-            const mensagemTextoBase = document.getElementById("mensagemTextoBase");
-            const mensagemDescricao = document.getElementById("mensagemDescricao");
-            const mensagemErro = document.getElementById("mensagemErro");
-
-            if (!data.success || !data.mensagem) {
-                if(mensagemErro) mensagemErro.classList.remove("hidden");
-                return;
-            }
-
-            const {
-                versao,
-                livro,
-                capitulo,
-                versiculo,
-                descricao,
-            } = data.mensagem;
-            
-            if(mensagemTitulo) mensagemTitulo.textContent = data.mensagem.titulo;
-            if(mensagemTextoBase) mensagemTextoBase.textContent = `${livro} ${capitulo}:${versiculo} (${getVersionName(versao)})`;
-            if(mensagemDescricao) mensagemDescricao.textContent = descricao;
-
-
-            // Correção: Mude o link para rotas Express EJS (idealmente /app/biblia) ou mantenha o caminho estático se necessário:
-            const mensagemDiaria = document.getElementById("mensagemDiaria");
-            if(mensagemDiaria) {
-                mensagemDiaria.addEventListener("click", () => {
-                    // IDEAL: window.location.href = `/app/biblia?versao=${versao}&livro=${encodeURIComponent(livro)}&capitulo=${capitulo}&versiculo=${versiculo}`;
-                    window.location.href = `/biblia/Biblia.html?versao=${versao}&livro=${encodeURIComponent(
-                        livro
-                    )}&capitulo=${capitulo}&versiculo=${versiculo}`; // Mantendo o caminho estático temporariamente
-                });
-            }
+          }
         } catch (error) {
-            console.error("Erro ao carregar mensagem:", error);
-            const mensagemErro = document.getElementById("mensagemErro");
-            if(mensagemErro) mensagemErro.classList.remove("hidden");
+          console.error("Erro ao carregar mensagem:", error);
+          const mensagemErro = document.getElementById("mensagemErro");
+          if (mensagemErro) mensagemErro.classList.remove("hidden");
         }
-    }
+      }
 
-    // A função logout deve ser global (em layout.ejs)
+      // A função logout deve ser global (em layout.ejs)
 
-    const logoutButtonConteudo = document.getElementById("logoutButtonConteudo");
-    // Se a função 'logout' estiver globalmente definida em layout.ejs, podemos usá-la.
-    if (logoutButtonConteudo && typeof logout === 'function') {
+      const logoutButtonConteudo = document.getElementById("logoutButtonConteudo");
+      // Se a função 'logout' estiver globalmente definida em layout.ejs, podemos usá-la.
+      if (logoutButtonConteudo && typeof logout === 'function') {
         logoutButtonConteudo.addEventListener("click", logout);
-    } else {
+      } else {
         // Fallback se a função global ainda não foi definida:
         logoutButtonConteudo.addEventListener("click", () => {
-            localStorage.removeItem("token");
-            fetch('/auth/logout', { method: 'POST' })
-             .finally(() => { window.location.href = "/"; });
+          localStorage.removeItem("token");
+          fetch('/auth/logout', { method: 'POST' })
+            .finally(() => { window.location.href = "/"; });
         });
-    }
+      }
 
-    // Chamada inicial
-    loadMensagemDiaria();
-</script>
+      // Chamada inicial
+      loadMensagemDiaria();
+    </script>

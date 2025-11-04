@@ -164,4 +164,12 @@ router.put('/atualizar', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/app/painel', authenticateToken, (req, res) => {
+    // req.user deve ser preenchido pelo middleware authenticateToken
+    res.render('public/telas/Painel', { 
+        user: req.user, // ESTA LINHA É CRÍTICA!
+        body: {} 
+    });
+});
+
 module.exports = router;
