@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 // Se o DB_PORT não estiver definido, o default é 3306 (padrão)
