@@ -28,13 +28,18 @@
                 transform: translateX(0);
             }
         }
+        
+        /* Adiciona transição para o ícone de dropdown */
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 
 <body class="bg-gray-100">
     <div class="min-h-screen flex">
         <!-- Sidebar (Duplicada da sua sidebar.ejs, para este arquivo standalone) -->
-        <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
+        <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto" id="sidebar">
             <h2 class="text-2xl font-bold mb-6 select-none text-[#2563eb] flex items-center space-x-2">
                 <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32" loading="lazy"
                     src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" width="32" />
@@ -72,7 +77,7 @@
                             <span>
                                 <i class="fas fa-cog mr-3"></i>Administração
                             </span>
-                            <i class="fas fa-chevron-down ml-2"></i>
+                            <i class="fas fa-chevron-down ml-2 transition-transform duration-200"></i>
                         </button>
                         <ul aria-label="Submenu Administração"
                             class="hidden absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg z-40"
@@ -212,14 +217,13 @@
 
         /**
          * Função para carregar dados do usuário para edição.
-         * TORNADA GLOBAL para ser chamada pelo onclick.
-         * @param {string} id - O ID do usuário (deve ser passado como string com aspas no HTML).
+         * @param {string} id - O ID do usuário (pode ser string ou número).
          */
         async function editarUsuario(id) {
             console.log('Botão Editar Clicado. Tentando carregar usuário:', id);
             
             // Tenta encontrar o usuário na lista já buscada
-            const usuario = lastSearchedUsers.find(u => u.id_usuario === id);
+            const usuario = lastSearchedUsers.find(u => String(u.id_usuario) === String(id));
             
             if (!usuario) {
                 showFeedback("Dados do usuário não encontrados localmente. Tentando buscar na API.");
@@ -263,9 +267,6 @@
             document.getElementById('usuariosTable').classList.add('hidden');
         }
         
-        // Atribui a função ao objeto window para que possa ser chamada pelo onclick no HTML
-        window.editarUsuario = editarUsuario;
-
         // Função para renderizar usuários na tabela
         function renderUsuarios(usuarios) {
             const tbody = document.getElementById('usuariosTableBody');
@@ -279,11 +280,9 @@
             }
 
             usuarios.forEach(usuario => {
-                // CORREÇÃO CRÍTICA: Envolver o ID do usuário em aspas simples no onclick.
-                // Isso garante que o ID (se for string, como um UUID) seja passado como literal
-                // para a função JS, evitando erro de referência.
                 const idString = usuario.id_usuario ? String(usuario.id_usuario) : '';
                 
+                // NOVO: Usa data-user-id em vez de onclick inline
                 const row = `
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="py-3 px-4 border-b text-left text-xs text-gray-600">${idString}</td>
@@ -295,7 +294,7 @@
                     <td class="py-3 px-4 border-b text-left">
                         <button 
                             class="bg-yellow-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-yellow-600 transition duration-150 shadow-sm"
-                            onclick="editarUsuario('${idString}')"
+                            data-user-id="${idString}" 
                         >
                             <i class="fas fa-edit mr-1"></i> Editar
                         </button>
@@ -310,7 +309,7 @@
         
         // --- Setup Inicial e Verificação de Autenticação ---
         document.addEventListener("DOMContentLoaded", async () => {
-            const sidebar = document.querySelector('.bg-white.w-64');
+            const sidebar = document.getElementById('sidebar');
             const mobileMenuButton = document.getElementById('mobileMenuButton');
             
             // Toggle do menu mobile
@@ -327,7 +326,6 @@
 
                 if (response.status === 401 || response.status === 403 || !response.ok) {
                     showFeedback("Sessão expirada ou acesso restrito a administradores.", true);
-                    localStorage.removeItem('token'); 
                     setTimeout(() => window.location.href = "/", 3000); 
                     return;
                 }
@@ -335,6 +333,7 @@
                 
                 if (!data.auth || data.user.tipo !== 'admin') {
                     showFeedback("Acesso restrito a administradores. Redirecionando...", true);
+                    // Garante que o logout é feito antes do redirecionamento
                     fetch('/auth/logout', { method: 'POST' }).finally(() => {
                         setTimeout(() => window.location.href = "/", 3000);
                     });
@@ -363,10 +362,22 @@
             } catch (error) {
                 console.error("Erro ao verificar token:", error);
                 showFeedback("Erro ao verificar autenticação: " + error.message, true);
-                localStorage.removeItem('token');
                 setTimeout(() => window.location.href = "/", 3000);
             }
         });
+
+
+        // --- Event Delegation: Trata cliques no botão de edição ---
+        document.getElementById('usuariosTableBody').addEventListener('click', (e) => {
+            // Usa closest para encontrar o botão, mesmo que o clique seja no ícone ou texto interno
+            const editButton = e.target.closest('button[data-user-id]');
+            
+            if (editButton) {
+                const userId = editButton.getAttribute('data-user-id');
+                editarUsuario(userId); 
+            }
+        });
+
 
         // --- Event Listener: Busca de usuário ---
         document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
@@ -395,8 +406,8 @@
                         const errorData = await response.json();
                         errorMessage = errorData.error || errorData.message || errorMessage;
                     } catch (jsonError) {
-                         // Fallback para erros de rede ou servidor sem JSON
-                         errorMessage = `Erro de Servidor (${response.status} ${response.statusText})`;
+                        // Fallback para erros de rede ou servidor sem JSON
+                        errorMessage = `Erro de Servidor (${response.status} ${response.statusText})`;
                     }
                     throw new Error(errorMessage);
                 }
@@ -483,7 +494,6 @@
             console.log('Efetuando logout...');
             fetch('/auth/logout', { method: 'POST' })
                 .finally(() => {
-                    localStorage.removeItem('token'); 
                     showFeedback("Logout realizado com sucesso!", false);
                     setTimeout(() => window.location.href = "/", 2000); 
                 });
