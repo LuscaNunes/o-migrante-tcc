@@ -11,7 +11,7 @@ router.post('/login', async (req, res) => {
     console.log('Requisição de login recebida:', { email, senha: '****' });
 
     try {
-        const [rows] = await db.query('SELECT id, nome, email, senha_hash, tipo FROM usuarios WHERE email = ?', [email]); if (rows.length === 0) {
+        const [rows] = await db.query('SELECT id_usuario, nome, email, senha, tipo FROM Usuarios WHERE email = ?', [email]); if (rows.length === 0) {
             console.log('Usuário não encontrado');
             return res.status(401).json({ auth: false, message: 'Email ou senha incorretos.' });
         }

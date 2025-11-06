@@ -40,28 +40,24 @@ const pool = mysql.createPool(poolConfig);
 /**
  * Funções de Verificação (Usando o Pool)
  */
-pool.getConnection((err, connection) => {
-    if (err) {
-        console.error('Erro ao obter conexão do Pool:', err);
-        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            // Se o pool falhar, pode haver um problema de firewall/credenciais no início
-            console.error('Verifique as credenciais e o Firewall/ACL do TiDB!');
-        }
-        // Não é necessário reconexão manual aqui, o Pool gerencia isso.
-        // A falha inicial pode indicar um erro de configuração.
-    } else {
+pool.getConnection()
+    .then(connection => {
         console.log('Pool de conexões criado e funcionando. Conectado ao MySQL!');
-        // Se a conexão for bem-sucedida, você pode liberá-la e verificar o DB.
-        connection.query('SELECT DATABASE() AS db_name', (err, result) => {
-            if (err) {
-                console.error('Erro ao verificar banco de dados:', err);
-            } else {
-                console.log('Banco de dados atual:', result[0].db_name);
-            }
-            connection.release(); // LIBERA A CONEXÃO DE VOLTA AO POOL
-        });
-    }
-});
+        
+        // A conexão obtida também usa Promises
+        return connection.query('SELECT DATABASE() AS db_name')
+            .then(([rows]) => {
+                console.log('Banco de dados atual:', rows[0].db_name);
+                connection.release(); // LIBERA A CONEXÃO DE VOLTA AO POOL
+            });
+    })
+    .catch(err => {
+        // Captura o erro ao tentar obter a conexão
+        console.error('Erro ao conectar ou verificar o Pool:', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            console.error('Verifique as credenciais e o Firewall/ACL!');
+        }
+    });
 
 // Exporta o Pool, que é o que deve ser usado com .promise() nos seus routes
 module.exports = pool;
