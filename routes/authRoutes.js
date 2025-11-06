@@ -11,8 +11,7 @@ router.post('/login', async (req, res) => {
     console.log('Requisição de login recebida:', { email, senha: '****' });
 
     try {
-        const [rows] = await db.promise().query('SELECT * FROM Usuarios WHERE email = ?', [email]);
-        if (rows.length === 0) {
+        const [rows] = await db.query('SELECT id, nome, email, senha_hash, tipo FROM usuarios WHERE email = ?', [email]); if (rows.length === 0) {
             console.log('Usuário não encontrado');
             return res.status(401).json({ auth: false, message: 'Email ou senha incorretos.' });
         }
@@ -26,9 +25,9 @@ router.post('/login', async (req, res) => {
 
         const token = jwt.sign({ id: user.id_usuario, tipo: user.tipo }, process.env.JWT_SECRET, { expiresIn: '1h' });
         console.log('Token gerado para usuário:', user.id_usuario);
-        
+
         // 🛑 MUDANÇA CRUCIAL 1: Define o token como um cookie HTTP-only
-        res.cookie('token', token, { 
+        res.cookie('token', token, {
             httpOnly: true, // Impedir acesso via JS (Segurança)
             secure: process.env.NODE_ENV === 'production', // Apenas em HTTPS (Render)
             sameSite: 'strict', // Proteção contra CSRF
@@ -37,7 +36,7 @@ router.post('/login', async (req, res) => {
 
         // 🛑 MUDANÇA CRUCIAL 2: Retorna uma resposta de sucesso sem o token
         res.json({ auth: true, message: 'Login bem-sucedido.' }); // Token removido do JSON!
-        
+
     } catch (error) {
         console.error('Erro no login:', error);
         res.status(500).json({ auth: false, message: 'Erro no servidor' });
@@ -69,10 +68,10 @@ router.post('/register', async (req, res) => {
 // Logout route
 router.post('/logout', (req, res) => {
     // 🛑 Remove o cookie 'token'
-    res.clearCookie('token', { 
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === 'production', 
-        sameSite: 'strict' 
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
     });
     // Remove o token antigo do front-end (apenas para limpar)
     res.json({ auth: false, message: 'Logout bem-sucedido.' });
@@ -217,7 +216,7 @@ router.get('/teste-tabela', async (req, res) => {
         const [rows_upper_plural] = await db.promise().query('SELECT * FROM Usuarios LIMIT 1');
         return res.json({ success: true, tableName: 'Usuarios (U maiúsculo)', data: rows_upper_plural });
     } catch (error_upper_plural) {
-        
+
         try {
             // Tentativa 2: usuarios (minúsculo)
             const [rows_lower_plural] = await db.promise().query('SELECT * FROM usuarios LIMIT 1');
@@ -229,12 +228,12 @@ router.get('/teste-tabela', async (req, res) => {
                 const [rows_lower_singular] = await db.promise().query('SELECT * FROM usuario LIMIT 1');
                 return res.json({ success: true, tableName: 'usuario (singular, minúsculo)', data: rows_lower_singular });
             } catch (error_singular) {
-                
+
                 console.error('FALHA GERAL. O nome da tabela é outro:', error_singular);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Nenhuma das formas de capitalização Usuários/usuarios/usuario funcionou.', 
-                    error_original: error_singular.message 
+                return res.status(500).json({
+                    success: false,
+                    message: 'Nenhuma das formas de capitalização Usuários/usuarios/usuario funcionou.',
+                    error_original: error_singular.message
                 });
             }
         }
