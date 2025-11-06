@@ -6,9 +6,8 @@
   class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto"
   id="sidebar">
   <h2 class="text-2xl font-bold mb-6 select-none text-[#2563eb] flex items-center space-x-2">
-    <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32"
-      loading="lazy" src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
-      width="32" />
+    <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32" loading="lazy"
+      src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" width="32" />
     <span>O Migrante</span>
   </h2>
   <ul class="flex flex-col gap-2 w-full justify-start">
@@ -33,9 +32,9 @@
       <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
         href="../telas/telas testes/testestestes.html"><i class="fas fa-book mr-3"></i>The Good Friends</a>
     </li>
-    
+
     <!-- LÓGICA DE ADMINISTRAÇÃO USANDO EJS -->
-    <% if (user && user.tipo === 'admin') { %>
+    <% if (user && user.tipo==='admin' ) { %>
       <li class="mb-4 w-full" id="adminDropdown">
         <div class="relative w-full">
           <button aria-controls="adminMenuItems" aria-expanded="false"
@@ -69,9 +68,17 @@
               <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="../../admin/telas/MensagemDiaria.html"
                 role="menuitem">Cadastrar Mensagem do dia</a>
             </li>
+            <li role="none" class="border-t mt-1 pt-1">
+                            <a class="block px-4 py-2 hover:bg-red-100 text-[#111827] font-semibold"
+                href="../telas testes/testestestes.html"                 role="menuitem">TESTE: Estrutura Geral</a>
+                          </li>
+                        <li role="none">
+                            <a class="block px-4 py-2 hover:bg-red-100 text-[#111827] font-semibold"
+                href="../telas testes/testetempo.html"                 role="menuitem">TESTE: Componente Tempo</a>
+                          </li>
           </ul>
         </div>
       </li>
-    <% } %>
+      <% } %>
   </ul>
 </nav>
