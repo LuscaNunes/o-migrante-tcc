@@ -7,110 +7,141 @@
     <title>Busca e Edição de Usuários</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Usando Inter font para alinhamento com o Tailwind padrão -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Classes para a barra lateral responsiva, como no seu EJS */
+        .sidebar-desktop {
+            transform: translateX(0);
+        }
+
+        .sidebar-mobile {
+            transform: translateX(-100%);
+        }
+
+        @media (min-width: 768px) {
+            .sidebar-mobile {
+                transform: translateX(0);
+            }
         }
     </style>
 </head>
 
 <body class="bg-gray-100">
     <div class="min-h-screen flex">
-        <!-- Sidebar -->
-        <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen">
-            <h2 class="text-2xl font-bold mb-6">Menu</h2>
-            <ul>
-                <li class="mb-4">
-                    <a href="/public/telas/Painel.html"
-                        class="flex items-center text-gray-700 hover:text-blue-500 hover:bg-blue-100 py-2 px-3 rounded">
-                        <i class="fas fa-home mr-3"></i> Inicio
-                    </a>
+        <!-- Sidebar (Duplicada da sua sidebar.ejs, para este arquivo standalone) -->
+        <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-6 select-none text-[#2563eb] flex items-center space-x-2">
+                <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32" loading="lazy"
+                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" width="32" />
+                <span>O Migrante</span>
+            </h2>
+            <ul class="flex flex-col gap-2 w-full justify-start">
+                <!-- Links de Navegação -->
+                <li>
+                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
+                        href="/app/painel"><i class="fas fa-home mr-3"></i>Início</a>
                 </li>
-                <li class="mb-4">
-                    <a href="/public/telas/DadoUsuario.html"
-                        class="flex items-center text-gray-700 hover:text-blue-500 hover:bg-blue-100 py-2 px-3 rounded">
-                        <i class="fas fa-user mr-3"></i> Perfil
-                    </a>
+                <li>
+                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
+                        href="DadoUsuario.html"><i class="fas fa-user mr-3"></i>Perfil</a>
                 </li>
-                <li class="mb-4">
-                    <a href="/public/telas/Fases.html"
-                        class="flex items-center text-gray-700 hover:text-blue-500 hover:bg-blue-100 py-2 px-3 rounded">
-                        <i class="fas fa-tasks mr-3"></i> Missão
-                    </a>
+                <li>
+                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
+                        href="Fases.html"><i class="fas fa-tasks mr-3"></i>Missão</a>
                 </li>
-                <li class="mb-4">
-                    <a href="/public/Biblioteca/paginaBiblioteca.html"
-                        class="flex items-center text-gray-700 hover:text-blue-500 hover:bg-blue-100 py-2 px-3 rounded">
-                        <i class="fas fa-book mr-3"></i> Biblioteca
-                    </a>
+                <li>
+                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
+                        href="../Biblioteca/paginaBiblioteca.html"><i class="fas fa-book mr-3"></i>Biblioteca</a>
+                </li>
+                <li>
+                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
+                        href="../telas/telas testes/testestestes.html"><i class="fas fa-book mr-3"></i>The Good Friends</a>
                 </li>
 
-                <li id="adminDropdown" class="mb-4 hidden">
-                    <div class="relative">
-                        <button id="adminMenuButton"
-                            class="flex items-center text-gray-700 hover:text-blue-500 hover:bg-blue-100 py-2 px-3 rounded w-full">
-                            <i class="fas fa-cog mr-3"></i> Administração
-                            <i class="fas fa-chevron-down ml-auto"></i>
+                <!-- LÓGICA DE ADMINISTRAÇÃO USANDO JS/HTML -->
+                <li class="mb-4 w-full hidden" id="adminDropdown">
+                    <div class="relative w-full">
+                        <button aria-controls="adminMenuItems" aria-expanded="false"
+                            class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg w-full transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] justify-between"
+                            id="adminMenuButton">
+                            <span>
+                                <i class="fas fa-cog mr-3"></i>Administração
+                            </span>
+                            <i class="fas fa-chevron-down ml-2"></i>
                         </button>
-                        <ul id="adminMenuItems" class="hidden absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-lg z-10">
-                            <li>
-                                <!-- CORREÇÃO AQUI: Aponta para o próprio arquivo para exibir a busca de usuários -->
-                                <a href="BuscaEdicaoUsuario.html"
-                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Usuários</a>
+                        <ul aria-label="Submenu Administração"
+                            class="hidden absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg z-40"
+                            id="adminMenuItems" role="menu">
+                            <li role="none">
+                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
+                                    href="BuscaEdicaoUsuario.html" role="menuitem">Usuários</a>
                             </li>
-                            <li>
-                                <a href="CaPerguntas.html"
-                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Cadastrar
-                                    Perguntas</a>
+                            <li role="none">
+                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
+                                    href="CaPerguntas.html" role="menuitem">Cadastrar Níveis e Perguntas</a>
                             </li>
-                            <li>
-                                <a href="DadosFases.html"
-                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Dados
-                                    das Fases</a>
+                            <li role="none">
+                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
+                                    href="DadosFases.html" role="menuitem">Dados das Fases</a>
                             </li>
-                            <li>
-                                <a href="DadosNiveis.html"
-                                    class="block px-4 py-2 text-gray-700 hover:text-blue-500 hover:bg-blue-100">Busca de
-                                    Níveis e Edição</a>
+                            <li role="none">
+                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
+                                    href="DadosNiveis.html" role="menuitem">Editar Níveis e Perguntas</a>
+                            </li>
+                            <li role="none">
+                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
+                                    href="MensagemDiaria.html" role="menuitem">Cadastrar Mensagem do dia</a>
+                            </li>
+                            <li role="none">
+                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
+                                    href="../telas/telas testes/testestestes.html" role="menuitem">Tela de Teste</a>
                             </li>
                         </ul>
                     </div>
                 </li>
             </ul>
         </div>
-
         <!-- Main Content -->
-        <div class="flex-1 p-8 ml-64">
+        <div class="flex-1 p-8 md:ml-64">
+            <!-- Botão para mobile menu (adicionado para consistência) -->
+            <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg bg-white shadow mb-4">
+                <i class="fas fa-bars text-[#2563eb]"></i>
+            </button>
+
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold">Busca e Edição de Usuários</h2>
-                <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Sair</button>
+                <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition duration-150 shadow-md">Sair</button>
             </div>
 
             <!-- Formulário de Busca -->
-            <form id="buscaUsuarioForm" class="bg-white p-6 rounded-lg shadow-lg mb-8">
+            <form id="buscaUsuarioForm" class="bg-white p-6 rounded-xl shadow-lg mb-8">
                 <h3 class="text-xl font-bold mb-4">Buscar Usuário</h3>
                 <div class="mb-4">
                     <label for="buscaUsuario" class="block text-gray-700 font-bold mb-2">ID, Nome ou E-mail:</label>
-                    <input type="text" id="buscaUsuario" class="w-full p-2 border rounded-lg" required>
+                    <input type="text" id="buscaUsuario" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                 </div>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Buscar</button>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition duration-150 shadow-md">Buscar</button>
             </form>
 
             <!-- Tabela de Usuários -->
-            <div id="usuariosTable" class="bg-white p-6 rounded-lg shadow-lg hidden">
+            <div id="usuariosTable" class="bg-white p-6 rounded-xl shadow-lg hidden">
                 <h3 class="text-xl font-bold mb-4">Resultados</h3>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white">
+                    <table class="min-w-full bg-white border-collapse">
                         <thead>
-                            <tr>
-                                <th class="py-2 px-4 border-b text-left">ID</th>
-                                <th class="py-2 px-4 border-b text-left">Nome</th>
-                                <th class="py-2 px-4 border-b text-left">Email</th>
-                                <th class="py-2 px-4 border-b text-left">Tipo</th>
-                                <th class="py-2 px-4 border-b text-left">XP Total</th>
-                                <th class="py-2 px-4 border-b text-left">Fase Atual</th>
-                                <th class="py-2 px-4 border-b text-left">Ações</th>
+                            <tr class="bg-gray-50 border-b">
+                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">ID</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Nome</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Email</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Tipo</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">XP Total</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Fase Atual</th>
+                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="usuariosTableBody">
@@ -120,34 +151,39 @@
             </div>
 
             <!-- Formulário de Edição -->
-            <form id="editaUsuarioForm" class="bg-white p-6 rounded-lg shadow-lg hidden">
-                <h3 class="text-xl font-bold mb-4">Editar Usuário</h3>
+            <form id="editaUsuarioForm" class="bg-white p-6 rounded-xl shadow-lg hidden mt-8">
+                <h3 class="text-xl font-bold mb-4 text-blue-600">Editar Usuário Selecionado</h3>
                 <input type="hidden" id="editaUsuarioId">
-                <div class="mb-4">
-                    <label for="editaUsuarioNome" class="block text-gray-700 font-bold mb-2">Nome:</label>
-                    <input type="text" id="editaUsuarioNome" class="w-full p-2 border rounded-lg" required>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="editaUsuarioNome" class="block text-gray-700 font-bold mb-2">Nome:</label>
+                        <input type="text" id="editaUsuarioNome" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editaUsuarioEmail" class="block text-gray-700 font-bold mb-2">Email:</label>
+                        <input type="email" id="editaUsuarioEmail" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editaUsuarioTipo" class="block text-gray-700 font-bold mb-2">Tipo:</label>
+                        <select id="editaUsuarioTipo" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editaUsuarioXpTotal" class="block text-gray-700 font-bold mb-2">XP Total:</label>
+                        <input type="number" id="editaUsuarioXpTotal" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editaUsuarioFaseAtual" class="block text-gray-700 font-bold mb-2">Fase Atual:</label>
+                        <input type="number" id="editaUsuarioFaseAtual" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label for="editaUsuarioEmail" class="block text-gray-700 font-bold mb-2">Email:</label>
-                    <input type="email" id="editaUsuarioEmail" class="w-full p-2 border rounded-lg" required>
+                
+                <div class="mt-4 flex gap-2">
+                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition duration-150 shadow-md">Salvar Alterações</button>
+                    <button type="reset" class="bg-gray-500 text-white px-6 py-2 rounded-xl hover:bg-gray-600 transition duration-150 shadow-md">Cancelar</button>
                 </div>
-                <div class="mb-4">
-                    <label for="editaUsuarioTipo" class="block text-gray-700 font-bold mb-2">Tipo:</label>
-                    <select id="editaUsuarioTipo" class="w-full p-2 border rounded-lg" required>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label for="editaUsuarioXpTotal" class="block text-gray-700 font-bold mb-2">XP Total:</label>
-                    <input type="number" id="editaUsuarioXpTotal" class="w-full p-2 border rounded-lg" required>
-                </div>
-                <div class="mb-4">
-                    <label for="editaUsuarioFaseAtual" class="block text-gray-700 font-bold mb-2">Fase Atual:</label>
-                    <input type="number" id="editaUsuarioFaseAtual" class="w-full p-2 border rounded-lg" required>
-                </div>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Salvar</button>
-                <button type="reset" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-2">Cancelar</button>
             </form>
         </div>
     </div>
@@ -155,20 +191,30 @@
     <script>
         const API_BASE_URL = 'https://o-migrante.onrender.com';
         const API_USER_PATH = '/usuarios';
-
-        // Variável global para armazenar os usuários buscados para fácil acesso na edição
+        
+        // Variável global para armazenar os usuários buscados
         let lastSearchedUsers = [];
 
         // Função para exibir mensagens de feedback
         function showFeedback(message, isError = true) {
+            const existingFeedback = document.querySelector('.feedback-message');
+            if (existingFeedback) existingFeedback.remove();
+
             const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
+            feedbackDiv.className = `feedback-message fixed bottom-4 right-4 p-4 rounded-xl shadow-2xl ${isError ? 'bg-red-600' : 'bg-green-600'} text-white z-50 transition-opacity duration-300`;
             feedbackDiv.textContent = message;
             document.body.appendChild(feedbackDiv);
-            setTimeout(() => feedbackDiv.remove(), 3000);
+            setTimeout(() => {
+                feedbackDiv.style.opacity = '0';
+                setTimeout(() => feedbackDiv.remove(), 300);
+            }, 3000);
         }
 
-        // Função para carregar dados do usuário para edição (TORNADA GLOBAL)
+        /**
+         * Função para carregar dados do usuário para edição.
+         * TORNADA GLOBAL para ser chamada pelo onclick.
+         * @param {string} id - O ID do usuário (deve ser passado como string com aspas no HTML).
+         */
         async function editarUsuario(id) {
             console.log('Botão Editar Clicado. Tentando carregar usuário:', id);
             
@@ -189,12 +235,12 @@
                     }
                     const data = await response.json();
                     
-                    document.getElementById('editaUsuarioId').value = data.id_usuario;
-                    document.getElementById('editaUsuarioNome').value = data.nome;
-                    document.getElementById('editaUsuarioEmail').value = data.email;
-                    document.getElementById('editaUsuarioTipo').value = data.tipo;
-                    document.getElementById('editaUsuarioXpTotal').value = data.xp_total;
-                    document.getElementById('editaUsuarioFaseAtual').value = data.fase_atual;
+                    document.getElementById('editaUsuarioId').value = data.id_usuario || '';
+                    document.getElementById('editaUsuarioNome').value = data.nome || '';
+                    document.getElementById('editaUsuarioEmail').value = data.email || '';
+                    document.getElementById('editaUsuarioTipo').value = data.tipo || 'user';
+                    document.getElementById('editaUsuarioXpTotal').value = data.xp_total || 0;
+                    document.getElementById('editaUsuarioFaseAtual').value = data.fase_atual || 1;
                     document.getElementById('editaUsuarioForm').classList.remove('hidden');
 
                 } catch (error) {
@@ -203,15 +249,18 @@
                     return;
                 }
             } else {
-                 // Usa os dados do objeto encontrado
-                document.getElementById('editaUsuarioId').value = usuario.id_usuario;
-                document.getElementById('editaUsuarioNome').value = usuario.nome;
-                document.getElementById('editaUsuarioEmail').value = usuario.email;
-                document.getElementById('editaUsuarioTipo').value = usuario.tipo;
-                document.getElementById('editaUsuarioXpTotal').value = usuario.xp_total;
-                document.getElementById('editaUsuarioFaseAtual').value = usuario.fase_atual;
+                // Usa os dados do objeto encontrado
+                document.getElementById('editaUsuarioId').value = usuario.id_usuario || '';
+                document.getElementById('editaUsuarioNome').value = usuario.nome || '';
+                document.getElementById('editaUsuarioEmail').value = usuario.email || '';
+                document.getElementById('editaUsuarioTipo').value = usuario.tipo || 'user';
+                document.getElementById('editaUsuarioXpTotal').value = usuario.xp_total || 0;
+                document.getElementById('editaUsuarioFaseAtual').value = usuario.fase_atual || 1;
                 document.getElementById('editaUsuarioForm').classList.remove('hidden');
             }
+
+            // Oculta a tabela de resultados para focar na edição
+            document.getElementById('usuariosTable').classList.add('hidden');
         }
         
         // Atribui a função ao objeto window para que possa ser chamada pelo onclick no HTML
@@ -223,25 +272,30 @@
             tbody.innerHTML = '';
             lastSearchedUsers = usuarios; // Armazena os usuários buscados
 
-            if (usuarios.length === 0) {
-                showFeedback("Nenhum usuário encontrado.");
+            if (!usuarios || usuarios.length === 0) {
+                showFeedback("Nenhum usuário encontrado.", true);
                 document.getElementById('usuariosTable').classList.add('hidden');
                 return;
             }
 
             usuarios.forEach(usuario => {
+                // CORREÇÃO CRÍTICA: Envolver o ID do usuário em aspas simples no onclick.
+                // Isso garante que o ID (se for string, como um UUID) seja passado como literal
+                // para a função JS, evitando erro de referência.
+                const idString = usuario.id_usuario ? String(usuario.id_usuario) : '';
+                
                 const row = `
-                <tr>
-                    <td class="py-2 px-4 border-b text-left text-sm">${usuario.id_usuario}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.nome}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.email}</td>
-                    <td class="py-2 px-4 border-b text-left capitalize">${usuario.tipo}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.xp_total}</td>
-                    <td class="py-2 px-4 border-b text-left">${usuario.fase_atual}</td>
-                    <td class="py-2 px-4 border-b text-left">
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="py-3 px-4 border-b text-left text-xs text-gray-600">${idString}</td>
+                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.nome || '-'}</td>
+                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.email || '-'}</td>
+                    <td class="py-3 px-4 border-b text-left capitalize text-gray-800">${usuario.tipo || 'user'}</td>
+                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.xp_total || 0}</td>
+                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.fase_atual || 1}</td>
+                    <td class="py-3 px-4 border-b text-left">
                         <button 
-                            class="bg-yellow-500 text-white px-3 py-1 text-sm rounded hover:bg-yellow-600 transition duration-150"
-                            onclick="editarUsuario(${usuario.id_usuario})"
+                            class="bg-yellow-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-yellow-600 transition duration-150 shadow-sm"
+                            onclick="editarUsuario('${idString}')"
                         >
                             <i class="fas fa-edit mr-1"></i> Editar
                         </button>
@@ -254,25 +308,33 @@
             document.getElementById('usuariosTable').classList.remove('hidden');
         }
         
-        // Verifica autenticação e tipo de usuário
+        // --- Setup Inicial e Verificação de Autenticação ---
         document.addEventListener("DOMContentLoaded", async () => {
+            const sidebar = document.querySelector('.bg-white.w-64');
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            
+            // Toggle do menu mobile
+            mobileMenuButton.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+            
             try {
                 console.log('Verificando autenticação via Cookie...');
                 const response = await fetch("/auth/verifyToken", {
                     method: "GET",
+                    credentials: 'include',
                 });
-                console.log('Resposta da verificação:', response.status, response.statusText);
+
                 if (response.status === 401 || response.status === 403 || !response.ok) {
+                    showFeedback("Sessão expirada ou acesso restrito a administradores.", true);
                     localStorage.removeItem('token'); 
-                    showFeedback("Sessão expirada ou acesso restrito a administradores.");
                     setTimeout(() => window.location.href = "/", 3000); 
                     return;
                 }
                 const data = await response.json();
-                console.log('Dados do usuário autenticado:', data);
+                
                 if (!data.auth || data.user.tipo !== 'admin') {
-                    localStorage.removeItem('token');
-                    showFeedback("Acesso restrito a administradores.");
+                    showFeedback("Acesso restrito a administradores. Redirecionando...", true);
                     fetch('/auth/logout', { method: 'POST' }).finally(() => {
                         setTimeout(() => window.location.href = "/", 3000);
                     });
@@ -284,39 +346,42 @@
                     const adminMenuButton = document.getElementById('adminMenuButton');
                     const adminMenuItems = document.getElementById('adminMenuItems');
 
+                    // Lógica de dropdown
                     adminMenuButton.addEventListener('click', (e) => {
                         e.stopPropagation();
                         adminMenuItems.classList.toggle('hidden');
+                        adminMenuButton.querySelector('.fa-chevron-down').classList.toggle('rotate-180');
                     });
 
                     document.addEventListener('click', (e) => {
-                        if (!adminMenuButton.contains(e.target) && !adminMenuItems.contains(e.target)) {
+                        if (adminDropdown && !adminDropdown.contains(e.target)) {
                             adminMenuItems.classList.add('hidden');
+                            adminMenuButton.querySelector('.fa-chevron-down').classList.remove('rotate-180');
                         }
                     });
                 }
             } catch (error) {
                 console.error("Erro ao verificar token:", error);
-                showFeedback("Erro ao verificar autenticação: " + error.message);
+                showFeedback("Erro ao verificar autenticação: " + error.message, true);
                 localStorage.removeItem('token');
                 setTimeout(() => window.location.href = "/", 3000);
             }
         });
 
-        // Busca de usuário por ID, nome ou e-mail
+        // --- Event Listener: Busca de usuário ---
         document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const busca = document.getElementById('buscaUsuario').value.trim();
 
-            document.getElementById('editaUsuarioForm').classList.add('hidden');
+            document.getElementById('editaUsuarioForm').classList.add('hidden'); // Oculta o form de edição
+            document.getElementById('usuariosTableBody').innerHTML = ''; // Limpa resultados anteriores
 
             if (!busca) {
-                showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.");
+                showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.", true);
                 return;
             }
 
             try {
-                console.log('Buscando usuário:', busca);
                 const urlBusca = `${API_BASE_URL}${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
                 console.log('URL de Busca Final:', urlBusca);
 
@@ -324,19 +389,14 @@
                     credentials: 'include',
                 });
 
-                console.log('Resposta da busca:', response.status, response.statusText);
-
                 if (!response.ok) {
                     let errorMessage = "Erro ao buscar usuários";
                     try {
                         const errorData = await response.json();
                         errorMessage = errorData.error || errorData.message || errorMessage;
                     } catch (jsonError) {
-                        if (response.status === 404) {
-                            errorMessage = "Recurso da API de busca não encontrado (404). Verifique a URL.";
-                        } else if (response.status === 401 || response.status === 403) {
-                            errorMessage = "Não autorizado. Verifique seu login/permissão.";
-                        }
+                         // Fallback para erros de rede ou servidor sem JSON
+                         errorMessage = `Erro de Servidor (${response.status} ${response.statusText})`;
                     }
                     throw new Error(errorMessage);
                 }
@@ -346,12 +406,12 @@
                 renderUsuarios(data.usuarios || []); // Garante que é um array
             } catch (error) {
                 console.error("Erro ao buscar usuários:", error);
-                showFeedback("Erro ao buscar usuários: " + error.message);
+                showFeedback("Erro ao buscar usuários: " + error.message, true);
             }
         });
 
 
-        // Salvamento da edição do usuário
+        // --- Event Listener: Salvamento da edição do usuário ---
         document.getElementById('editaUsuarioForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('editaUsuarioId').value;
@@ -361,20 +421,21 @@
             const xp_total = document.getElementById('editaUsuarioXpTotal').value;
             const fase_atual = document.getElementById('editaUsuarioFaseAtual').value;
 
-            if (!nome || !email || !tipo || !xp_total || !fase_atual) {
-                showFeedback("Por favor, preencha todos os campos.");
+            if (!id || !nome || !email || !tipo || !xp_total || !fase_atual) {
+                showFeedback("Por favor, preencha todos os campos do formulário de edição.", true);
                 return;
             }
 
             const xpTotalNum = parseInt(xp_total);
             const faseAtualNum = parseInt(fase_atual);
             if (isNaN(xpTotalNum) || isNaN(faseAtualNum)) {
-                showFeedback("XP Total e Fase Atual devem ser números válidos.");
+                showFeedback("XP Total e Fase Atual devem ser números válidos.", true);
                 return;
             }
 
             try {
-                console.log('Salvando edição do usuário:', id, { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum });
+                const payload = { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum };
+                console.log('Salvando edição do usuário:', id, payload);
 
                 const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
                     method: "PUT",
@@ -382,35 +443,42 @@
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum })
+                    body: JSON.stringify(payload)
                 });
 
-                console.log('Resposta da edição:', response.status, response.statusText);
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || "Erro ao salvar edição");
+                    throw new Error(errorData.message || `Erro ao salvar edição (Status: ${response.status})`);
                 }
                 const data = await response.json();
-                showFeedback(data.message, false);
+                showFeedback(data.message || "Usuário atualizado com sucesso!", false);
 
                 document.getElementById('editaUsuarioForm').reset();
                 document.getElementById('editaUsuarioForm').classList.add('hidden');
+                document.getElementById('usuariosTable').classList.remove('hidden');
 
-                // Re-executa a busca para atualizar a tabela
-                document.getElementById('buscaUsuarioForm').dispatchEvent(new Event('submit', { bubbles: true }));
+
+                // Re-executa a busca para atualizar a tabela com os dados editados
+                const buscaValorAtual = document.getElementById('buscaUsuario').value.trim();
+                if (buscaValorAtual) {
+                    // Simula o submit do formulário de busca
+                    document.getElementById('buscaUsuarioForm').dispatchEvent(new Event('submit', { bubbles: true }));
+                }
 
             } catch (error) {
                 console.error("Erro ao salvar edição:", error);
-                showFeedback("Erro ao salvar edição: " + error.message);
+                showFeedback("Erro ao salvar edição: " + error.message, true);
             }
         });
 
-        // Fechar o formulário de edição
+        // --- Event Listener: Fechar o formulário de edição ---
         document.getElementById('editaUsuarioForm').addEventListener('reset', () => {
             document.getElementById('editaUsuarioForm').classList.add('hidden');
+            // Volta a exibir a tabela de resultados após cancelar
+            document.getElementById('usuariosTable').classList.remove('hidden');
         });
 
-        // Logout
+        // --- Event Listener: Logout ---
         document.getElementById('logoutButton').addEventListener('click', () => {
             console.log('Efetuando logout...');
             fetch('/auth/logout', { method: 'POST' })
