@@ -22,9 +22,9 @@ const amizadeRoutes = require('./routes/amizadeRoutes');
 const app = express();
 
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -34,12 +34,9 @@ app.use(cookieParser());
 // =======================================================
 app.set('view engine', 'ejs');
 // Define um array de caminhos para que o Express procure templates.
-// 1. Templates de Admin
-// 2. Templates Públicos (usuário)
-// 3. (OPCIONAL: Um diretório central para layout/sidebar, se você o criar)
 app.set('views', [
-    path.join(__dirname, 'admin', 'telas'),
-    path.join(__dirname, 'public', 'telas')
+    path.join(__dirname, 'admin', 'telas'),
+    path.join(__dirname, 'public', 'telas')
 ]);
 // =======================================================
 
@@ -47,12 +44,12 @@ app.set('views', [
 
 // Rota para a tela inicial (Index.html -> Index.ejs)
 app.get('/', (req, res) => {
-    // Se o Index for uma página simples que não usa o layout, mantenha o sendFile.
-    // Se quiser que ela use EJS, mude para res.render('Index');
+    // Se o Index for uma página simples que não usa o layout, mantenha o sendFile.
+    // Se quiser que ela use EJS, mude para res.render('Index');
 res.render('Index', { title: 'Login e Cadastro - O Migrante' });});
 
 // Rotas de Autenticação (Login e Cadastro)
-app.use('/auth', authRoutes);    
+app.use('/auth', authRoutes);    
 
 // Servir arquivos estáticos PÚBLICOS (CSS, JS, etc.)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -76,47 +73,57 @@ app.use('/amizades', authenticateToken, amizadeRoutes);
 // =======================================================
 
 function renderViewToString(appInstance, viewName, data) {
-    return new Promise((resolve, reject) => {
-        // app.render() aceita o callback 'done' que estava faltando na chamada direta
-        appInstance.render(viewName, data, (err, html) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(html);
-        });
-    });
+    return new Promise((resolve, reject) => {
+        // app.render() aceita o callback 'done' que estava faltando na chamada direta
+        appInstance.render(viewName, data, (err, html) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(html);
+        });
+    });
 }
 // Rota para a área do usuário logado (ex: Painel.ejs)
-// Agora renderiza o template .ejs em vez de servir o arquivo estático.
 app.get('/app/painel', authenticateToken, async (req, res) => {
-    try {
-        // Captura o HTML puro de Painel.ejs como string
-        const bodyContent = await renderViewToString(req.app, 'Painel', { 
-            // Passa o objeto do usuário (obtido do JWT) para a view Painel.ejs
-            user: req.user
-        });
+    try {
+        // Captura o HTML puro de Painel.ejs como string
+        const bodyContent = await renderViewToString(req.app, 'Painel', { 
+            // Passa o objeto do usuário (obtido do JWT) para a view Painel.ejs
+            user: req.user
+        });
 
-        // Renderiza o layout principal, injetando o Painel.ejs (bodyContent) no layout
-        res.render('layout', { 
-            title: 'Painel do Usuário | O Migrante', // Título para o <title> do HTML
-            body: bodyContent, // O conteúdo completo do Painel.ejs (incluindo o script, mas sem <html>)
-            user: req.user // O objeto user para ser usado dentro de layout.ejs (como na sidebar)
-        });
-    } catch (error) {
-        // Se houver um erro de renderização no Painel ou no Layout
-        console.error('Erro ao renderizar Painel:', error);
-        res.status(500).send('Erro interno ao carregar a página: ' + error.message);
-    }
+        // Renderiza o layout principal, injetando o Painel.ejs (bodyContent) no layout
+        res.render('layout', { 
+            title: 'Painel do Usuário | O Migrante', // Título para o <title> do HTML
+            body: bodyContent, // O conteúdo completo do Painel.ejs (incluindo o script, mas sem <html>)
+            user: req.user // O objeto user para ser usado dentro de layout.ejs (como na sidebar)
+        });
+    } catch (error) {
+        // Se houver um erro de renderização no Painel ou no Layout
+        console.error('Erro ao renderizar Painel:', error);
+        res.status(500).send('Erro interno ao carregar a página: ' + error.message);
+    }
 });
 
-// Rota para a área de ADMIN (Exemplo: Pesquisa de Usuários)
-app.get('/admin/pesquisar', authenticateToken, checkAdmin, (req, res) => {
-    // Assume que 'PesquisarUsuario.ejs' está em 'admin/telas'
-    res.render('layout', { 
-        title: 'Admin - Pesquisar Usuários', 
-        // Renderiza PesquisarUsuario.ejs como string
-        body: res.render('PesquisarUsuario', { /* dados */ }, true)
-    });
+// Rota para a área de ADMIN (Pesquisa de Usuários) - Lógica de renderização CORRIGIDA
+app.get('/admin/pesquisar', authenticateToken, checkAdmin, async (req, res) => {
+    try {
+        // 1. Renderiza o conteúdo (PesquisaUsuario.ejs) como string
+        const bodyContent = await renderViewToString(req.app, 'PesquisaUsuario', {
+            // É fundamental passar o user aqui para que a sidebar (que está no layout) funcione corretamente
+            user: req.user 
+        });
+
+        // 2. Renderiza o layout principal, injetando o conteúdo
+        res.render('layout', { 
+            title: 'Admin - Pesquisar Usuários', 
+            body: bodyContent,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Erro ao renderizar Pesquisa de Usuários:', error);
+        res.status(500).send('Erro interno ao carregar a página administrativa.');
+    }
 });
 
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
@@ -132,8 +139,8 @@ app.use('/app', authenticateToken, express.static(path.join(__dirname, 'public',
 // --- 3. LIMPEZA E ERROS ---
 
 app.use((err, req, res, next) => {
-    console.error('Erro no servidor:', err.stack); // Use .stack para mais detalhes
-    res.status(500).json({ error: 'Erro interno do servidor.' });
+    console.error('Erro no servidor:', err.stack); // Use .stack para mais detalhes
+    res.status(500).json({ error: 'Erro interno do servidor.' });
 });
 
 const PORT = process.env.PORT || 3000;
