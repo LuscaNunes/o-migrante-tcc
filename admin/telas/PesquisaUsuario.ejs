@@ -194,8 +194,13 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'https://o-migrante.onrender.com';
+        // Detecta automaticamente o ambiente (local ou produção)
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? `http://${window.location.hostname}:${window.location.port || 3000}` 
+            : 'https://o-migrante.onrender.com';
         const API_USER_PATH = '/usuarios';
+        
+        console.log('🌐 API Base URL:', API_BASE_URL);
         
         // Variável global para armazenar os usuários buscados
         let lastSearchedUsers = [];

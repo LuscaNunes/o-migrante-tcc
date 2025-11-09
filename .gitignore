@@ -1,0 +1,41 @@
+# Variáveis de ambiente - NUNCA COMMITAR CREDENCIAIS!
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Dependências
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Arquivos temporários
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Coverage e testes
+coverage/
+.nyc_output/
+
+# Build
+dist/
+build/
