@@ -28,7 +28,7 @@ router.get('/', authenticateToken, checkAdmin, async (req, res) => {
   }
 
   try {
-    const [results] = await db.promise().query(sql, params);
+    const [rows] = await db.execute(sql, values);
     res.json({ usuarios: results });
   } catch (err) {
     console.error('Erro ao buscar usuários:', err);
