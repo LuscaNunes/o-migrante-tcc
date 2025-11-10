@@ -5,38 +5,39 @@ const db = require('../config/database'); // db aqui é o Pool de Conexões (já
 const router = express.Router();
 
 /**
- * Rota para buscar usuários (filtro por ID, nome ou email)
+ * Rota para listar ou buscar usuários (filtro por ID, nome ou email)
  * GET /usuarios
  * Requer autenticação e permissão de admin
+ * Se 'busca' for fornecido, filtra. Caso contrário, lista todos. (NOVA LÓGICA)
  */
 router.get('/', authenticateToken, checkAdmin, async (req, res) => {
 	const { busca } = req.query;
 
-	if (!busca) {
-		return res.status(400).json({ error: 'Parâmetro de busca não fornecido.' });
-	}
-
-	let sql = 'SELECT * FROM Usuarios WHERE 1=1';
+	let sql = 'SELECT * FROM Usuarios'; // Query padrão: lista todos
 	const params = [];
 
-	if (!isNaN(busca)) {
-		// Busca por ID
-		sql += ' AND id_usuario = ?';
-		params.push(busca);
-	} else {
-		// Busca por nome ou email (case-insensitive)
-		sql += ' AND (LOWER(nome) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))';
-		params.push(`%${busca}%`, `%${busca}%`);
+	if (busca) {
+		// Se houver um termo de busca, adiciona a cláusula WHERE e os filtros.
+		sql += ' WHERE 1=1'; 
+
+		if (!isNaN(busca)) {
+			// Busca por ID
+			sql += ' AND id_usuario = ?';
+			params.push(busca);
+		} else {
+			// Busca por nome ou email (case-insensitive)
+			sql += ' AND (LOWER(nome) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))';
+			params.push(`%${busca}%`, `%${busca}%`);
+		}
 	}
 
 	try {
-		// O Pool (db) já tem o método execute() que retorna Promises.
-		// Corrigido: Usando 'db.execute' e trocando 'values' por 'params' e 'results' por 'rows'
+		// Executa a consulta com ou sem filtros.
 		const [rows] = await db.execute(sql, params);
 		res.json({ usuarios: rows });
 	} catch (err) {
-		console.error('Erro ao buscar usuários:', err);
-		res.status(500).json({ error: 'Erro ao buscar usuários.' });
+		console.error('Erro ao buscar ou listar usuários:', err);
+		res.status(500).json({ error: 'Erro ao buscar ou listar usuários.' });
 	}
 });
 
