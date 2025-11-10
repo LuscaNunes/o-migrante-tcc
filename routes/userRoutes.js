@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const { authenticateToken, checkAdmin } = require('../middleware/auth');
-const db = require('../config/database');
+const db = require('../config/database'); // db aqui é o Pool de Conexões (já promise-enabled)
 const router = express.Router();
 
 /**
@@ -10,30 +10,34 @@ const router = express.Router();
  * Requer autenticação e permissão de admin
  */
 router.get('/', authenticateToken, checkAdmin, async (req, res) => {
-  const { busca } = req.query;
+	const { busca } = req.query;
 
-  if (!busca) {
-    return res.status(400).json({ error: 'Parâmetro de busca não fornecido.' });
-  }
+	if (!busca) {
+		return res.status(400).json({ error: 'Parâmetro de busca não fornecido.' });
+	}
 
-  let sql = 'SELECT * FROM Usuarios WHERE 1=1';
-  const params = [];
+	let sql = 'SELECT * FROM Usuarios WHERE 1=1';
+	const params = [];
 
-  if (!isNaN(busca)) {
-    sql += ' AND id_usuario = ?';
-    params.push(busca);
-  } else {
-    sql += ' AND (LOWER(nome) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))';
-    params.push(`%${busca}%`, `%${busca}%`);
-  }
+	if (!isNaN(busca)) {
+		// Busca por ID
+		sql += ' AND id_usuario = ?';
+		params.push(busca);
+	} else {
+		// Busca por nome ou email (case-insensitive)
+		sql += ' AND (LOWER(nome) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))';
+		params.push(`%${busca}%`, `%${busca}%`);
+	}
 
-  try {
-    const [rows] = await db.execute(sql, values);
-    res.json({ usuarios: results });
-  } catch (err) {
-    console.error('Erro ao buscar usuários:', err);
-    res.status(500).json({ error: 'Erro ao buscar usuários.' });
-  }
+	try {
+		// O Pool (db) já tem o método execute() que retorna Promises.
+		// Corrigido: Usando 'db.execute' e trocando 'values' por 'params' e 'results' por 'rows'
+		const [rows] = await db.execute(sql, params);
+		res.json({ usuarios: rows });
+	} catch (err) {
+		console.error('Erro ao buscar usuários:', err);
+		res.status(500).json({ error: 'Erro ao buscar usuários.' });
+	}
 });
 
 /**
@@ -42,19 +46,20 @@ router.get('/', authenticateToken, checkAdmin, async (req, res) => {
  * Requer autenticação
  */
 router.get('/public/:id', authenticateToken, async (req, res) => {
-  try {
-    const [results] = await db.promise().query(
-      'SELECT id_usuario, nome, email, xp_total, fase_atual, tipo, criado_em FROM Usuarios WHERE id_usuario = ?',
-      [req.params.id]
-    );
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Usuário não encontrado.' });
-    }
-    res.json(results[0]);
-  } catch (err) {
-    console.error('Erro ao buscar usuário:', err);
-    res.status(500).json({ error: 'Erro ao buscar usuário.' });
-  }
+	try {
+		// CORRIGIDO: Removido .promise()
+		const [results] = await db.query(
+			'SELECT id_usuario, nome, email, xp_total, fase_atual, tipo, criado_em FROM Usuarios WHERE id_usuario = ?',
+			[req.params.id]
+		);
+		if (results.length === 0) {
+			return res.status(404).json({ error: 'Usuário não encontrado.' });
+		}
+		res.json(results[0]);
+	} catch (err) {
+		console.error('Erro ao buscar usuário:', err);
+		res.status(500).json({ error: 'Erro ao buscar usuário.' });
+	}
 });
 
 /**
@@ -63,16 +68,17 @@ router.get('/public/:id', authenticateToken, async (req, res) => {
  * Requer autenticação e permissão de admin
  */
 router.get('/:id', authenticateToken, checkAdmin, async (req, res) => {
-  try {
-    const [results] = await db.promise().query('SELECT * FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
-    if (results.length === 0) {
-      return res.status(404).send('Usuário não encontrado.');
-    }
-    res.send(results[0]);
-  } catch (err) {
-    console.error('Erro ao buscar usuário:', err);
-    res.status(500).send('Erro ao buscar usuário.');
-  }
+	try {
+		// CORRIGIDO: Removido .promise()
+		const [results] = await db.query('SELECT * FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
+		if (results.length === 0) {
+			return res.status(404).send('Usuário não encontrado.');
+		}
+		res.send(results[0]);
+	} catch (err) {
+		console.error('Erro ao buscar usuário:', err);
+		res.status(500).send('Erro ao buscar usuário.');
+	}
 });
 
 /**
@@ -81,25 +87,26 @@ router.get('/:id', authenticateToken, checkAdmin, async (req, res) => {
  * Requer autenticação e permissão de admin
  */
 router.put('/:id', authenticateToken, checkAdmin, async (req, res) => {
-  const { nome, email, tipo, xp_total, fase_atual } = req.body;
+	const { nome, email, tipo, xp_total, fase_atual } = req.body;
 
-  if (!nome || !email || !tipo || !xp_total || !fase_atual) {
-    return res.status(400).json({ success: false, message: 'Preencha todos os campos.' });
-  }
+	if (!nome || !email || !tipo || !xp_total || !fase_atual) {
+		return res.status(400).json({ success: false, message: 'Preencha todos os campos.' });
+	}
 
-  try {
-    const [result] = await db.promise().query(
-      'UPDATE Usuarios SET nome = ?, email = ?, tipo = ?, xp_total = ?, fase_atual = ? WHERE id_usuario = ?',
-      [nome, email, tipo, xp_total, fase_atual, req.params.id]
-    );
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-    }
-    res.json({ success: true, message: 'Usuário atualizado com sucesso!' });
-  } catch (err) {
-    console.error('Erro ao editar usuário:', err);
-    res.status(500).json({ success: false, message: 'Erro ao editar usuário.' });
-  }
+	try {
+		// CORRIGIDO: Removido .promise()
+		const [result] = await db.query(
+			'UPDATE Usuarios SET nome = ?, email = ?, tipo = ?, xp_total = ?, fase_atual = ? WHERE id_usuario = ?',
+			[nome, email, tipo, xp_total, fase_atual, req.params.id]
+		);
+		if (result.affectedRows === 0) {
+			return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+		}
+		res.json({ success: true, message: 'Usuário atualizado com sucesso!' });
+	} catch (err) {
+		console.error('Erro ao editar usuário:', err);
+		res.status(500).json({ success: false, message: 'Erro ao editar usuário.' });
+	}
 });
 
 /**
@@ -108,68 +115,63 @@ router.put('/:id', authenticateToken, checkAdmin, async (req, res) => {
  * Requer autenticação
  */
 router.put('/atualizar', authenticateToken, async (req, res) => {
-  const { nome, email, senha } = req.body;
-  const usuario_id = req.user.id;
+	const { nome, email, senha } = req.body;
+	const usuario_id = req.user.id;
 
-  if (!nome) {
-    return res.status(400).json({ success: false, message: 'O nome é obrigatório.' });
-  }
+	if (!nome) {
+		return res.status(400).json({ success: false, message: 'O nome é obrigatório.' });
+	}
 
-  try {
-    const [currentUser] = await db.promise().query('SELECT email FROM Usuarios WHERE id_usuario = ?', [usuario_id]);
-    if (currentUser.length === 0) {
-      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-    }
+	try {
+		// CORRIGIDO: Removido .promise()
+		const [currentUser] = await db.query('SELECT email FROM Usuarios WHERE id_usuario = ?', [usuario_id]);
+		if (currentUser.length === 0) {
+			return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+		}
 
-    const finalEmail = email || currentUser[0].email;
+		const finalEmail = email || currentUser[0].email;
 
-    if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({ success: false, message: 'Email inválido.' });
-      }
-      const [existingUser] = await db.promise().query(
-        'SELECT id_usuario FROM Usuarios WHERE email = ? AND id_usuario != ?',
-        [email, usuario_id]
-      );
-      if (existingUser.length > 0) {
-        return res.status(400).json({ success: false, message: 'Este email já está em uso.' });
-      }
-    }
+		if (email) {
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!emailRegex.test(email)) {
+				return res.status(400).json({ success: false, message: 'Email inválido.' });
+			}
+			// CORRIGIDO: Removido .promise()
+			const [existingUser] = await db.query(
+				'SELECT id_usuario FROM Usuarios WHERE email = ? AND id_usuario != ?',
+				[email, usuario_id]
+			);
+			if (existingUser.length > 0) {
+				return res.status(400).json({ success: false, message: 'Este email já está em uso.' });
+			}
+		}
 
-    const updateData = { nome, email: finalEmail };
-    const queryParams = [nome, finalEmail];
+		const queryParams = [nome, finalEmail];
 
-    if (senha) {
-      if (senha.length < 6) {
-        return res.status(400).json({ success: false, message: 'A senha deve ter pelo menos 6 caracteres.' });
-      }
-      const hashedPassword = await bcrypt.hash(senha, 10);
-      updateData.senha = hashedPassword;
-      queryParams.push(hashedPassword);
-    }
+		if (senha) {
+			if (senha.length < 6) {
+				return res.status(400).json({ success: false, message: 'A senha deve ter pelo menos 6 caracteres.' });
+			}
+			const hashedPassword = await bcrypt.hash(senha, 10);
+			queryParams.push(hashedPassword);
+		}
 
-    queryParams.push(usuario_id);
-    const updateQuery = `UPDATE Usuarios SET nome = ?, email = ?${senha ? ', senha = ?' : ''} WHERE id_usuario = ?`;
-    const [result] = await db.promise().query(updateQuery, queryParams);
+		queryParams.push(usuario_id);
+		const updateQuery = `UPDATE Usuarios SET nome = ?, email = ?${senha ? ', senha = ?' : ''} WHERE id_usuario = ?`;
+		// CORRIGIDO: Removido .promise()
+		const [result] = await db.query(updateQuery, queryParams);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-    }
+		if (result.affectedRows === 0) {
+			return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+		}
 
-    res.json({ success: true, message: 'Perfil atualizado com sucesso.' });
-  } catch (error) {
-    console.error('Erro ao atualizar perfil:', error);
-    res.status(500).json({ success: false, message: 'Erro ao atualizar perfil.' });
-  }
+		res.json({ success: true, message: 'Perfil atualizado com sucesso.' });
+	} catch (error) {
+		console.error('Erro ao atualizar perfil:', error);
+		res.status(500).json({ success: false, message: 'Erro ao atualizar perfil.' });
+	}
 });
 
-router.get('/app/painel', authenticateToken, (req, res) => {
-    // req.user deve ser preenchido pelo middleware authenticateToken
-    res.render('public/telas/Painel', { 
-        user: req.user, // ESTA LINHA É CRÍTICA!
-        body: {} 
-    });
-});
+// REMOVIDO: A rota /app/painel foi removida por estar fora de lugar aqui (já está em server.js).
 
 module.exports = router;
