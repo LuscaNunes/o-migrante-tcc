@@ -28,15 +28,45 @@
                 transform: translateX(0);
             }
         }
-        
+
         /* Adiciona transição para o ícone de dropdown */
         .rotate-180 {
             transform: rotate(180deg);
+        }
+
+        /* Estilo para o Spinner de Carregamento */
+        .spinner {
+            border-top-color: #3b82f6;
+            border-left-color: #3b82f6;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 
 <body class="bg-gray-100">
+    <!-- Modal de Confirmação (Deleção) -->
+    <div id="confirmationModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl p-6 m-4 max-w-sm w-full">
+            <h3 class="text-xl font-bold mb-4 text-red-600">Confirmar Deleção</h3>
+            <p id="confirmationMessage" class="mb-6 text-gray-700">Tem certeza que deseja deletar este usuário?</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancelDeleteButton" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition duration-150 shadow-md">Cancelar</button>
+                <button id="confirmDeleteButton" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-150 shadow-md">Deletar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 z-40 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="spinner w-12 h-12 border-4 border-dashed rounded-full"></div>
+    </div>
+
     <div class="min-h-screen flex">
         <!-- Sidebar (Duplicada da sua sidebar.ejs, para este arquivo standalone) -->
         <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto" id="sidebar">
@@ -162,26 +192,26 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="mb-4">
                         <label for="editaUsuarioNome" class="block text-gray-700 font-bold mb-2">Nome:</label>
-                        <input type="text" id="editaUsuarioNome" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        <input type="text" id="editaUsuarioNome" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                     <div class="mb-4">
                         <label for="editaUsuarioEmail" class="block text-gray-700 font-bold mb-2">Email:</label>
-                        <input type="email" id="editaUsuarioEmail" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        <input type="email" id="editaUsuarioEmail" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                     <div class="mb-4">
                         <label for="editaUsuarioTipo" class="block text-gray-700 font-bold mb-2">Tipo:</label>
-                        <select id="editaUsuarioTipo" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        <select id="editaUsuarioTipo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
                     <div class="mb-4">
                         <label for="editaUsuarioXpTotal" class="block text-gray-700 font-bold mb-2">XP Total:</label>
-                        <input type="number" id="editaUsuarioXpTotal" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        <input type="number" id="editaUsuarioXpTotal" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                     <div class="mb-4">
                         <label for="editaUsuarioFaseAtual" class="block text-gray-700 font-bold mb-2">Fase Atual:</label>
-                        <input type="number" id="editaUsuarioFaseAtual" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                        <input type="number" id="editaUsuarioFaseAtual" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
                     </div>
                 </div>
                 
@@ -197,13 +227,19 @@
         // Detecta automaticamente o ambiente (local ou produção)
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
             ? `http://${window.location.hostname}:${window.location.port || 3000}` 
-            : 'https://o-migrante.onrender.com';
+            : 'https://o-migrante.onrender.com'; // OURL de produção original
         const API_USER_PATH = '/usuarios';
         
         console.log('🌐 API Base URL:', API_BASE_URL);
         
         // Variável global para armazenar os usuários buscados
         let lastSearchedUsers = [];
+        let userIdToDelete = null;
+
+        // Função para controlar o estado de carregamento global
+        function toggleLoading(isLoading) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !isLoading);
+        }
 
         // Função para exibir mensagens de feedback
         function showFeedback(message, isError = true) {
@@ -220,6 +256,57 @@
             }, 3000);
         }
 
+        // Função para abrir o modal de confirmação de deleção
+        function showConfirmationModal(id) {
+            const usuario = lastSearchedUsers.find(u => String(u.id_usuario) === String(id));
+            if (!usuario) {
+                showFeedback("Erro: Não foi possível encontrar o usuário para deleção.", true);
+                return;
+            }
+
+            userIdToDelete = id;
+            document.getElementById('confirmationMessage').textContent = `Tem certeza que deseja deletar o usuário "${usuario.nome}" (ID: ${id})? Esta ação é irreversível.`;
+            document.getElementById('confirmationModal').classList.remove('hidden');
+        }
+
+        // Função para deletar o usuário de fato
+        async function deleteUsuario(id) {
+            console.log('Tentando deletar usuário:', id);
+            toggleLoading(true);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
+                    method: "DELETE",
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Erro ao deletar (Status: ${response.status})`);
+                }
+
+                // Não precisa ler o JSON no DELETE, mas a chamada foi bem-sucedida
+                showFeedback("Usuário deletado com sucesso!", false);
+                
+                // Re-executa a busca para atualizar a tabela
+                const buscaValorAtual = document.getElementById('buscaUsuario').value.trim();
+                if (buscaValorAtual) {
+                    document.getElementById('buscaUsuarioForm').dispatchEvent(new Event('submit', { bubbles: true }));
+                } else {
+                    document.getElementById('usuariosTable').classList.add('hidden');
+                    document.getElementById('usuariosTableBody').innerHTML = '';
+                    lastSearchedUsers = [];
+                }
+
+            } catch (error) {
+                console.error("Erro ao deletar usuário:", error);
+                showFeedback("Erro ao deletar usuário: " + error.message, true);
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+
         /**
          * Função para carregar dados do usuário para edição.
          * @param {string} id - O ID do usuário (pode ser string ou número).
@@ -232,6 +319,7 @@
             
             if (!usuario) {
                 showFeedback("Dados do usuário não encontrados localmente. Tentando buscar na API.");
+                toggleLoading(true);
                 // Se não encontrar, tenta buscar diretamente na API (fallback)
                 try {
                     const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
@@ -256,6 +344,8 @@
                     console.error("Erro ao carregar dados do usuário:", error);
                     showFeedback("Erro ao carregar dados do usuário: " + error.message);
                     return;
+                } finally {
+                    toggleLoading(false);
                 }
             } else {
                 // Usa os dados do objeto encontrado
@@ -287,7 +377,6 @@
             usuarios.forEach(usuario => {
                 const idString = usuario.id_usuario ? String(usuario.id_usuario) : '';
                 
-                // NOVO: Usa data-user-id em vez de onclick inline
                 const row = `
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="py-3 px-4 border-b text-left text-xs text-gray-600">${idString}</td>
@@ -296,12 +385,18 @@
                     <td class="py-3 px-4 border-b text-left capitalize text-gray-800">${usuario.tipo || 'user'}</td>
                     <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.xp_total || 0}</td>
                     <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.fase_atual || 1}</td>
-                    <td class="py-3 px-4 border-b text-left">
+                    <td class="py-3 px-4 border-b text-left whitespace-nowrap">
                         <button 
-                            class="bg-yellow-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-yellow-600 transition duration-150 shadow-sm"
+                            class="edit-button bg-blue-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-blue-600 transition duration-150 shadow-sm"
                             data-user-id="${idString}" 
                         >
                             <i class="fas fa-edit mr-1"></i> Editar
+                        </button>
+                        <button 
+                            class="delete-button bg-red-600 text-white px-3 py-1 text-sm rounded-lg hover:bg-red-700 transition duration-150 shadow-sm ml-2"
+                            data-user-id="${idString}" 
+                        >
+                            <i class="fas fa-trash mr-1"></i> Deletar
                         </button>
                     </td>
                 </tr>
@@ -321,6 +416,8 @@
             mobileMenuButton.addEventListener('click', () => {
                 sidebar.classList.toggle('-translate-x-full');
             });
+
+            toggleLoading(true); // Inicia com o loader
             
             try {
                 console.log('Verificando autenticação via Cookie...');
@@ -368,18 +465,37 @@
                 console.error("Erro ao verificar token:", error);
                 showFeedback("Erro ao verificar autenticação: " + error.message, true);
                 setTimeout(() => window.location.href = "/", 3000);
+            } finally {
+                toggleLoading(false);
             }
         });
 
 
-        // --- Event Delegation: Trata cliques no botão de edição ---
+        // --- Event Delegation: Trata cliques no botão de edição e deleção ---
         document.getElementById('usuariosTableBody').addEventListener('click', (e) => {
-            // Usa closest para encontrar o botão, mesmo que o clique seja no ícone ou texto interno
-            const editButton = e.target.closest('button[data-user-id]');
+            const editButton = e.target.closest('button.edit-button[data-user-id]');
+            const deleteButton = e.target.closest('button.delete-button[data-user-id]');
             
             if (editButton) {
                 const userId = editButton.getAttribute('data-user-id');
                 editarUsuario(userId); 
+            } else if (deleteButton) {
+                const userId = deleteButton.getAttribute('data-user-id');
+                showConfirmationModal(userId);
+            }
+        });
+
+        // --- Event Listeners do Modal de Confirmação ---
+        document.getElementById('cancelDeleteButton').addEventListener('click', () => {
+            document.getElementById('confirmationModal').classList.add('hidden');
+            userIdToDelete = null;
+        });
+
+        document.getElementById('confirmDeleteButton').addEventListener('click', () => {
+            document.getElementById('confirmationModal').classList.add('hidden');
+            if (userIdToDelete) {
+                deleteUsuario(userIdToDelete);
+                userIdToDelete = null;
             }
         });
 
@@ -397,6 +513,7 @@
                 return;
             }
 
+            toggleLoading(true);
             try {
                 const urlBusca = `${API_BASE_URL}${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
                 console.log('URL de Busca Final:', urlBusca);
@@ -423,6 +540,8 @@
             } catch (error) {
                 console.error("Erro ao buscar usuários:", error);
                 showFeedback("Erro ao buscar usuários: " + error.message, true);
+            } finally {
+                toggleLoading(false);
             }
         });
 
@@ -448,6 +567,8 @@
                 showFeedback("XP Total e Fase Atual devem ser números válidos.", true);
                 return;
             }
+            
+            toggleLoading(true);
 
             try {
                 const payload = { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum };
@@ -484,6 +605,8 @@
             } catch (error) {
                 console.error("Erro ao salvar edição:", error);
                 showFeedback("Erro ao salvar edição: " + error.message, true);
+            } finally {
+                toggleLoading(false);
             }
         });
 
