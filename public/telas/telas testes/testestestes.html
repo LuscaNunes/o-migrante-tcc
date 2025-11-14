@@ -3,36 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O Migrante - Teste Anime.js</title>
+  <title>O Migrante - Animação Foda</title>
   <style>
-    #caixa {
-      width: 100px;
-      height: 100px;
-      background: #FF1493;
-      margin: 200px auto;
-      border-radius: 15px;
-    }
+    body { margin:0; background:#87CEEB; overflow:hidden; }
+    canvas { display:block; }
   </style>
 </head>
 <body>
-  <div id="caixa"></div>
 
-  <!-- USA CDN → FUNCIONA 100% NO ZAP, ONRENDER, CELULAR, TUDO -->
-  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-  <script>
-    // Agora sim! Versão 3.2.2 (a mais estável pro zap)
-    anime({
-      targets: '#caixa',
-      translateX: [0, 500, 0],
-      translateY: [0, -250, 0],
-      rotate: '4turn',
-      scale: [1, 1.8, 1],
-      backgroundColor: ['#FF1493', '#00FFFF', '#FFD700', '#FF1493'],
-      duration: 3000,
-      direction: 'alternate',
-      loop: true,
-      easing: 'easeInOutBack'
-    });
-  </script>
+<canvas id="c"></canvas>
+
+<!-- CDN do anime.js (versão que nunca falha no zap) -->
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+
+<script>
+// Canvas setup
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let centerX = canvas.width / 2;
+let centerY = canvas.height / 2 + 50;
+
+// Partes do boneco (valores que vamos animar)
+const boneco = {
+  cabecaY: centerY - 120,
+  cabecaRot: 0,
+  peitoScale: 1,
+  bracoEsq: 0,
+  bracoDir: 0,
+  pernaEsq: 0,
+  pernaDir: 0
+};
+
+// Respiração eterna (suave e natural)
+anime({
+  targets: boneco,
+  peitoScale: [1, 1.08, 1],
+  duration: 2400,
+  direction: 'alternate',
+  loop: true,
+  easing: 'easeInOutSine'
+});
+
+// Função que faz a cabeça voar e voltar (chama quando quiser)
+function cabecaVoaEVolta() {
+  anime({
+    targets: boneco,
+    cabecaY: [centerY - 120, centerY - 300, centerY - 120],
+    cabecaRot: [0, -0.5, 2.5, 0],
+    duration: 1800,
+    easing: 'easeOutElastic(1, 0.5)',
+    complete: () => comemoraVitoria()
+  });
+}
+
+// Comemoração foda depois da cabeça voltar
+function comemoraVitoria() {
+  anime({
+    targets: boneco,
+    bracoEsq: [0, -1.2],
+    bracoDir: [0, 1.2],
+    pernaEsq: [0, -0.5],
+    pernaDir: [0, -0.5],
+    keyframes: [
+      { translateY: -60, duration: 300 },
+      { translateY: 0, duration: 400 }
+    ],
+    duration: 800,
+    easing: 'easeOutBounce',
+    loop: 3
+  });
+}
+
+// Desenha o boneco frame a frame
+function desenha() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.translate(centerX, centerY);
+
+  // Corpo (respira)
+  ctx.save();
+  ctx.scale(1, boneco.peitoScale);
+  ctx.fillStyle = '#FF6B6B';
+  ctx.fillRect(-50, -40, 100, 160); // tronco
+  ctx.restore();
+
+  // Braços
+  ctx.save();
+  ctx.rotate(boneco.bracoEsq);
+  ctx.fillStyle = '#FFBFA0';
+  ctx.fillRect(-60, -20, 50, 120);
+  ctx.restore();
+
+  ctx.save();
+  ctx.rotate(boneco.bracoDir);
+  ctx.translate(0, 0);
+  ctx.fillStyle = '#FFBFA0';
+  ctx.fillRect(10, -20, 50, 120);
+  ctx.restore();
+
+  // Pernas
+  ctx.fillStyle = '#4444FF';
+  ctx.fillRect(-40, 120, 35, 140);
+  ctx.save();
+  ctx.translate(-22, 260);
+  ctx.rotate(boneco.pernaEsq);
+  ctx.fillRect(0, 0, 35, 100);
+  ctx.restore();
+
+  ctx.fillRect(5, 120, 35, 140);
+  ctx.save();
+  ctx.translate(23, 260);
+  ctx.rotate(boneco.pernaDir);
+  ctx.fillRect(0, 0, 35, 100);
+  ctx.restore();
+
+  // Cabeça voando
+  ctx.save();
+  ctx.translate(0, boneco.cabecaY - centerY);
+  ctx.rotate(boneco.cabecaRot);
+  ctx.fillStyle = '#FFBFA0';
+  ctx.beginPath();
+  ctx.arc(0, -120, 60, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Olhos felizes
+  ctx.fillStyle = '#000';
+  ctx.fillRect(-20, -140, 15, 20);
+  ctx.fillRect(5, -140, 15, 20);
+
+  // Sorriso
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(0, -100, 30, 0, Math.PI);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.restore();
+
+  requestAnimationFrame(desenha);
+}
+
+// Inicia tudo
+desenha();
+
+// Depois de 2 segundos a cabeça voa (só pra tu ver logo!)
+setTimeout(cabecaVoaEVolta, 2000);
+
+// Quer disparar manualmente? Clica ou toca na tela
+canvas.addEventListener('click', cabecaVoaEVolta);
+canvas.addEventListener('touchstart', cabecaVoaEVolta);
+</script>
 </body>
 </html>
