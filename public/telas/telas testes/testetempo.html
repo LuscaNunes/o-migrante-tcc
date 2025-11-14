@@ -3,231 +3,184 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tutorial Interativo do Anime.js</title>
+  <title>Laboratório Anime.js - O Migrante</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
-      background: #f4f4f4;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-    }
-    p {
-      max-width: 800px;
-      margin: 0 auto 20px;
-      color: #666;
-    }
-    canvas {
-      border: 2px solid #333;
-      margin: 20px auto;
-      display: block;
-      background: #fff;
-    }
-    .botoes {
+      background: linear-gradient(to bottom, #87CEEB, #98FB98);
+      font-family: Arial, sans-serif;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 { color: #333; margin-bottom: 10px; }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      max-width: 800px;
+      width: 100%;
     }
     button {
-      padding: 10px 15px;
+      padding: 16px 8px;
       font-size: 14px;
-      background: #4CAF50;
+      font-weight: bold;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: transform 0.2s;
     }
-    button:hover {
-      background: #45a049;
-    }
-    .explicacao {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #888;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
+    button:hover { transform: scale(1.05); }
+    button:active { transform: scale(0.95); }
+    #demo { width: 120px; height: 120px; background: #FF6B6B; border-radius: 20px; margin: 30px auto; }
   </style>
 </head>
 <body>
 
-<h1>Tutorial Interativo do Anime.js</h1>
-<p>Este é um tutorial prático para aprender a usar o Anime.js, uma biblioteca JavaScript para animações. Clique nos botões abaixo para ver diferentes tipos de animações aplicadas a um objeto simples (um quadrado vermelho) no canvas. Cada botão demonstra uma função ou propriedade específica do Anime.js. O código é comentado para facilitar o aprendizado!</p>
+  <h1>Laboratório Anime.js</h1>
+  <div id="demo"></div>
 
-<canvas id="canvas" width="600" height="400"></canvas>
+  <div class="container">
+    <button style="background:#FF6B6B" onclick="efeito1()">1. Pulo Simples</button>
+    <button style="background:#4ECDC4" onclick="efeito2()">2. Girar 360°</button>
+    <button style="background:#45B7D1" onclick="efeito3()">3. Fade + Scale</button>
+    <button style="background:#96CEB4" onclick="efeito4()">4. Elasticidade</button>
+    <button style="background:#FECA57" onclick="efeito5()">5. Boing (Bounce)</button>
+    <button style="background:#FF9FF3" onclick="efeito6()">6. Tremor</button>
+    <button style="background:#54A0FF" onclick="efeito7()">7. Stagger (Sequência)</button>
+    <button style="background:#FF6347" onclick="efeito8()">8. Timeline (Combo)</button>
+    <button style="background:#6C5CE7" onclick="efeito9()">9. Cor + Forma</button>
+    <button style="background:#00D2D3" onclick="efeito10()">10. Cabeça Voa (Easter Egg)</button>
+  </div>
 
-<div class="botoes">
-  <button onclick="animarMover()">Mover (Translate)</button>
-  <button onclick="animarGirar()">Girar (Rotate)</button>
-  <button onclick="animarEscalar()">Escalar (Scale)</button>
-  <button onclick="animarCor()">Mudar Cor (Color)</button>
-  <button onclick="animarFade()">Fade In/Out (Opacity)</button>
-  <button onclick="animarBounce()">Bounce (Easing)</button>
-  <button onclick="animarLoop()">Loop Contínuo</button>
-  <button onclick="animarSequencia()">Sequência (Keyframes)</button>
-  <button onclick="resetar()">Resetar</button>
-</div>
+  <!-- Anime.js via CDN (nunca falha) -->
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
 
-<div class="explicacao">
-  <strong>Dicas:</strong> Anime.js anima propriedades de objetos JavaScript. Aqui, animamos um objeto 'quadrado' com propriedades como x, y, rotation, etc. Use 'targets' para o objeto, 'duration' para tempo, 'easing' para suavidade, e 'loop' para repetição. Veja o console para logs das animações!
-</div>
+  <script>
+    const demo = document.getElementById('demo');
 
-<!-- CDN do Anime.js -->
-<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+    // 1. Pulo simples
+    function efeito1() {
+      anime({
+        targets: demo,
+        translateY: [-150, 0],
+        duration: 800,
+        easing: 'easeOutBounce'
+      });
+    }
 
-<script>
-// Configuração do Canvas
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+    // 2. Girar 360°
+    function efeito2() {
+      anime({
+        targets: demo,
+        rotate: '1turn',
+        duration: 1000,
+        easing: 'easeInOutSine'
+      });
+    }
 
-// Objeto animável: um quadrado simples
-const quadrado = {
-  x: 250,      // Posição X
-  y: 150,      // Posição Y
-  width: 100,  // Largura
-  height: 100, // Altura
-  rotation: 0, // Rotação em radianos
-  scale: 1,    // Escala
-  color: '#FF0000', // Cor (vermelho)
-  opacity: 1   // Opacidade
-};
+    // 3. Fade + Scale (ótimo pra botões)
+    function efeito3() {
+      anime({
+        targets: demo,
+        scale: [0.5, 1.3, 1],
+        opacity: [0, 1],
+        duration: 1200,
+        easing: 'easeOutElastic(1, 0.6)'
+      });
+    }
 
-// Função para desenhar o quadrado no canvas
-function desenhar() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  ctx.translate(quadrado.x + quadrado.width / 2, quadrado.y + quadrado.height / 2);
-  ctx.rotate(quadrado.rotation);
-  ctx.scale(quadrado.scale, quadrado.scale);
-  ctx.globalAlpha = quadrado.opacity;
-  ctx.fillStyle = quadrado.color;
-  ctx.fillRect(-quadrado.width / 2, -quadrado.height / 2, quadrado.width, quadrado.height);
-  ctx.restore();
-  requestAnimationFrame(desenhar);
-}
+    // 4. Elasticidade (cabeça voltando)
+    function efeito4() {
+      anime({
+        targets: demo,
+        translateY: -300,
+        duration: 1500,
+        direction: 'alternate',
+        easing: 'easeOutElastic(1, 0.4)'
+      });
+    }
 
-// Inicia o loop de desenho
-desenhar();
+    // 5. Boing realista
+    function efeito5() {
+      anime({
+        targets: demo,
+        translateY: [0, -200, 0, -100, 0],
+        duration: 1200,
+        easing: 'easeOutBounce'
+      });
+    }
 
-// Funções de animação (cada uma explica o que faz)
+    // 6. Tremor (quando leva dano)
+    function efeito6() {
+      anime({
+        targets: demo,
+        translateX: [-10, 10, -10, 10, 0],
+        duration: 300,
+        easing: 'easeInOutSine'
+      });
+    }
 
-// 1. Mover: Anima a posição X e Y do quadrado
-function animarMover() {
-  console.log("Animação: Mover - Usando 'translateX' e 'translateY' para mover o objeto.");
-  anime({
-    targets: quadrado,
-    translateX: 100,  // Move 100px para a direita
-    translateY: -50,  // Move 50px para cima
-    duration: 1000,   // Duração de 1 segundo
-    easing: 'easeInOutQuad', // Suavização quadrática
-    direction: 'alternate' // Vai e volta
-  });
-}
+    // 7. Stagger – anima vários de uma vez (perfeito pra partículas)
+    function efeito7() {
+      anime({
+        targets: '.container button',
+        translateY: [-50, 0],
+        delay: anime.stagger(50), // um depois do outro
+        duration: 800,
+        easing: 'easeOutBounce'
+      });
+    }
 
-// 2. Girar: Anima a rotação do quadrado
-function animarGirar() {
-  console.log("Animação: Girar - Usando 'rotation' para girar o objeto em radianos.");
-  anime({
-    targets: quadrado,
-    rotation: Math.PI * 2, // Gira 360 graus (2π radianos)
-    duration: 1500,
-    easing: 'easeInOutSine'
-  });
-}
+    // 8. Timeline – sequência de animações (COMBO FODA)
+    function efeito8() {
+      const tl = anime.timeline({
+        targets: demo,
+        easing: 'easeInOutSine'
+      });
+      tl.add({ scale: 0.5, opacity: 0, duration: 300 })
+        .add({ scale: 2, backgroundColor: '#FFD700', duration: 500 })
+        .add({ rotate: '2turn', duration: 800 })
+        .add({ scale: 1, backgroundColor: '#FF6B6B', duration: 400 });
+    }
 
-// 3. Escalar: Anima o tamanho (escala) do quadrado
-function animarEscalar() {
-  console.log("Animação: Escalar - Usando 'scale' para aumentar/diminuir o tamanho.");
-  anime({
-    targets: quadrado,
-    scale: 1.5,      // Aumenta para 150%
-    duration: 800,
-    easing: 'easeOutElastic(1, 0.5)', // Efeito elástico
-    direction: 'alternate'
-  });
-}
+    // 9. Mudar cor + forma (morphing básico)
+    function efeito9() {
+      anime({
+        targets: demo,
+        backgroundColor: ['#FF6B6B', '#00FF00', '#0000FF', '#FF6B6B'],
+        borderRadius: ['20px', '50%', '0%', '20px'],
+        duration: 3000,
+        easing: 'easeInOutQuad'
+      });
+    }
 
-// 4. Mudar Cor: Anima a cor de fundo
-function animarCor() {
-  console.log("Animação: Mudar Cor - Usando 'color' para transicionar entre cores.");
-  anime({
-    targets: quadrado,
-    color: '#00FF00', // Verde
-    duration: 1200,
-    easing: 'linear',
-    direction: 'alternate'
-  });
-}
+    // 10. EASTER EGG – Cabeça voando (igual o boneco anterior)
+    function efeito10() {
+      anime({
+        targets: demo,
+        translateY: [0, -350, 0],
+        rotate: [0, -0.5, 3, 0],
+        scale: [1, 1.3, 1],
+        duration: 2000,
+        easing: 'easeOutElastic(1, 0.5)',
+        complete: () => {
+          alert("A CABEÇA VOLTOU!!!");
+        }
+      });
+    }
 
-// 5. Fade: Anima a opacidade (fade in/out)
-function animarFade() {
-  console.log("Animação: Fade - Usando 'opacity' para aparecer/desaparecer.");
-  anime({
-    targets: quadrado,
-    opacity: 0,      // Torna invisível
-    duration: 1000,
-    easing: 'easeInOutQuad',
-    direction: 'alternate'
-  });
-}
-
-// 6. Bounce: Anima com efeito de quique (usando easing)
-function animarBounce() {
-  console.log("Animação: Bounce - Usando 'easing' 'easeOutBounce' para efeito de quique.");
-  anime({
-    targets: quadrado,
-    translateY: -100, // Salta para cima
-    duration: 1000,
-    easing: 'easeOutBounce'
-  });
-}
-
-// 7. Loop Contínuo: Anima indefinidamente
-function animarLoop() {
-  console.log("Animação: Loop - Usando 'loop: true' para repetir indefinidamente.");
-  anime({
-    targets: quadrado,
-    rotation: Math.PI * 4, // Gira várias vezes
-    duration: 2000,
-    easing: 'linear',
-    loop: true // Loop infinito
-  });
-}
-
-// 8. Sequência: Anima em etapas (keyframes)
-function animarSequencia() {
-  console.log("Animação: Sequência - Usando 'keyframes' para animações em etapas.");
-  anime({
-    targets: quadrado,
-    keyframes: [
-      { translateX: 100, duration: 500 },  // Passo 1: Move direita
-      { scale: 1.2, duration: 500 },       // Passo 2: Aumenta
-      { rotation: Math.PI, duration: 500 }, // Passo 3: Gira
-      { translateX: 0, scale: 1, rotation: 0, duration: 500 } // Passo 4: Volta
-    ],
-    easing: 'easeInOutQuad'
-  });
-}
-
-// 9. Resetar: Volta ao estado inicial
-function resetar() {
-  console.log("Resetando: Parando animações e voltando ao início.");
-  anime.remove(quadrado); // Para todas as animações
-  quadrado.x = 250;
-  quadrado.y = 150;
-  quadrado.rotation = 0;
-  quadrado.scale = 1;
-  quadrado.color = '#FF0000';
-  quadrado.opacity = 1;
-}
-</script>
-
+    // Só pra começar com estilo
+    anime({
+      targets: 'h1',
+      translateY: [-100, 0],
+      opacity: [0, 1],
+      duration: 1500,
+      easing: 'easeOutBounce'
+    });
+  </script>
 </body>
 </html>
