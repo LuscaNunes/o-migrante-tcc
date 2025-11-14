@@ -1,171 +1,136 @@
 <!DOCTYPE html>
 <html class="scroll-smooth" lang="pt-BR">
-
 <head>
   <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1" name="viewport" />
-  <title><%= title %></title> 
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %></title>
 
+  <!-- Tailwind + Font Awesome + Google Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+
   <style>
-    /* CSS GLOBAL MOVIDO DO PAINEL.HTML */
     body {
-      font-family: "Roboto", -apple-system, BlinkMacSystemFont, "San Francisco",
-        "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-family: "Roboto", -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: #f9fafb;
       color: #111827;
     }
 
-    nav::-webkit-scrollbar {
-      width: 6px;
-    }
-
+    /* Scrollbar bonito só no sidebar */
+    nav::-webkit-scrollbar { width: 6px; }
     nav::-webkit-scrollbar-thumb {
       background-color: #93c5fd;
       border-radius: 10px;
     }
 
+    /* Animação de entrada suave */
     @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(15px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
     .fadeInUp {
-      animation: fadeInUp 0.5s ease forwards;
+      animation: fadeInUp 0.6s ease-out forwards;
       opacity: 0;
     }
-
-    .fadeInUp.delay-100 {
-      animation-delay: 0.1s;
-    }
-
-    .fadeInUp.delay-200 {
-      animation-delay: 0.2s;
-    }
-
-    .fadeInUp.delay-300 {
-      animation-delay: 0.3s;
-    }
-
-    .fadeInUp.delay-400 {
-      animation-delay: 0.4s;
-    }
-
-    .fadeInUp.delay-500 {
-      animation-delay: 0.5s;
-    }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+    .delay-500 { animation-delay: 0.5s; }
   </style>
 </head>
 
 <body class="min-h-screen flex overflow-hidden">
-  
-  <%- include('sidebar', { user: user }) %>
 
-  <div aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-30 hidden z-20 md:hidden" id="overlay"></div>
-  <header
-    class="fixed top-0 left-0 right-0 h-16 bg-white shadow-md flex items-center justify-between px-4 md:hidden z-30">
-    <button aria-label="Abrir menu"
-      class="text-[#2563eb] focus:outline-none focus:ring-2 focus:ring-[#2563eb] rounded-md" id="btnSidebarOpen">
-      <i class="fas fa-bars fa-lg"></i>
+  <!-- Sidebar -->
+  <%- include('sidebar', { user }) %>
+
+  <!-- Overlay mobile -->
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-20 md:hidden transition-opacity"></div>
+
+  <!-- Header mobile -->
+  <header class="fixed top-0 left-0 right-0 h-16 bg-white shadow-lg flex items-center justify-between px-5 z-30 md:hidden">
+    <button id="btnSidebarOpen" aria-label="Abrir menu" class="text-2xl text-[#2563eb] focus:outline-none">
+      <i class="fas fa-bars"></i>
     </button>
-    <div class="flex items-center space-x-2 select-none">
-      <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32"
-        loading="lazy" src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
-        width="32" />
-      <span class="text-xl font-semibold text-[#2563eb]">Sistema</span>
+    <div class="flex items-center space-x-3">
+      <img src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
+           alt="Logo" class="w-9 h-9 rounded-full">
+      <span class="text-xl font-bold text-[#2563eb]">O Migrante</span>
     </div>
-    <button aria-label="Logout"
-      class="text-[#2563eb] hover:text-red-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 rounded-md"
-      id="logoutButtonMobile">
-      <i class="fas fa-sign-out-alt fa-lg"></i>
+    <button id="logoutButtonMobile" aria-label="Sair" class="text-2xl text-[#2563eb] hover:text-red-600 transition">
+      <i class="fas fa-sign-out-alt"></i>
     </button>
   </header>
 
-  <main class="flex-1 p-6 md:p-8 md:ml-64 overflow-y-auto max-h-screen bg-[#f9fafb]" id="mainContent">
+  <!-- Conteúdo principal -->
+  <main class="flex-1 pt-20 md:pt-0 md:ml-64 overflow-y-auto bg-[#f9fafb]" id="mainContent">
     <%- body %>
   </main>
 
-
+  <!-- SCRIPT GLOBAL (sidebar + admin dropdown + logout) -->
   <script>
-    // Lógica do Sidebar e Menu Mobile
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-    const btnSidebarOpen = document.getElementById("btnSidebarOpen");
+    // === 1. Sidebar Mobile ===
+    const sidebar   = document.getElementById('sidebar');
+    const overlay   = document.getElementById('overlay');
+    const btnOpen   = document.getElementById('btnSidebarOpen');
 
-    if (btnSidebarOpen && sidebar && overlay) {
-        btnSidebarOpen.addEventListener("click", () => {
-            sidebar.classList.remove("-translate-x-full");
-            overlay.classList.remove("hidden");
-            document.body.style.overflow = "hidden";
-        });
+    btnOpen?.addEventListener('click', () => {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
 
-        overlay.addEventListener("click", () => {
-            sidebar.classList.add("-translate-x-full");
-            overlay.classList.add("hidden");
-            document.body.style.overflow = "";
-        });
-    }
+    overlay?.addEventListener('click', () => {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    });
 
-    // Lógica do Dropdown de Administração (só executa se for admin)
-    <% if (user && user.tipo === 'admin') { %>
-        const adminDropdown = document.getElementById("adminDropdown");
-        if (adminDropdown) {
-          
-            const adminMenuButton = document.getElementById("adminMenuButton");
-            const adminMenuItems = document.getElementById("adminMenuItems");
+    // === 2. Dropdown Admin (só se existir) ===
+    const adminButton = document.getElementById('adminToggle');
+    const adminMenu   = document.getElementById('adminMenu');
+    const chevron     = document.getElementById('chevron');
 
-            // Garantir que os elementos existem antes de adicionar listeners
-            if (adminMenuButton && adminMenuItems) {
-                adminMenuButton.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    const expanded = adminMenuButton.getAttribute("aria-expanded") === "true";
-                    adminMenuButton.setAttribute("aria-expanded", !expanded);
-                    adminMenuItems.classList.toggle("hidden");
-                });
+    if (adminButton && adminMenu) {
+      adminButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !adminMenu.classList.contains('hidden');
+        adminMenu.classList.toggle('hidden');
+        adminButton.setAttribute('aria-expanded', !isOpen);
+        chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      });
 
-                document.addEventListener("click", (e) => {
-                    if (
-                        !adminMenuButton.contains(e.target) &&
-                        !adminMenuItems.contains(e.target)
-                    ) {
-                        adminMenuItems.classList.add("hidden");
-                        adminMenuButton.setAttribute("aria-expanded", "false");
-                    }
-                });
-            }
+      // Fecha ao clicar fora
+      document.addEventListener('click', (e) => {
+        if (!adminButton.contains(e.target) && !adminMenu.contains(e.target)) {
+          adminMenu.classList.add('hidden');
+          chevron.style.transform = 'rotate(0deg)';
+          adminButton.setAttribute('aria-expanded', 'false');
         }
-    <% } %>
-
-    // Lógica de Logout Mobile
-    const logoutButtonMobile = document.getElementById("logoutButtonMobile");
-    
-    if (logoutButtonMobile) {
-        logoutButtonMobile.addEventListener("click", () => {
-            // Chamamos a função 'logout' que deve estar definida no Painel.ejs ou em um script global.
-            if (typeof logout === 'function') {
-                logout();
-            } else {
-                // Fallback de segurança para logout
-                console.log("Função 'logout' não encontrada. Usando fallback.");
-                localStorage.removeItem("token");
-                fetch('/auth/logout', { method: 'POST' })
-                  .finally(() => {
-                    window.location.href = "/"; 
-                  });
-            }
-        });
+      });
     }
 
+    // === 3. Logout Mobile ===
+    document.getElementById('logoutButtonMobile')?.addEventListener('click', () => {
+      if (typeof logout === 'function') {
+        logout();
+      } else {
+        localStorage.removeItem('token');
+        fetch('/auth/logout', { method: 'POST' })
+          .finally(() => location.href = '/');
+      }
+    });
+
+    // === 4. Fecha sidebar ao redimensionar pra desktop ===
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+    });
   </script>
 </body>
-
 </html>

@@ -1,84 +1,80 @@
 <!--
-  sidebar.ejs: Este é um parcial (partial) que será incluído no layout.ejs.
-  Ele espera receber a variável 'user' do layout.
+  sidebar.ejs - Versão corrigida e otimizada
+  Funciona perfeitamente no mobile + dropdown admin com JS puro
 -->
-<nav
-  class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto"
-  id="sidebar">
-  <h2 class="text-2xl font-bold mb-6 select-none text-[#2563eb] flex items-center space-x-2">
-    <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32" loading="lazy"
-      src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" width="32" />
+<nav class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto"
+     id="sidebar">
+  
+  <h2 class="text-2xl font-bold mb-8 select-none text-[#2563eb] flex items-center space-x-3">
+    <img src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
+         alt="Logo O Migrante" class="w-10 h-10 rounded-full object-cover">
     <span>O Migrante</span>
   </h2>
-  <ul class="flex flex-col gap-2 w-full justify-start">
-    <!-- Links de Navegação -->
-    <li>
-      <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-        href="/app/painel"><i class="fas fa-home mr-3"></i>Início</a>
-    </li>
-    <li>
-      <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-        href="DadoUsuario.html"><i class="fas fa-user mr-3"></i>Perfil</a>
-    </li>
-    <li>
-      <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-        href="Fases.html"><i class="fas fa-tasks mr-3"></i>Missão</a>
-    </li>
-    <li>
-      <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-        href="../Biblioteca/paginaBiblioteca.html"><i class="fas fa-book mr-3"></i>Biblioteca</a>
-    </li>
-    <li>
-      <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-        href="../telas/telas testes/testestestes.html"><i class="fas fa-book mr-3"></i>The Good Friends</a>
-    </li>
 
-    <!-- LÓGICA DE ADMINISTRAÇÃO USANDO EJS -->
-    <% if (user && user.tipo==='admin' ) { %>
-      <li class="mb-4 w-full" id="adminDropdown">
-        <div class="relative w-full">
-          <button aria-controls="adminMenuItems" aria-expanded="false"
-            class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg w-full transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] justify-between"
-            id="adminMenuButton">
-            <span>
-              <i class="fas fa-cog mr-3"></i>Administração
-            </span>
-            <i class="fas fa-chevron-down ml-2"></i>
-          </button>
-          <ul aria-label="Submenu Administração"
-            class="hidden absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg z-40" id="adminMenuItems"
-            role="menu">
-            <li role="none">
-              <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="/admin/pesquisar"
-                role="menuitem">Usuários</a>
-            </li>
-            <li role="none">
-              <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="admin/telas/CaPerguntas.html"
-                role="menuitem">Cadastrar Níveis e Perguntas</a>
-            </li>
-            <li role="none">
-              <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="admin/telas/DadosFases.html"
-                role="menuitem">Dados das Fases</a>
-            </li>
-            <li role="none">
-              <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="../../admin/telas/DadosNiveis.html"
-                role="menuitem">Editar Níveis e Perguntas</a>
-            </li>
-            <li role="none">
-              <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="../../admin/telas/MensagemDiaria.html"
-                role="menuitem">Cadastrar Mensagem do dia</a>
-            </li>
-            <li role="none">
-              <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="../telas/telas testes/testestestes.html"
-                role="menuitem">Tela de Teste</a>
-            </li>
-            <li role="none">
-              <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="../telas/telas testes/testetempo.html"
-                role="menuitem">Tela de Teste</a>
-            </li>
-          </ul>
-        </div>
-      </li>
-      <% } %>
+  <ul class="space-y-2 w-full">
+    <!-- Links normais -->
+    <li><a href="/app/painel" class="sidebar-link"><i class="fas fa-home mr-3"></i>Início</a></li>
+    <li><a href="DadoUsuario.html" class="sidebar-link"><i class="fas fa-user mr-3"></i>Perfil</a></li>
+    <li><a href="Fases.html" class="sidebar-link"><i class="fas fa-tasks mr-3"></i>Missão</a></li>
+    <li><a href="../Biblioteca/paginaBiblioteca.html" class="sidebar-link"><i class="fas fa-book mr-3"></i>Biblioteca</a></li>
+    <li><a href="../telas/telas%20testes/testestestes.html" class="sidebar-link"><i class="fas fa-gamepad mr-3"></i>The Good Friends</a></li>
   </ul>
+
+  <!-- === MENU ADMIN (só aparece pra admin) === -->
+  <% if (user && user.tipo === 'admin') { %>
+    <div class="mt-8 w-full">
+      <button id="adminToggle" 
+              class="sidebar-link w-full text-left flex items-center justify-between"
+              aria-expanded="false" aria-controls="adminMenu">
+        <span><i class="fas fa-cog mr-3"></i>Administração</span>
+        <i class="fas fa-chevron-down transition-transform duration-200" id="chevron"></i>
+      </button>
+
+      <ul id="adminMenu" class="mt-2 ml-6 space-y-1 hidden">
+        <li><a href="/admin/pesquisar" class="admin-submenu">Usuários</a></li>
+        <li><a href="admin/telas/CaPerguntas.html" class="admin-submenu">Cadastrar Níveis e Perguntas</a></li>
+        <li><a href="admin/telas/DadosFases.html" class="admin-submenu">Dados das Fases</a></li>
+        <li><a href="admin/telas/DadosNiveis.html" class="admin-submenu">Editar Níveis e Perguntas</a></li>
+        <li><a href="admin/telas/MensagemDiaria.html" class="admin-submenu">Mensagem do Dia</a></li>
+        <li><a href="../telas/telas%20testes/testestestes.html" class="admin-submenu">Tela de Teste (Anime.js)</a></li>
+        <li><a href="../telas/telas%20testes/testetempo.html" class="admin-submenu">Tela de Teste Tempo</a></li>
+      </ul>
+    </div>
+  <% } %>
+
 </nav>
+
+<!-- Estilos dos links (pode colocar no CSS global ou aqui mesmo) -->
+<style>
+  .sidebar-link {
+    @apply flex items-center text-gray-700 py-3 px-4 rounded-lg transition-all duration-200 w-full justify-start hover:bg-blue-50 hover:text-blue-600 font-medium;
+  }
+  .admin-submenu {
+    @apply block py-2 px-4 text-sm text-gray-600 rounded hover:bg-blue-100 hover:text-blue-700 transition;
+  }
+</style>
+
+<!-- JS do dropdown admin (funciona no celular e PC) -->
+<script>
+  const adminToggle = document.getElementById('adminToggle');
+  const adminMenu = document.getElementById('adminMenu');
+  const chevron = document.getElementById('chevron');
+
+  if (adminToggle) {
+    adminToggle.addEventListener('click', () => {
+      adminMenu.classList.toggle('hidden');
+      const expanded = !adminMenu.classList.contains('hidden');
+      adminToggle.setAttribute('aria-expanded', expanded);
+      chevron.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
+    });
+  }
+
+  // Fecha o menu ao clicar fora (opcional, mas fica top)
+  document.addEventListener('click', (e) => {
+    if (!adminToggle?.contains(e.target) && !adminMenu?.contains(e.target)) {
+      adminMenu?.classList.add('hidden');
+      chevron.style.transform = 'rotate(0deg)';
+      adminToggle?.setAttribute('aria-expanded', 'false');
+    }
+  });
+</script>
