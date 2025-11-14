@@ -3,160 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O Migrante - Animação Foda</title>
+  <title>O Migrante - Carregando...</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
   <style>
-    body { margin:0; background:#87CEEB; overflow:hidden; }
-    canvas { display:block; }
+    body { background: linear-gradient(135deg, #1e40af, #3b82f6); overflow: hidden; }
+    #loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+    #progressBar { height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; margin-top: 30px; width: 280px; }
+    #progressFill { height: 100%; background: #fff; width: 0%; border-radius: 3px; }
   </style>
 </head>
 <body>
 
-<canvas id="c"></canvas>
+<!-- TELA DE LOADING TIPO DUOLINGO -->
+<div id="loader">
+  <!-- TEU BONECO MIGRANTE (feito com SVG simples) -->
+  <svg width="180" height="220" viewBox="0 0 180 220" id="migrante">
+    <!-- Cabeça -->
+    <circle cx="90" cy="70" r="45" fill="#FFBFA0"/>
+    <!-- Olhos -->
+    <circle cx="75" cy="65" r="8" fill="#000"/>
+    <circle cx="105" cy="65" r="8" fill="#000"/>
+    <!-- Sorriso -->
+    <path d="M70 85 Q90 110 110 85" stroke="#000" stroke-width="6" fill="none"/>
+    <!-- Corpo -->
+    <rect x="60" y="110" width="60" height="80" rx="20" fill="#FF6B6B"/>
+    <!-- Mochila -->
+    <rect x="50" y="120" width="80" height="60" rx="15" fill="#4444FF"/>
+    <!-- Pernas -->
+    <rect x="70" y="185" width="20" height="30" fill="#4444FF"/>
+    <rect x="90" y="185" width="20" height="30" fill="#4444FF"/>
+  </svg>
 
-<!-- CDN do anime.js (versão que nunca falha no zap) -->
-<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+  <!-- Animação de respiração + pulinho fofo -->
+  <script>
+    // Respiração eterna
+    anime({
+      targets: '#migrante',
+      scaleY: [1, 1.06, 1],
+      duration: 2400,
+      loop: true,
+      easing: 'easeInOutSine'
+    });
+    // Pulinhos aleatórios (igual o Duolingo)
+    setInterval(() => {
+      anime({
+        targets: '#migrante',
+        translateY: [-30, 0],
+        rotate: [-5, 5, 0],
+        duration: 800,
+        easing: 'easeOutBounce'
+      });
+    }, 4000);
+  </script>
 
-<script>
-// Canvas setup
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+  <h2 class="text-3xl font-bold mt-8 animate-pulse">Preparando sua jornada...</h2>
+  
+  <!-- Textos motivacionais que mudam (igual Duolingo) -->
+  <p class="text-lg mt-4 text-center max-w-md opacity-90" id="motivational"></p>
+  <script>
+    const frases = [
+      "15 minutos por dia podem mudar sua vida...",
+      "Milhões de pessoas já cruzaram fronteiras com coragem.",
+      "Você não está sozinho nessa jornada.",
+      "A cada nível, você fica mais perto do sonho.",
+      "O mundo é grande. Vamos juntos?",
+      "Carregando esperança, força e um pouco de café.",
+      "Sua próxima conquista está logo ali..."
+    ];
+    let i = 0;
+    setInterval(() => {
+      document.getElementById('motivational').textContent = frases[i];
+      i = (i + 1) % frases.length;
+    }, 3500);
+    document.getElementById('motivational').textContent = frases[0];
+  </script>
 
-let centerX = canvas.width / 2;
-let centerY = canvas.height / 2 + 50;
+  <!-- Barra de progresso sutil -->
+  <div id="progressBar" class="mt-10">
+    <div id="progressFill"></div>
+  </div>
+  <script>
+    anime({
+      targets: '#progressFill',
+      width: ['0%', '100%'],
+      duration: 4000,
+      easing: 'linear',
+      complete: () => {
+        // Quando terminar → some tudo com fade lindo
+        anime({
+          targets: '#loader',
+          opacity: 0,
+          duration: 800,
+          easing: 'easeOutQuad',
+          complete: () => document.getElementById('loader').remove()
+        });
+      }
+    });
+  </script>
+</div>
 
-// Partes do boneco (valores que vamos animar)
-const boneco = {
-  cabecaY: centerY - 120,
-  cabecaRot: 0,
-  peitoScale: 1,
-  bracoEsq: 0,
-  bracoDir: 0,
-  pernaEsq: 0,
-  pernaDir: 0
-};
+<!-- Teu conteúdo real vem aqui embaixo (ou no layout normal) -->
+<div class="hidden">
+  <!-- Coloca aqui teu <%- body %> ou o jogo inteiro -->
+  <h1>Bem-vindo ao O Migrante!</h1>
+</div>
 
-// Respiração eterna (suave e natural)
-anime({
-  targets: boneco,
-  peitoScale: [1, 1.08, 1],
-  duration: 2400,
-  direction: 'alternate',
-  loop: true,
-  easing: 'easeInOutSine'
-});
-
-// Função que faz a cabeça voar e voltar (chama quando quiser)
-function cabecaVoaEVolta() {
-  anime({
-    targets: boneco,
-    cabecaY: [centerY - 120, centerY - 300, centerY - 120],
-    cabecaRot: [0, -0.5, 2.5, 0],
-    duration: 1800,
-    easing: 'easeOutElastic(1, 0.5)',
-    complete: () => comemoraVitoria()
-  });
-}
-
-// Comemoração foda depois da cabeça voltar
-function comemoraVitoria() {
-  anime({
-    targets: boneco,
-    bracoEsq: [0, -1.2],
-    bracoDir: [0, 1.2],
-    pernaEsq: [0, -0.5],
-    pernaDir: [0, -0.5],
-    keyframes: [
-      { translateY: -60, duration: 300 },
-      { translateY: 0, duration: 400 }
-    ],
-    duration: 800,
-    easing: 'easeOutBounce',
-    loop: 3
-  });
-}
-
-// Desenha o boneco frame a frame
-function desenha() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.save();
-  ctx.translate(centerX, centerY);
-
-  // Corpo (respira)
-  ctx.save();
-  ctx.scale(1, boneco.peitoScale);
-  ctx.fillStyle = '#FF6B6B';
-  ctx.fillRect(-50, -40, 100, 160); // tronco
-  ctx.restore();
-
-  // Braços
-  ctx.save();
-  ctx.rotate(boneco.bracoEsq);
-  ctx.fillStyle = '#FFBFA0';
-  ctx.fillRect(-60, -20, 50, 120);
-  ctx.restore();
-
-  ctx.save();
-  ctx.rotate(boneco.bracoDir);
-  ctx.translate(0, 0);
-  ctx.fillStyle = '#FFBFA0';
-  ctx.fillRect(10, -20, 50, 120);
-  ctx.restore();
-
-  // Pernas
-  ctx.fillStyle = '#4444FF';
-  ctx.fillRect(-40, 120, 35, 140);
-  ctx.save();
-  ctx.translate(-22, 260);
-  ctx.rotate(boneco.pernaEsq);
-  ctx.fillRect(0, 0, 35, 100);
-  ctx.restore();
-
-  ctx.fillRect(5, 120, 35, 140);
-  ctx.save();
-  ctx.translate(23, 260);
-  ctx.rotate(boneco.pernaDir);
-  ctx.fillRect(0, 0, 35, 100);
-  ctx.restore();
-
-  // Cabeça voando
-  ctx.save();
-  ctx.translate(0, boneco.cabecaY - centerY);
-  ctx.rotate(boneco.cabecaRot);
-  ctx.fillStyle = '#FFBFA0';
-  ctx.beginPath();
-  ctx.arc(0, -120, 60, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Olhos felizes
-  ctx.fillStyle = '#000';
-  ctx.fillRect(-20, -140, 15, 20);
-  ctx.fillRect(5, -140, 15, 20);
-
-  // Sorriso
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.arc(0, -100, 30, 0, Math.PI);
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.restore();
-
-  requestAnimationFrame(desenha);
-}
-
-// Inicia tudo
-desenha();
-
-// Depois de 2 segundos a cabeça voa (só pra tu ver logo!)
-setTimeout(cabecaVoaEVolta, 2000);
-
-// Quer disparar manualmente? Clica ou toca na tela
-canvas.addEventListener('click', cabecaVoaEVolta);
-canvas.addEventListener('touchstart', cabecaVoaEVolta);
-</script>
 </body>
 </html>
