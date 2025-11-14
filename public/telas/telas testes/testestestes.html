@@ -3,35 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teste Anime.js - O Migrante</title>
+  <title>O Migrante - Teste Anime.js</title>
   <style>
     #caixa {
       width: 100px;
       height: 100px;
-      background: #FF6B6B;
+      background: #FF1493;
       margin: 200px auto;
+      border-radius: 15px;
     }
   </style>
 </head>
 <body>
   <div id="caixa"></div>
 
-  <!-- IMPORT CORRETO DA VERSÃO DO NPM (v4) -->
-  <script type="module">
-    import { anime } from '../node_modules/animejs/lib/anime.es.js';
-
-    // Agora sim a animação roda!
+  <!-- USA CDN → FUNCIONA 100% NO ZAP, ONRENDER, CELULAR, TUDO -->
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+  <script>
+    // Agora sim! Versão 3.2.2 (a mais estável pro zap)
     anime({
       targets: '#caixa',
-      translateX: [0, 600, 0],     // vai, volta
-      translateY: [0, -200, 0],
-      rotate: '3turn',
-      scale: [1, 1.6, 1],
-      backgroundColor: ['#FF6B6B', '#4ECDC4', '#FF6B6B'],
+      translateX: [0, 500, 0],
+      translateY: [0, -250, 0],
+      rotate: '4turn',
+      scale: [1, 1.8, 1],
+      backgroundColor: ['#FF1493', '#00FFFF', '#FFD700', '#FF1493'],
       duration: 3000,
       direction: 'alternate',
       loop: true,
-      easing: 'easeInOutSine'
+      easing: 'easeInOutBack'
     });
   </script>
 </body>
