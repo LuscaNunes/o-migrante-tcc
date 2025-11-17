@@ -1,113 +1,133 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O Migrante - Carregando...</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-  <style>
-    body { background: linear-gradient(135deg, #1e40af, #3b82f6); overflow: hidden; }
-    #loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-    #progressBar { height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; margin-top: 30px; width: 280px; }
-    #progressFill { height: 100%; background: #fff; width: 0%; border-radius: 3px; }
-  </style>
+  <title>Login Ring</title>
 </head>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial;
+  }
+
+  .ring {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .ring i {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #fff;
+    transition: 0.5s;
+  }
+
+  .ring i:nth-child(1) {
+    border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+    animation: animate 6s linear infinite;
+  }
+
+  .ring i:nth-child(2) {
+    border-radius: 41% 44% 56% 59% / 38% 62% 63% 37%;
+    animation: animate 4s linear infinite;
+  }
+
+  @keyframes animate {
+    0% {
+      transform: rotate(0deg);
+      filter: hue-rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+      filter: hue-rotate(360deg);
+    }
+  }
+
+  .login {
+    position: absolute;
+    width: 280px;
+    text-align: center;
+    color: #fff;
+  }
+
+  .inputBx input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    border: 2px solid #fff;
+    border-radius: 20px;
+    color: #fff;
+  }
+
+  .inputBx button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #fff;
+    background: linear-gradient(45deg, #ff5f6d, #ffc371);
+  }
+
+  .links {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .links a {
+    color: #bbb;
+    font-size: 14px;
+    text-decoration: none;
+  }
+</style>
+
 <body>
 
-<!-- TELA DE LOADING TIPO DUOLINGO -->
-<div id="loader">
-  <!-- TEU BONECO MIGRANTE (feito com SVG simples) -->
-  <svg width="180" height="220" viewBox="0 0 180 220" id="migrante">
-    <!-- Cabeça -->
-    <circle cx="90" cy="70" r="45" fill="#FFBFA0"/>
-    <!-- Olhos -->
-    <circle cx="75" cy="65" r="8" fill="#000"/>
-    <circle cx="105" cy="65" r="8" fill="#000"/>
-    <!-- Sorriso -->
-    <path d="M70 85 Q90 110 110 85" stroke="#000" stroke-width="6" fill="none"/>
-    <!-- Corpo -->
-    <rect x="60" y="110" width="60" height="80" rx="20" fill="#FF6B6B"/>
-    <!-- Mochila -->
-    <rect x="50" y="120" width="80" height="60" rx="15" fill="#4444FF"/>
-    <!-- Pernas -->
-    <rect x="70" y="185" width="20" height="30" fill="#4444FF"/>
-    <rect x="90" y="185" width="20" height="30" fill="#4444FF"/>
-  </svg>
+  <div class="ring">
+    <i></i>
+    <i></i>
 
-  <!-- Animação de respiração + pulinho fofo -->
-  <script>
-    // Respiração eterna
-    anime({
-      targets: '#migrante',
-      scaleY: [1, 1.06, 1],
-      duration: 2400,
-      loop: true,
-      easing: 'easeInOutSine'
-    });
-    // Pulinhos aleatórios (igual o Duolingo)
-    setInterval(() => {
-      anime({
-        targets: '#migrante',
-        translateY: [-30, 0],
-        rotate: [-5, 5, 0],
-        duration: 800,
-        easing: 'easeOutBounce'
-      });
-    }, 4000);
-  </script>
+    <div class="login">
+      <h1>Login</h1>
 
-  <h2 class="text-3xl font-bold mt-8 animate-pulse">Preparando sua jornada...</h2>
-  
-  <!-- Textos motivacionais que mudam (igual Duolingo) -->
-  <p class="text-lg mt-4 text-center max-w-md opacity-90" id="motivational"></p>
-  <script>
-    const frases = [
-      "15 minutos por dia podem mudar sua vida...",
-      "Milhões de pessoas já cruzaram fronteiras com coragem.",
-      "Você não está sozinho nessa jornada.",
-      "A cada nível, você fica mais perto do sonho.",
-      "O mundo é grande. Vamos juntos?",
-      "Carregando esperança, força e um pouco de café.",
-      "Sua próxima conquista está logo ali..."
-    ];
-    let i = 0;
-    setInterval(() => {
-      document.getElementById('motivational').textContent = frases[i];
-      i = (i + 1) % frases.length;
-    }, 3500);
-    document.getElementById('motivational').textContent = frases[0];
-  </script>
+      <div class="inputBx">
+        <input type="text" placeholder="Username">
+      </div>
 
-  <!-- Barra de progresso sutil -->
-  <div id="progressBar" class="mt-10">
-    <div id="progressFill"></div>
+      <div class="inputBx">
+        <input type="password" placeholder="Password">
+      </div>
+
+      <div class="inputBx">
+        <button>Sign In</button>
+      </div>
+
+      <div class="links">
+        <a href="#">Forgot Password</a>
+        <a href="#">Signup</a>
+      </div>
+    </div>
   </div>
-  <script>
-    anime({
-      targets: '#progressFill',
-      width: ['0%', '100%'],
-      duration: 4000,
-      easing: 'linear',
-      complete: () => {
-        // Quando terminar → some tudo com fade lindo
-        anime({
-          targets: '#loader',
-          opacity: 0,
-          duration: 800,
-          easing: 'easeOutQuad',
-          complete: () => document.getElementById('loader').remove()
-        });
-      }
-    });
-  </script>
-</div>
-
-<!-- Teu conteúdo real vem aqui embaixo (ou no layout normal) -->
-<div class="hidden">
-  <!-- Coloca aqui teu <%- body %> ou o jogo inteiro -->
-  <h1>Bem-vindo ao O Migrante!</h1>
-</div>
 
 </body>
+
 </html>
