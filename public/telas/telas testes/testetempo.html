@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>O Migrante - Login & Cadastro</title>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Quicksand", sans-serif; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Quicksand", sans-serif;
+    }
+
     body {
       display: flex;
       justify-content: center;
@@ -18,27 +25,62 @@
     }
 
     /* Anéis giratórios neon */
+
     .ring {
       position: relative;
-      width: min(520px, 92vw);
-      height: min(520px, 92vw);
+      width: 500px;
+      height: 500px;
       display: flex;
       justify-content: center;
       align-items: center;
     }
+
     .ring i {
       position: absolute;
       inset: 0;
-      border: 3px solid #fff;
+      border: 2px solid #fff;
       transition: 0.5s;
-      border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
     }
-    .ring i:nth-child(1) { animation: animate 7s linear infinite; --clr: #00ff0a; border-color: #00ff0a; }
-    .ring i:nth-child(2) { animation: animate 5s linear infinite; --clr: #ff0057; border-color: #ff0057; }
-    .ring i:nth-child(3) { animation: animate2 11s linear infinite; --clr: #fffd44; border-color: #fffd44; }
 
-    @keyframes animate  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
-    @keyframes animate2 { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+    .ring i:nth-child(1) {
+      border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+      animation: animate 6s linear infinite;
+    }
+
+    .ring i:nth-child(2) {
+      border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
+      animation: animate 4s linear infinite;
+    }
+
+    .ring i:nth-child(3) {
+      border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
+      animation: animate2 10s linear infinite;
+    }
+
+    .ring:hover i {
+      border: 6px solid var(--clr);
+      filter: drop-shadow(0 0 20px var(--clr));
+    }
+
+    @keyframes animate {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes animate2 {
+      from {
+        transform: rotate(360deg);
+      }
+
+      to {
+        transform: rotate(0deg);
+      }
+    }
 
     .ring:hover i {
       border-width: 7px;
@@ -52,6 +94,7 @@
       text-align: center;
       z-index: 10;
     }
+
     h2 {
       font-size: 2.4em;
       font-weight: 700;
@@ -65,22 +108,27 @@
       position: relative;
       margin: 20px 0;
     }
+
     .inputBx input {
       width: 100%;
       padding: 14px 20px;
       background: transparent;
-      border: 2px solid rgba(255,255,255,0.6);
+      border: 2px solid rgba(255, 255, 255, 0.6);
       border-radius: 40px;
       outline: none;
       color: #fff;
       font-size: 1.1em;
       transition: 0.3s;
     }
+
     .inputBx input:focus {
       border-color: #00ff0a;
       box-shadow: 0 0 20px rgba(0, 255, 10, 0.5);
     }
-    .inputBx input::placeholder { color: rgba(255,255,255,0.7); }
+
+    .inputBx input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
 
     /* BOTÃO COM EFEITO NEON PULSANTE QUANDO CARREGA */
     button {
@@ -97,7 +145,10 @@
       transition: all 0.4s;
       overflow: hidden;
     }
-    button:hover { transform: scale(1.05); }
+
+    button:hover {
+      transform: scale(1.05);
+    }
 
     /* Efeito neon pulsante quando está carregando */
     button.loading {
@@ -107,9 +158,15 @@
       animation: neonPulse 1.5s infinite alternate;
       box-shadow: 0 0 30px rgba(0, 255, 10, 0.8);
     }
+
     @keyframes neonPulse {
-      0%   { box-shadow: 0 0 20px rgba(0, 255, 10, 0.6), inset 0 0 20px rgba(0, 255, 10, 0.3); }
-      100% { box-shadow: 0 0 50px rgba(0, 255, 10, 1),   inset 0 0 40px rgba(0, 255, 10, 0.6); }
+      0% {
+        box-shadow: 0 0 20px rgba(0, 255, 10, 0.6), inset 0 0 20px rgba(0, 255, 10, 0.3);
+      }
+
+      100% {
+        box-shadow: 0 0 50px rgba(0, 255, 10, 1), inset 0 0 40px rgba(0, 255, 10, 0.6);
+      }
     }
 
     .links {
@@ -119,16 +176,27 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+
     .links a {
       color: #fff;
       text-decoration: none;
       font-size: 0.95em;
       transition: 0.3s;
     }
-    .links a:hover { color: #ff357a; }
 
-    .error { color: #ff357a; margin-top: 10px; font-size: 0.9em; }
-    .hidden { display: none !important; }
+    .links a:hover {
+      color: #ff357a;
+    }
+
+    .error {
+      color: #ff357a;
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+
+    .hidden {
+      display: none !important;
+    }
 
     #messageBox {
       position: fixed;
@@ -142,14 +210,23 @@
       transform: translateX(120%);
       transition: transform 0.4s ease;
     }
-    #messageBox.show { transform: translateX(0); }
+
+    #messageBox.show {
+      transform: translateX(0);
+    }
 
     @media (max-width: 480px) {
-      h2 { font-size: 2em; }
-      .container { width: 90vw; }
+      h2 {
+        font-size: 2em;
+      }
+
+      .container {
+        width: 90vw;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <div class="ring">
@@ -197,7 +274,9 @@
     </div>
   </div>
 
-  <div id="messageBox"><p id="messageText"></p></div>
+  <div id="messageBox">
+    <p id="messageText"></p>
+  </div>
 
   <script>
     const API_BASE_URL = 'https://o-migrante.onrender.com';
@@ -313,4 +392,5 @@
     });
   </script>
 </body>
+
 </html>
