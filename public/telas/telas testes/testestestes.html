@@ -292,7 +292,7 @@
         if (!email || !senha) return mostrarErro('loginError', 'Preencha todos os campos.');
         if (!validarEmail(email)) return mostrarErro('loginError', 'Email inválido.');
 
-        toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', true);
+        // toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', true);
 
         try {
           const res = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -312,7 +312,7 @@
         } catch (err) {
           mostrarErro('loginError', 'Erro de conexão. Tente novamente.');
         } finally {
-          toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', false);
+          // toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', false);
         }
       };
     });

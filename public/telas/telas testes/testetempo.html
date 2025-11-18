@@ -3,183 +3,313 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laboratório Anime.js - O Migrante</title>
+  <title>O Migrante - Login & Cadastro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Quicksand", sans-serif; }
     body {
-      margin: 0;
-      background: linear-gradient(to bottom, #87CEEB, #98FB98);
-      font-family: Arial, sans-serif;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 20px;
       min-height: 100vh;
+      background: #111;
+      overflow: hidden;
+      color: #fff;
     }
-    h1 { color: #333; margin-bottom: 10px; }
+
+    /* Anéis giratórios neon */
+    .ring {
+      position: relative;
+      width: min(520px, 92vw);
+      height: min(520px, 92vw);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .ring i {
+      position: absolute;
+      inset: 0;
+      border: 3px solid #fff;
+      transition: 0.5s;
+      border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+    }
+    .ring i:nth-child(1) { animation: animate 7s linear infinite; --clr: #00ff0a; border-color: #00ff0a; }
+    .ring i:nth-child(2) { animation: animate 5s linear infinite; --clr: #ff0057; border-color: #ff0057; }
+    .ring i:nth-child(3) { animation: animate2 11s linear infinite; --clr: #fffd44; border-color: #fffd44; }
+
+    @keyframes animate  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+    @keyframes animate2 { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+
+    .ring:hover i {
+      border-width: 7px;
+      filter: drop-shadow(0 0 30px var(--clr));
+    }
+
     .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 15px;
-      max-width: 800px;
-      width: 100%;
+      position: absolute;
+      width: min(340px, 85vw);
+      padding: 30px 20px;
+      text-align: center;
+      z-index: 10;
     }
+    h2 {
+      font-size: 2.4em;
+      font-weight: 700;
+      margin-bottom: 30px;
+      background: linear-gradient(45deg, #00ff0a, #fffd44);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .inputBx {
+      position: relative;
+      margin: 20px 0;
+    }
+    .inputBx input {
+      width: 100%;
+      padding: 14px 20px;
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.6);
+      border-radius: 40px;
+      outline: none;
+      color: #fff;
+      font-size: 1.1em;
+      transition: 0.3s;
+    }
+    .inputBx input:focus {
+      border-color: #00ff0a;
+      box-shadow: 0 0 20px rgba(0, 255, 10, 0.5);
+    }
+    .inputBx input::placeholder { color: rgba(255,255,255,0.7); }
+
+    /* BOTÃO COM EFEITO NEON PULSANTE QUANDO CARREGA */
     button {
-      padding: 16px 8px;
-      font-size: 14px;
-      font-weight: bold;
-      color: white;
+      position: relative;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(45deg, #ff357a, #fff172);
       border: none;
-      border-radius: 12px;
+      border-radius: 40px;
+      color: #111;
+      font-size: 1.2em;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: all 0.4s;
+      overflow: hidden;
     }
     button:hover { transform: scale(1.05); }
-    button:active { transform: scale(0.95); }
-    #demo { width: 120px; height: 120px; background: #FF6B6B; border-radius: 20px; margin: 30px auto; }
+
+    /* Efeito neon pulsante quando está carregando */
+    button.loading {
+      background: transparent !important;
+      color: #fff !important;
+      border: 3px solid transparent !important;
+      animation: neonPulse 1.5s infinite alternate;
+      box-shadow: 0 0 30px rgba(0, 255, 10, 0.8);
+    }
+    @keyframes neonPulse {
+      0%   { box-shadow: 0 0 20px rgba(0, 255, 10, 0.6), inset 0 0 20px rgba(0, 255, 10, 0.3); }
+      100% { box-shadow: 0 0 50px rgba(0, 255, 10, 1),   inset 0 0 40px rgba(0, 255, 10, 0.6); }
+    }
+
+    .links {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .links a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.95em;
+      transition: 0.3s;
+    }
+    .links a:hover { color: #ff357a; }
+
+    .error { color: #ff357a; margin-top: 10px; font-size: 0.9em; }
+    .hidden { display: none !important; }
+
+    #messageBox {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 600;
+      z-index: 1000;
+      transform: translateX(120%);
+      transition: transform 0.4s ease;
+    }
+    #messageBox.show { transform: translateX(0); }
+
+    @media (max-width: 480px) {
+      h2 { font-size: 2em; }
+      .container { width: 90vw; }
+    }
   </style>
 </head>
 <body>
 
-  <h1>Laboratório Anime.js</h1>
-  <div id="demo"></div>
+  <div class="ring">
+    <i style="--clr:#00ff0a"></i>
+    <i style="--clr:#ff0057"></i>
+    <i style="--clr:#fffd44"></i>
 
-  <div class="container">
-    <button style="background:#FF6B6B" onclick="efeito1()">1. Pulo Simples</button>
-    <button style="background:#4ECDC4" onclick="efeito2()">2. Girar 360°</button>
-    <button style="background:#45B7D1" onclick="efeito3()">3. Fade + Scale</button>
-    <button style="background:#96CEB4" onclick="efeito4()">4. Elasticidade</button>
-    <button style="background:#FECA57" onclick="efeito5()">5. Boing (Bounce)</button>
-    <button style="background:#FF9FF3" onclick="efeito6()">6. Tremor</button>
-    <button style="background:#54A0FF" onclick="efeito7()">7. Stagger (Sequência)</button>
-    <button style="background:#FF6347" onclick="efeito8()">8. Timeline (Combo)</button>
-    <button style="background:#6C5CE7" onclick="efeito9()">9. Cor + Forma</button>
-    <button style="background:#00D2D3" onclick="efeito10()">10. Cabeça Voa (Easter Egg)</button>
+    <!-- Login -->
+    <div id="loginContainer" class="container">
+      <h2>O Migrante</h2>
+      <form id="loginForm">
+        <div class="inputBx">
+          <input type="email" id="loginEmail" placeholder="seu.email@exemplo.com" required>
+        </div>
+        <div class="inputBx">
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" id="loginButton">Entrar</button>
+        <p id="loginError" class="error hidden"></p>
+        <div class="links">
+          <a href="#" id="showRegister">Cadastre-se</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Cadastro -->
+    <div id="registerContainer" class="container hidden">
+      <h2>Criar Conta</h2>
+      <form id="registerForm">
+        <div class="inputBx">
+          <input type="text" id="registerName" placeholder="Nome Completo" required>
+        </div>
+        <div class="inputBx">
+          <input type="email" id="registerEmail" placeholder="seu.email@exemplo.com" required>
+        </div>
+        <div class="inputBx">
+          <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required>
+        </div>
+        <button type="submit" id="registerButton">Cadastrar</button>
+        <p id="registerError" class="error hidden"></p>
+        <div class="links">
+          <a href="#" id="showLogin">Já tem conta? Faça login</a>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <!-- Anime.js via CDN (nunca falha) -->
-  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+  <div id="messageBox"><p id="messageText"></p></div>
 
   <script>
-    const demo = document.getElementById('demo');
+    const API_BASE_URL = 'https://o-migrante.onrender.com';
 
-    // 1. Pulo simples
-    function efeito1() {
-      anime({
-        targets: demo,
-        translateY: [-150, 0],
-        duration: 800,
-        easing: 'easeOutBounce'
-      });
+    function showMessage(msg, success = false) {
+      const box = document.getElementById('messageBox');
+      const text = document.getElementById('messageText');
+      text.textContent = msg;
+      box.className = success ? 'bg-green-600' : 'bg-red-600';
+      box.classList.add('show');
+      setTimeout(() => box.classList.remove('show'), 4000);
     }
 
-    // 2. Girar 360°
-    function efeito2() {
-      anime({
-        targets: demo,
-        rotate: '1turn',
-        duration: 1000,
-        easing: 'easeInOutSine'
-      });
+    function mostrarErro(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.classList.remove('hidden');
     }
 
-    // 3. Fade + Scale (ótimo pra botões)
-    function efeito3() {
-      anime({
-        targets: demo,
-        scale: [0.5, 1.3, 1],
-        opacity: [0, 1],
-        duration: 1200,
-        easing: 'easeOutElastic(1, 0.6)'
-      });
+    function setLoading(button, loading) {
+      button.disabled = loading;
+      if (loading) {
+        button.classList.add('loading');
+        button.textContent = button.id === 'loginButton' ? 'Entrando...' : 'Cadastrando...';
+      } else {
+        button.classList.remove('loading');
+        button.textContent = button.id === 'loginButton' ? 'Entrar' : 'Cadastrar';
+      }
     }
 
-    // 4. Elasticidade (cabeça voltando)
-    function efeito4() {
-      anime({
-        targets: demo,
-        translateY: -300,
-        duration: 1500,
-        direction: 'alternate',
-        easing: 'easeOutElastic(1, 0.4)'
-      });
+    function validarEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    // 5. Boing realista
-    function efeito5() {
-      anime({
-        targets: demo,
-        translateY: [0, -200, 0, -100, 0],
-        duration: 1200,
-        easing: 'easeOutBounce'
-      });
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginCont = document.getElementById('loginContainer');
+      const regCont = document.getElementById('registerContainer');
+      const loginBtn = document.getElementById('loginButton');
+      const registerBtn = document.getElementById('registerButton');
 
-    // 6. Tremor (quando leva dano)
-    function efeito6() {
-      anime({
-        targets: demo,
-        translateX: [-10, 10, -10, 10, 0],
-        duration: 300,
-        easing: 'easeInOutSine'
-      });
-    }
+      document.getElementById('showRegister').onclick = e => { e.preventDefault(); loginCont.classList.add('hidden'); regCont.classList.remove('hidden'); };
+      document.getElementById('showLogin').onclick = e => { e.preventDefault(); regCont.classList.add('hidden'); loginCont.classList.remove('hidden'); };
 
-    // 7. Stagger – anima vários de uma vez (perfeito pra partículas)
-    function efeito7() {
-      anime({
-        targets: '.container button',
-        translateY: [-50, 0],
-        delay: anime.stagger(50), // um depois do outro
-        duration: 800,
-        easing: 'easeOutBounce'
-      });
-    }
+      // CADASTRO
+      document.getElementById('registerForm').onsubmit = async e => {
+        e.preventDefault();
+        const nome = document.getElementById('registerName').value.trim();
+        const email = document.getElementById('registerEmail').value.trim();
+        const senha = document.getElementById('registerPassword').value;
 
-    // 8. Timeline – sequência de animações (COMBO FODA)
-    function efeito8() {
-      const tl = anime.timeline({
-        targets: demo,
-        easing: 'easeInOutSine'
-      });
-      tl.add({ scale: 0.5, opacity: 0, duration: 300 })
-        .add({ scale: 2, backgroundColor: '#FFD700', duration: 500 })
-        .add({ rotate: '2turn', duration: 800 })
-        .add({ scale: 1, backgroundColor: '#FF6B6B', duration: 400 });
-    }
+        document.getElementById('registerError').classList.add('hidden');
+        if (!nome || !email || !senha) return mostrarErro('registerError', 'Preencha todos os campos.');
+        if (!validarEmail(email)) return mostrarErro('registerError', 'Email inválido.');
+        if (senha.length < 6) return mostrarErro('registerError', 'Senha deve ter no mínimo 6 caracteres.');
 
-    // 9. Mudar cor + forma (morphing básico)
-    function efeito9() {
-      anime({
-        targets: demo,
-        backgroundColor: ['#FF6B6B', '#00FF00', '#0000FF', '#FF6B6B'],
-        borderRadius: ['20px', '50%', '0%', '20px'],
-        duration: 3000,
-        easing: 'easeInOutQuad'
-      });
-    }
+        setLoading(registerBtn, true);
 
-    // 10. EASTER EGG – Cabeça voando (igual o boneco anterior)
-    function efeito10() {
-      anime({
-        targets: demo,
-        translateY: [0, -350, 0],
-        rotate: [0, -0.5, 3, 0],
-        scale: [1, 1.3, 1],
-        duration: 2000,
-        easing: 'easeOutElastic(1, 0.5)',
-        complete: () => {
-          alert("A CABEÇA VOLTOU!!!");
+        try {
+          const res = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, email, senha })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showMessage(data.message || 'Cadastro realizado com sucesso!', true);
+            e.target.reset();
+            regCont.classList.add('hidden');
+            loginCont.classList.remove('hidden');
+          } else {
+            mostrarErro('registerError', data.message || 'Erro no cadastro.');
+          }
+        } catch (err) {
+          mostrarErro('registerError', 'Erro de conexão. Tente novamente.');
+        } finally {
+          setLoading(registerBtn, false);
         }
-      });
-    }
+      };
 
-    // Só pra começar com estilo
-    anime({
-      targets: 'h1',
-      translateY: [-100, 0],
-      opacity: [0, 1],
-      duration: 1500,
-      easing: 'easeOutBounce'
+      // LOGIN
+      document.getElementById('loginForm').onsubmit = async e => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        const senha = document.getElementById('loginPassword').value;
+
+        document.getElementById('loginError').classList.add('hidden');
+        if (!email || !senha) return mostrarErro('loginError', 'Preencha todos os campos.');
+        if (!validarEmail(email)) return mostrarErro('loginError', 'Email inválido.');
+
+        setLoading(loginBtn, true);
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha })
+          });
+          const data = await res.json();
+
+          if (data.auth) {
+            localStorage.setItem('token', data.token);
+            showMessage('Login realizado com sucesso!', true);
+            setTimeout(() => window.location.href = '/app/painel', 1500);
+          } else {
+            mostrarErro('loginError', data.message || 'Email ou senha incorretos.');
+          }
+        } catch (err) {
+          mostrarErro('loginError', 'Erro de conexão. Tente novamente.');
+        } finally {
+          setLoading(loginBtn, false);
+        }
+      };
     });
   </script>
 </body>
