@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Adicionado para responsividade -->
   <title>Animated Login Form - CSS</title>
-
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap");
 
@@ -27,8 +26,8 @@
 
     .ring {
       position: relative;
-      width: 500px;
-      height: 500px;
+      width: min(500px, 90vw); /* Responsivo: máximo 90% da viewport width */
+      height: min(500px, 90vw);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -39,6 +38,7 @@
       inset: 0;
       border: 2px solid #fff;
       transition: 0.5s;
+      will-change: transform; /* Otimiza animações para performance */
     }
 
     .ring i:nth-child(1) {
@@ -62,28 +62,18 @@
     }
 
     @keyframes animate {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     @keyframes animate2 {
-      0% {
-        transform: rotate(360deg);
-      }
-
-      100% {
-        transform: rotate(0deg);
-      }
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
     }
 
     .login {
       position: absolute;
-      width: 300px;
+      width: min(300px, 80vw); /* Responsivo */
       height: 100%;
       display: flex;
       justify-content: center;
@@ -102,6 +92,10 @@
       width: 100%;
     }
 
+    .login .inputBx label {
+      display: none; /* Oculto visualmente, mas acessível para leitores de tela */
+    }
+
     .login .inputBx input {
       position: relative;
       width: 100%;
@@ -113,6 +107,11 @@
       color: #fff;
       box-shadow: none;
       outline: none;
+      transition: border-color 0.3s; /* Transição suave */
+    }
+
+    .login .inputBx input:focus {
+      border-color: var(--clr, #ff357a); /* Destaque no foco */
     }
 
     .login .inputBx input[type="submit"] {
@@ -120,6 +119,11 @@
       background: linear-gradient(45deg, #ff357a, #fff172);
       border: none;
       cursor: pointer;
+      transition: transform 0.2s; /* Efeito hover */
+    }
+
+    .login .inputBx input[type="submit"]:hover {
+      transform: scale(1.05);
     }
 
     .login .inputBx input::placeholder {
@@ -138,28 +142,42 @@
     .login .links a {
       color: #fff;
       text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .login .links a:hover {
+      color: #ff357a;
+    }
+
+    /* Responsividade para telas pequenas */
+    @media (max-width: 600px) {
+      .login h2 {
+        font-size: 1.5em;
+      }
+      .login .inputBx input {
+        font-size: 1em;
+        padding: 10px 15px;
+      }
     }
   </style>
-
 </head>
-
 <body>
-
-  <!-- RING + LOGIN -->
   <div class="ring">
     <i style="--clr:#00ff0a;"></i>
     <i style="--clr:#ff0057;"></i>
     <i style="--clr:#fffd44;"></i>
 
-    <div class="login">
+    <form class="login" action="/login" method="post" id="loginForm"> <!-- Adicionado <form> semântico -->
       <h2>Login</h2>
 
       <div class="inputBx">
-        <input type="text" placeholder="Username">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Username" required aria-describedby="usernameHelp">
       </div>
 
       <div class="inputBx">
-        <input type="password" placeholder="Password">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Password" required aria-describedby="passwordHelp">
       </div>
 
       <div class="inputBx">
@@ -167,12 +185,27 @@
       </div>
 
       <div class="links">
-        <a href="#">Forget Password</a>
-        <a href="#">Signup</a>
+        <a href="/forgot-password">Forget Password</a>
+        <a href="/signup">Signup</a>
       </div>
-    </div>
+    </form>
   </div>
 
+  <script>
+    // JS básico para validação simples
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      
+      if (!username || !password) {
+        alert('Please fill in all fields.');
+        e.preventDefault();
+      } else if (password.length < 6) {
+        alert('Password must be at least 6 characters.');
+        e.preventDefault();
+      }
+      // Aqui você pode adicionar lógica para submissão real (e.g., fetch API)
+    });
+  </script>
 </body>
-
 </html>
