@@ -1,210 +1,320 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Adicionado para responsividade -->
-  <title>Animated Login Form - CSS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>O Migrante - Login & Cadastro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap");
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Quicksand", sans-serif;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Quicksand", sans-serif; }
     body {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       background: #111;
-      width: 100%;
       overflow: hidden;
+      color: #fff;
     }
 
+    /* Anéis giratórios neon (o coração do design) */
     .ring {
       position: relative;
-      width: min(500px, 90vw); /* Responsivo: máximo 90% da viewport width */
-      height: min(500px, 90vw);
+      width: min(520px, 92vw);
+      height: min(520px, 92vw);
       display: flex;
       justify-content: center;
       align-items: center;
     }
-
     .ring i {
       position: absolute;
       inset: 0;
-      border: 2px solid #fff;
+      border: 3px solid #fff;
       transition: 0.5s;
-      will-change: transform; /* Otimiza animações para performance */
-    }
-
-    .ring i:nth-child(1) {
       border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
-      animation: animate 6s linear infinite;
     }
-
-    .ring i:nth-child(2) {
-      border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
-      animation: animate 4s linear infinite;
-    }
-
-    .ring i:nth-child(3) {
-      border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
-      animation: animate2 10s linear infinite;
-    }
+    .ring i:nth-child(1) { animation: animate 7s linear infinite; border-color: #00ff0a; }
+    .ring i:nth-child(2) { animation: animate 5s linear infinite; border-color: #ff0057; }
+    .ring i:nth-child(3) { animation: animate2 11s linear infinite; border-color: #fffd44; }
 
     .ring:hover i {
-      border: 6px solid var(--clr);
-      filter: drop-shadow(0 0 20px var(--clr));
+      border-width: 7px;
+      filter: drop-shadow(0 0 25px var(--clr));
     }
 
-    @keyframes animate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes animate  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+    @keyframes animate2 { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
 
-    @keyframes animate2 {
-      0% { transform: rotate(360deg); }
-      100% { transform: rotate(0deg); }
-    }
-
-    .login {
+    /* Container principal */
+    .container {
       position: absolute;
-      width: min(300px, 80vw); /* Responsivo */
-      height: 100%;
+      width: min(340px, 85vw);
+      padding: 30px 20px;
+      text-align: center;
+      z-index: 10;
+    }
+    h2 {
+      font-size: 2.4em;
+      font-weight: 700;
+      margin-bottom: 30px;
+      background: linear-gradient(45deg, #00ff0a, #fffd44);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .inputBx {
+      position: relative;
+      margin: 20px 0;
+    }
+    .inputBx input {
+      width: 100%;
+      padding: 14px 20px;
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.6);
+      border-radius: 40px;
+      outline: none;
+      color: #fff;
+      font-size: 1.1em;
+      transition: 0.3s;
+    }
+    .inputBx input:focus {
+      border-color: var(--clr, #00ff0a);
+      box-shadow: 0 0 15px rgba(0, 255, 10, 0.4);
+    }
+    .inputBx input::placeholder { color: rgba(255,255,255,0.7); }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(45deg, #ff357a, #fff172);
+      border: none;
+      border-radius: 40px;
+      color: #111;
+      font-size: 1.2em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
-      gap: 20px;
+      gap: 10px;
     }
+    button:hover { transform: scale(1.05); }
+    button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-    .login h2 {
-      font-size: 2em;
-      color: #fff;
-    }
-
-    .login .inputBx {
-      position: relative;
-      width: 100%;
-    }
-
-    .login .inputBx label {
-      display: none; /* Oculto visualmente, mas acessível para leitores de tela */
-    }
-
-    .login .inputBx input {
-      position: relative;
-      width: 100%;
-      padding: 12px 20px;
-      background: transparent;
-      border: 2px solid #fff;
-      border-radius: 40px;
-      font-size: 1.2em;
-      color: #fff;
-      box-shadow: none;
-      outline: none;
-      transition: border-color 0.3s; /* Transição suave */
-    }
-
-    .login .inputBx input:focus {
-      border-color: var(--clr, #ff357a); /* Destaque no foco */
-    }
-
-    .login .inputBx input[type="submit"] {
-      width: 100%;
-      background: linear-gradient(45deg, #ff357a, #fff172);
-      border: none;
-      cursor: pointer;
-      transition: transform 0.2s; /* Efeito hover */
-    }
-
-    .login .inputBx input[type="submit"]:hover {
-      transform: scale(1.05);
-    }
-
-    .login .inputBx input::placeholder {
-      color: rgba(255, 255, 255, 0.75);
-    }
-
-    .login .links {
-      position: relative;
-      width: 100%;
+    .links {
+      margin-top: 20px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
-
-    .login .links a {
+    .links a {
       color: #fff;
       text-decoration: none;
-      transition: color 0.3s;
+      font-size: 0.95em;
+      transition: 0.3s;
     }
+    .links a:hover { color: #ff357a; }
 
-    .login .links a:hover {
-      color: #ff357a;
+    .error { color: #ff357a; margin-top: 10px; font-size: 0.9em; }
+    .hidden { display: none !important; }
+
+    /* Mensagem flutuante no canto */
+    #messageBox {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 600;
+      z-index: 1000;
+      transform: translateX(120%);
+      transition: transform 0.4s ease;
     }
+    #messageBox.show { transform: translateX(0); }
 
-    /* Responsividade para telas pequenas */
-    @media (max-width: 600px) {
-      .login h2 {
-        font-size: 1.5em;
-      }
-      .login .inputBx input {
-        font-size: 1em;
-        padding: 10px 15px;
-      }
+    @media (max-width: 480px) {
+      h2 { font-size: 2em; }
+      .container { width: 90vw; }
     }
   </style>
 </head>
 <body>
+
   <div class="ring">
-    <i style="--clr:#00ff0a;"></i>
-    <i style="--clr:#ff0057;"></i>
-    <i style="--clr:#fffd44;"></i>
+    <i style="--clr:#00ff0a"></i>
+    <i style="--clr:#ff0057"></i>
+    <i style="--clr:#fffd44"></i>
 
-    <form class="login" action="/login" method="post" id="loginForm"> <!-- Adicionado <form> semântico -->
-      <h2>Login</h2>
+    <!-- Login -->
+    <div id="loginContainer" class="container">
+      <h2>O Migrante</h2>
+      <form id="loginForm">
+        <div class="inputBx">
+          <input type="email" id="loginEmail" placeholder="seu.email@exemplo.com" required>
+        </div>
+        <div class="inputBx">
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" id="loginButton">
+          <span id="loginButtonText">Entrar</span>
+          <svg id="loginSpinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+        </button>
+        <p id="loginError" class="error hidden"></p>
+        <div class="links">
+          <a href="#" id="showRegister">Cadastre-se</a>
+        </div>
+      </form>
+    </div>
 
-      <div class="inputBx">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Username" required aria-describedby="usernameHelp">
-      </div>
+    <!-- Cadastro -->
+    <div id="registerContainer" class="container hidden">
+      <h2>Criar Conta</h2>
+      <form id="registerForm">
+        <div class="inputBx">
+          <input type="text" id="registerName" placeholder="Nome Completo" required>
+        </div>
+        <div class="inputBx">
+          <input type="email" id="registerEmail" placeholder="seu.email@exemplo.com" required>
+        </div>
+        <div class="inputBx">
+          <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required>
+        </div>
+        <button type="submit" id="registerButton">
+          <span id="registerButtonText">Cadastrar</span>
+          <svg id="registerSpinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+        </button>
+        <p id="registerError" class="error hidden"></p>
+        <div class="links">
+          <a href="#" id="showLogin">Já tem conta? Faça login</a>
+        </div>
+      </form>
+    </div>
+  </div>
 
-      <div class="inputBx">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Password" required aria-describedby="passwordHelp">
-      </div>
-
-      <div class="inputBx">
-        <input type="submit" value="Sign in">
-      </div>
-
-      <div class="links">
-        <a href="/forgot-password">Forget Password</a>
-        <a href="/signup">Signup</a>
-      </div>
-    </form>
+  <!-- Mensagem flutuante -->
+  <div id="messageBox">
+    <p id="messageText"></p>
   </div>
 
   <script>
-    // JS básico para validação simples
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      
-      if (!username || !password) {
-        alert('Please fill in all fields.');
+    const API_BASE_URL = 'https://o-migrante.onrender.com';
+
+    // Mensagem bonita no canto
+    function showMessage(msg, success = false) {
+      const box = document.getElementById('messageBox');
+      const text = document.getElementById('messageText');
+      text.textContent = msg;
+      box.className = success ? 'bg-green-600' : 'bg-red-600';
+      box.classList.add('show');
+      setTimeout(() => box.classList.remove('show'), 4000);
+    }
+
+    function mostrarErro(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function toggleLoading(btnId, spinId, textId, loading) {
+      const btn = document.getElementById(btnId);
+      const spin = document.getElementById(spinId);
+      const txt = document.getElementById(textId);
+      btn.disabled = loading;
+      spin.classList.toggle('hidden', !loading);
+      txt.textContent = loading ? '' : (btnId === 'loginButton' ? 'Entrar' : 'Cadastrar');
+    }
+
+    function validarEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginCont = document.getElementById('loginContainer');
+      const regCont   = document.getElementById('registerContainer');
+
+      document.getElementById('showRegister').onclick = e => { e.preventDefault(); loginCont.classList.add('hidden'); regCont.classList.remove('hidden'); };
+      document.getElementById('showLogin').onclick    = e => { e.preventDefault(); regCont.classList.add('hidden');   loginCont.classList.remove('hidden'); };
+
+      // CADASTRO
+      document.getElementById('registerForm').onsubmit = async e => {
         e.preventDefault();
-      } else if (password.length < 6) {
-        alert('Password must be at least 6 characters.');
+        const nome = document.getElementById('registerName').value.trim();
+        const email = document.getElementById('registerEmail').value.trim();
+        const senha = document.getElementById('registerPassword').value;
+
+        document.getElementById('registerError').classList.add('hidden');
+
+        if (!nome || !email || !senha) return mostrarErro('registerError', 'Preencha todos os campos.');
+        if (!validarEmail(email)) return mostrarErro('registerError', 'Email inválido.');
+        if (senha.length < 6) return mostrarErro('registerError', 'Senha deve ter no mínimo 6 caracteres.');
+
+        toggleLoading('registerButton', 'registerSpinner', 'registerButtonText', true);
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, email, senha })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showMessage(data.message || 'Cadastro realizado com sucesso!', true);
+            e.target.reset();
+            regCont.classList.add('hidden');
+            loginCont.classList.remove('hidden');
+          } else {
+            mostrarErro('registerError', data.message || 'Erro no cadastro.');
+          }
+        } catch (err) {
+          mostrarErro('registerError', 'Erro de conexão. Tente novamente.');
+        } finally {
+          toggleLoading('registerButton', 'registerSpinner', 'registerButtonText', false);
+        }
+      };
+
+      // LOGIN
+      document.getElementById('loginForm').onsubmit = async e => {
         e.preventDefault();
-      }
-      // Aqui você pode adicionar lógica para submissão real (e.g., fetch API)
+        const email = document.getElementById('loginEmail').value.trim();
+        const senha = document.getElementById('loginPassword').value;
+
+        document.getElementById('loginError').classList.add('hidden');
+
+        if (!email || !senha) return mostrarErro('loginError', 'Preencha todos os campos.');
+        if (!validarEmail(email)) return mostrarErro('loginError', 'Email inválido.');
+
+        toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', true);
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha })
+          });
+          const data = await res.json();
+
+          if (data.auth) {
+            localStorage.setItem('token', data.token);
+            showMessage('Login realizado com sucesso! Redirecionando...', true);
+            setTimeout(() => window.location.href = '/app/painel', 1500);
+          } else {
+            mostrarErro('loginError', data.message || 'Email ou senha incorretos.');
+          }
+        } catch (err) {
+          mostrarErro('loginError', 'Erro de conexão. Tente novamente.');
+        } finally {
+          toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', false);
+        }
+      };
     });
   </script>
 </body>
