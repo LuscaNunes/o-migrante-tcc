@@ -21,7 +21,6 @@
         height: 100vh;
         overflow: hidden;
         z-index: -10;
-        /* fica atrás de tudo */
       }
 
       .bg-image {
@@ -32,7 +31,7 @@
         left: 50%;
         transform: translate(-50%, -50%) scale(1.05);
         object-fit: cover;
-        transition: transform 0.05s linear;
+        transition: transform 0.12s linear;
         user-select: none;
         pointer-events: none;
         /* garante que o usuário clique no painel sem bloquear */
@@ -43,7 +42,7 @@
 
     <!-- Fundo animado -->
     <div class="bg-container">
-      <img class="bg-image" src="/img/SEU_ARQUIVO_AQUI.jpg" alt="Fundo">
+      <img class="bg-image" src="Teste fundo migrante (1) (1).jpg" alt="Fundo">
     </div>
 
     <section class="max-w-5xl mx-auto space-y-8">
@@ -128,7 +127,7 @@
         const x = (e.clientX / window.innerWidth - 0.5) * 30;
         const y = (e.clientY / window.innerHeight - 0.5) * 30;
 
-        bg.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1.05)`;
+        bg.style.transform = `translateX(calc(-50% + ${x}px)) translateY(calc(-50% + ${y}px)) scale(1.05)`;
       });
 
 
