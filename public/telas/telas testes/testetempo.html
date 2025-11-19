@@ -1,396 +1,228 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<% /* * Painel.ejs: Versão Corrigida * Este arquivo contém APENAS o HTML da seção principal do Dashboard. * As tags
+  <html>,
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O Migrante - Login & Cadastro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Quicksand", sans-serif;
-    }
-
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #111;
-      overflow: hidden;
-      color: #fff;
-    }
-
-    /* Anéis giratórios neon */
-
-    .ring {
-      position: relative;
-      width: 500px;
-      height: 500px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .ring i {
-      position: absolute;
-      inset: 0;
-      border: 2px solid #fff;
-      transition: 0.5s;
-    }
-
-    .ring i:nth-child(1) {
-      border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
-      animation: animate 6s linear infinite;
-    }
-
-    .ring i:nth-child(2) {
-      border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
-      animation: animate 4s linear infinite;
-    }
-
-    .ring i:nth-child(3) {
-      border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
-      animation: animate2 10s linear infinite;
-    }
-
-    .ring:hover i {
-      border: 6px solid var(--clr);
-      filter: drop-shadow(0 0 20px var(--clr));
-    }
-
-    @keyframes animate {
-      from {
-        transform: rotate(0deg);
+  <head>,
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+        background: #000;
       }
 
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes animate2 {
-      from {
-        transform: rotate(360deg);
-      }
-
-      to {
-        transform: rotate(0deg);
-      }
-    }
-
-    .ring:hover i {
-      border-width: 7px;
-      filter: drop-shadow(0 0 30px var(--clr));
-    }
-
-    .container {
-      position: absolute;
-      width: min(340px, 85vw);
-      padding: 30px 20px;
-      text-align: center;
-      z-index: 10;
-    }
-
-    h2 {
-      font-size: 2.4em;
-      font-weight: 700;
-      margin-bottom: 30px;
-      background: linear-gradient(45deg, #00ff0a, #fffd44);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .inputBx {
-      position: relative;
-      margin: 20px 0;
-    }
-
-    .inputBx input {
-      width: 100%;
-      padding: 14px 20px;
-      background: transparent;
-      border: 2px solid rgba(255, 255, 255, 0.6);
-      border-radius: 40px;
-      outline: none;
-      color: #fff;
-      font-size: 1.1em;
-      transition: 0.3s;
-    }
-
-    .inputBx input:focus {
-      border-color: #00ff0a;
-      box-shadow: 0 0 20px rgba(0, 255, 10, 0.5);
-    }
-
-    .inputBx input::placeholder {
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    /* BOTÃO COM EFEITO NEON PULSANTE QUANDO CARREGA */
-    button {
-      position: relative;
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(45deg, #ff357a, #fff172);
-      border: none;
-      border-radius: 40px;
-      color: #111;
-      font-size: 1.2em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.4s;
-      overflow: hidden;
-    }
-
-    button:hover {
-      transform: scale(1.05);
-    }
-
-    /* Efeito neon pulsante quando está carregando */
-    button.loading {
-      background: transparent !important;
-      color: #fff !important;
-      border: 3px solid transparent !important;
-      animation: neonPulse 1.5s infinite alternate;
-      box-shadow: 0 0 30px rgba(0, 255, 10, 0.8);
-    }
-
-    @keyframes neonPulse {
-      0% {
-        box-shadow: 0 0 20px rgba(0, 255, 10, 0.6), inset 0 0 20px rgba(0, 255, 10, 0.3);
+      .bg-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        z-index: -10;
+        /* fica atrás de tudo */
       }
 
-      100% {
-        box-shadow: 0 0 50px rgba(0, 255, 10, 1), inset 0 0 40px rgba(0, 255, 10, 0.6);
+      .bg-image {
+        position: absolute;
+        width: 110vw;
+        height: 110vh;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(1.05);
+        object-fit: cover;
+        transition: transform 0.05s linear;
+        user-select: none;
+        pointer-events: none;
+        /* garante que o usuário clique no painel sem bloquear */
       }
-    }
+    </style>
 
-    .links {
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
+  <body>
 
-    .links a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 0.95em;
-      transition: 0.3s;
-    }
-
-    .links a:hover {
-      color: #ff357a;
-    }
-
-    .error {
-      color: #ff357a;
-      margin-top: 10px;
-      font-size: 0.9em;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    #messageBox {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 16px 24px;
-      border-radius: 12px;
-      color: #fff;
-      font-weight: 600;
-      z-index: 1000;
-      transform: translateX(120%);
-      transition: transform 0.4s ease;
-    }
-
-    #messageBox.show {
-      transform: translateX(0);
-    }
-
-    @media (max-width: 480px) {
-      h2 {
-        font-size: 2em;
-      }
-
-      .container {
-        width: 90vw;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="ring">
-    <i style="--clr:#00ff0a"></i>
-    <i style="--clr:#ff0057"></i>
-    <i style="--clr:#fffd44"></i>
-
-    <!-- Login -->
-    <div id="loginContainer" class="container">
-      <h2>O Migrante</h2>
-      <form id="loginForm">
-        <div class="inputBx">
-          <input type="email" id="loginEmail" placeholder="seu.email@exemplo.com" required>
-        </div>
-        <div class="inputBx">
-          <input type="password" id="loginPassword" placeholder="••••••••" required>
-        </div>
-        <button type="submit" id="loginButton">Entrar</button>
-        <p id="loginError" class="error hidden"></p>
-        <div class="links">
-          <a href="#" id="showRegister">Cadastre-se</a>
-        </div>
-      </form>
+    <!-- Fundo animado -->
+    <div class="bg-container">
+      <img class="bg-image" src="/img/SEU_ARQUIVO_AQUI.jpg" alt="Fundo">
     </div>
 
-    <!-- Cadastro -->
-    <div id="registerContainer" class="container hidden">
-      <h2>Criar Conta</h2>
-      <form id="registerForm">
-        <div class="inputBx">
-          <input type="text" id="registerName" placeholder="Nome Completo" required>
+    <section class="max-w-5xl mx-auto space-y-8">
+      <div
+        class="flex flex-col md:flex-row md:justify-between md:items-center bg-white rounded-2xl shadow-sm p-8 fadeInUp delay-100">
+        <div>
+          <h1 class="text-3xl font-semibold text-[#111827] mb-1 select-none">
+            Bem-vindo,
+            <span class="font-bold">
+              <%= user ? user.nome : 'Usuário' %>
+            </span>!
+          </h1>
+          <p class="text-gray-600 select-none">Você está logado com sucesso.</p>
         </div>
-        <div class="inputBx">
-          <input type="email" id="registerEmail" placeholder="seu.email@exemplo.com" required>
+
+        <button
+          class="mt-6 md:mt-0 bg-[#2563eb] hover:bg-[#1e40af] text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#1e40af] flex items-center select-none"
+          id="logoutButtonConteudo">
+          <i class="fas fa-sign-out-alt mr-2"></i>Sair
+        </button>
+      </div>
+      <section aria-label="Acesso rápido" class="grid grid-cols-1 gap-6 fadeInUp delay-200 max-w-6xl mx-auto">
+        <div id="mensagemDiaria"
+          class="bg-white rounded-2xl shadow-sm p-6 flex flex-col text-left hover:shadow-md transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-[#2563eb] cursor-pointer select-none"
+          tabindex="0">
+          <div class="flex items-center mb-2">
+            <span class="font-semibold text-[#2563eb] text-lg">Mensagem Diária</span>
+          </div>
+          <h3 id="mensagemTitulo" class="font-semibold text-[#111827] text-xl mb-2"></h3>
+          <p id="mensagemTextoBase" class="text-sm text-gray-600 mb-2"></p>
+          <p id="mensagemDescricao" class="text-gray-700"></p>
+          <p id="mensagemErro" class="text-gray-500 hidden">
+            Nenhuma mensagem disponível hoje.
+          </p>
         </div>
-        <div class="inputBx">
-          <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required>
-        </div>
-        <button type="submit" id="registerButton">Cadastrar</button>
-        <p id="registerError" class="error hidden"></p>
-        <div class="links">
-          <a href="#" id="showLogin">Já tem conta? Faça login</a>
-        </div>
-      </form>
-    </div>
-  </div>
+      </section>
 
-  <div id="messageBox">
-    <p id="messageText"></p>
-  </div>
+      <section aria-label="Atividades recentes do usuário"
+        class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm p-8 fadeInUp delay-400">
+        <h2 class="text-xl font-semibold text-[#111827] mb-6 select-none">
+          notificações
+        </h2>
+        <ul class="space-y-4 text-gray-700">
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-check-circle text-[#2563eb]"></i>
+            <span>
+              Você completou a missão
+              <strong class="text-[#111827]">"Descobrir o Novo Testamento"</strong>.
+            </span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-save text-[#2563eb]"></i>
+            <span>
+              Você salvou uma anotação na
+              <strong class="text-[#111827]">Biblioteca Bíblica</strong>.
+            </span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-comment-alt text-[#2563eb]"></i>
+            <span>Você enviou uma mensagem diária para o grupo.</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-cog text-[#2563eb]"></i>
+            <span>Você atualizou suas configurações de perfil.</span>
+          </li>
+          <li class="flex items-center space-x-3">
+            <i aria-hidden="true" class="fas fa-flag-checkered text-[#2563eb]"></i>
+            <span>
+              Você iniciou a missão
+              <strong class="text-[#111827]">"Estudo do Antigo Testamento"</strong>.
+            </span>
+          </li>
+        </ul>
+      </section>
+    </section>
 
-  <script>
-    const API_BASE_URL = 'https://o-migrante.onrender.com';
+    <script>
 
-    function showMessage(msg, success = false) {
-      const box = document.getElementById('messageBox');
-      const text = document.getElementById('messageText');
-      text.textContent = msg;
-      box.className = success ? 'bg-green-600' : 'bg-red-600';
-      box.classList.add('show');
-      setTimeout(() => box.classList.remove('show'), 4000);
-    }
+      const bg = document.querySelector(".bg-image");
 
-    function mostrarErro(id, msg) {
-      const el = document.getElementById(id);
-      el.textContent = msg;
-      el.classList.remove('hidden');
-    }
+      document.addEventListener("mousemove", (e) => {
+        const x = (e.clientX / window.innerWidth - 0.5) * 30;
+        const y = (e.clientY / window.innerHeight - 0.5) * 30;
 
-    function setLoading(button, loading) {
-      button.disabled = loading;
-      if (loading) {
-        button.classList.add('loading');
-        button.textContent = button.id === 'loginButton' ? 'Entrando...' : 'Cadastrando...';
+        bg.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1.05)`;
+      });
+
+
+      console.log("Script do Painel.ejs carregado");
+
+      // Lógica que era feita pelo verifyToken, mas agora é redundante 
+      // pois o Express já autenticou antes de renderizar a página.
+
+      function showFeedback(message, isError = true) {
+        const feedbackDiv = document.createElement("div");
+        feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? "bg-red-500" : "bg-green-500"
+          } text-white z-50`;
+        feedbackDiv.textContent = message;
+        document.body.appendChild(feedbackDiv);
+        setTimeout(() => feedbackDiv.remove(), 3000);
+      }
+
+      function getVersionName(version) {
+        const versions = {
+          acf: "Almeida Corrigida Fiel",
+          nvi: "Nova Versão Internacional",
+          aa: "Almeida Atualizada",
+        };
+        return versions[version] || version;
+      }
+
+      async function loadMensagemDiaria() {
+        try {
+          // Mantenha o localhost para testes, mas use API_BASE_URL se estiver definido globalmente ou um caminho relativo /mensagens/diaria se a rota estiver no mesmo servidor
+          const response = await fetch("/mensagens/diaria", {
+            method: "GET",
+          });
+          console.log("Resposta de /mensagens/diaria:", response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          console.log("Dados de /mensagens/diaria:", data);
+
+          const mensagemTitulo = document.getElementById("mensagemTitulo");
+          const mensagemTextoBase = document.getElementById("mensagemTextoBase");
+          const mensagemDescricao = document.getElementById("mensagemDescricao");
+          const mensagemErro = document.getElementById("mensagemErro");
+
+          if (!data.success || !data.mensagem) {
+            if (mensagemErro) mensagemErro.classList.remove("hidden");
+            return;
+          }
+
+          const {
+            versao,
+            livro,
+            capitulo,
+            versiculo,
+            descricao,
+          } = data.mensagem;
+
+          if (mensagemTitulo) mensagemTitulo.textContent = data.mensagem.titulo;
+          if (mensagemTextoBase) mensagemTextoBase.textContent = `${livro} ${capitulo}:${versiculo} (${getVersionName(versao)})`;
+          if (mensagemDescricao) mensagemDescricao.textContent = descricao;
+
+
+          // Correção: Mude o link para rotas Express EJS (idealmente /app/biblia) ou mantenha o caminho estático se necessário:
+          const mensagemDiaria = document.getElementById("mensagemDiaria");
+          if (mensagemDiaria) {
+            mensagemDiaria.addEventListener("click", () => {
+              // IDEAL: window.location.href = `/app/biblia?versao=${versao}&livro=${encodeURIComponent(livro)}&capitulo=${capitulo}&versiculo=${versiculo}`;
+              window.location.href = `/biblia/Biblia.html?versao=${versao}&livro=${encodeURIComponent(
+                livro
+              )}&capitulo=${capitulo}&versiculo=${versiculo}`; // Mantendo o caminho estático temporariamente
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao carregar mensagem:", error);
+          const mensagemErro = document.getElementById("mensagemErro");
+          if (mensagemErro) mensagemErro.classList.remove("hidden");
+        }
+      }
+
+      // A função logout deve ser global (em layout.ejs)
+
+      const logoutButtonConteudo = document.getElementById("logoutButtonConteudo");
+      // Se a função 'logout' estiver globalmente definida em layout.ejs, podemos usá-la.
+      if (logoutButtonConteudo && typeof logout === 'function') {
+        logoutButtonConteudo.addEventListener("click", logout);
       } else {
-        button.classList.remove('loading');
-        button.textContent = button.id === 'loginButton' ? 'Entrar' : 'Cadastrar';
+        // Fallback se a função global ainda não foi definida:
+        logoutButtonConteudo.addEventListener("click", () => {
+          localStorage.removeItem("token");
+          fetch('/auth/logout', { method: 'POST' })
+            .finally(() => { window.location.href = "/"; });
+        });
       }
-    }
 
-    function validarEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginCont = document.getElementById('loginContainer');
-      const regCont = document.getElementById('registerContainer');
-      const loginBtn = document.getElementById('loginButton');
-      const registerBtn = document.getElementById('registerButton');
-
-      document.getElementById('showRegister').onclick = e => { e.preventDefault(); loginCont.classList.add('hidden'); regCont.classList.remove('hidden'); };
-      document.getElementById('showLogin').onclick = e => { e.preventDefault(); regCont.classList.add('hidden'); loginCont.classList.remove('hidden'); };
-
-      // CADASTRO
-      document.getElementById('registerForm').onsubmit = async e => {
-        e.preventDefault();
-        const nome = document.getElementById('registerName').value.trim();
-        const email = document.getElementById('registerEmail').value.trim();
-        const senha = document.getElementById('registerPassword').value;
-
-        document.getElementById('registerError').classList.add('hidden');
-        if (!nome || !email || !senha) return mostrarErro('registerError', 'Preencha todos os campos.');
-        if (!validarEmail(email)) return mostrarErro('registerError', 'Email inválido.');
-        if (senha.length < 6) return mostrarErro('registerError', 'Senha deve ter no mínimo 6 caracteres.');
-
-        setLoading(registerBtn, true);
-
-        try {
-          const res = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome, email, senha })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            showMessage(data.message || 'Cadastro realizado com sucesso!', true);
-            e.target.reset();
-            regCont.classList.add('hidden');
-            loginCont.classList.remove('hidden');
-          } else {
-            mostrarErro('registerError', data.message || 'Erro no cadastro.');
-          }
-        } catch (err) {
-          mostrarErro('registerError', 'Erro de conexão. Tente novamente.');
-        } finally {
-          setLoading(registerBtn, false);
-        }
-      };
-
-      // LOGIN
-      document.getElementById('loginForm').onsubmit = async e => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value.trim();
-        const senha = document.getElementById('loginPassword').value;
-
-        document.getElementById('loginError').classList.add('hidden');
-        if (!email || !senha) return mostrarErro('loginError', 'Preencha todos os campos.');
-        if (!validarEmail(email)) return mostrarErro('loginError', 'Email inválido.');
-
-        setLoading(loginBtn, true);
-
-        try {
-          const res = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, senha })
-          });
-          const data = await res.json();
-
-          if (data.auth) {
-            localStorage.setItem('token', data.token);
-            showMessage('Login realizado com sucesso!', true);
-            setTimeout(() => window.location.href = '/app/painel', 1500);
-          } else {
-            mostrarErro('loginError', data.message || 'Email ou senha incorretos.');
-          }
-        } catch (err) {
-          mostrarErro('loginError', 'Erro de conexão. Tente novamente.');
-        } finally {
-          setLoading(loginBtn, false);
-        }
-      };
-    });
-  </script>
-</body>
-
-</html>
+      // Chamada inicial
+      loadMensagemDiaria();
+    </script>
