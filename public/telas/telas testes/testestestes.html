@@ -1,321 +1,162 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O Migrante - Login & Cadastro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Quicksand", sans-serif; }
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: #111;
-      overflow: hidden;
-      color: #fff;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fire Transition</title>
 
-    /* Anéis giratórios neon (o coração do design) */
-    .ring {
-      position: relative;
-      width: min(520px, 92vw);
-      height: min(520px, 92vw);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .ring i {
-      position: absolute;
-      inset: 0;
-      border: 3px solid #fff;
-      transition: 0.5s;
-      border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
-    }
-    .ring i:nth-child(1) { animation: animate 7s linear infinite; border-color: #00ff0a; }
-    .ring i:nth-child(2) { animation: animate 5s linear infinite; border-color: #ff0057; }
-    .ring i:nth-child(3) { animation: animate2 11s linear infinite; border-color: #fffd44; }
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #060b10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+  }
 
-    .ring:hover i {
-      border-width: 7px;
-      filter: drop-shadow(0 0 25px var(--clr));
-    }
+  #center {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 10;
+  }
 
-    @keyframes animate  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
-    @keyframes animate2 { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+  #fire {
+    width: 260px;
+    height: 260px;
+  }
 
-    /* Container principal */
-    .container {
-      position: absolute;
-      width: min(340px, 85vw);
-      padding: 30px 20px;
-      text-align: center;
-      z-index: 10;
-    }
-    h2 {
-      font-size: 2.4em;
-      font-weight: 700;
-      margin-bottom: 30px;
-      background: linear-gradient(45deg, #00ff0a, #fffd44);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+  #flash {
+    position: absolute;
+    width: 0px;
+    height: 0px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,180,0.9), rgba(255,140,0,0.4), rgba(255,0,0,0));
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    transition: all 0.8s ease-out;
+  }
 
-    .inputBx {
-      position: relative;
-      margin: 20px 0;
-    }
-    .inputBx input {
-      width: 100%;
-      padding: 14px 20px;
-      background: transparent;
-      border: 2px solid rgba(255,255,255,0.6);
-      border-radius: 40px;
-      outline: none;
-      color: #fff;
-      font-size: 1.1em;
-      transition: 0.3s;
-    }
-    .inputBx input:focus {
-      border-color: var(--clr, #00ff0a);
-      box-shadow: 0 0 15px rgba(0, 255, 10, 0.4);
-    }
-    .inputBx input::placeholder { color: rgba(255,255,255,0.7); }
+  .btn {
+    padding: 10px 22px;
+    background: #102738;
+    color: white;
+    border: 1px solid #24445a;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+  }
 
-    button {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(45deg, #ff357a, #fff172);
-      border: none;
-      border-radius: 40px;
-      color: #111;
-      font-size: 1.2em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.3s;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-    }
-    button:hover { transform: scale(1.05); }
-    button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+  .btn:hover { background: #1c3f55; }
 
-    .links {
-      margin-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .links a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 0.95em;
-      transition: 0.3s;
-    }
-    .links a:hover { color: #ff357a; }
-
-    .error { color: #ff357a; margin-top: 10px; font-size: 0.9em; }
-    .hidden { display: none !important; }
-
-    /* Mensagem flutuante no canto */
-    #messageBox {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 16px 24px;
-      border-radius: 12px;
-      color: #fff;
-      font-weight: 600;
-      z-index: 1000;
-      transform: translateX(120%);
-      transition: transform 0.4s ease;
-    }
-    #messageBox.show { transform: translateX(0); }
-
-    @media (max-width: 480px) {
-      h2 { font-size: 2em; }
-      .container { width: 90vw; }
-    }
-  </style>
+  select {
+    padding: 8px 12px;
+    background: #102738;
+    color: white;
+    border-radius: 6px;
+    border: 1px solid #24445a;
+  }
+</style>
 </head>
 <body>
 
-  <div class="ring">
-    <i style="--clr:#00ff0a"></i>
-    <i style="--clr:#ff0057"></i>
-    <i style="--clr:#fffd44"></i>
+<div id="flash"></div>
 
-    <!-- Login -->
-    <div id="loginContainer" class="container">
-      <h2>O Migrante</h2>
-      <form id="loginForm">
-        <div class="inputBx">
-          <input type="email" id="loginEmail" placeholder="seu.email@exemplo.com" required>
-        </div>
-        <div class="inputBx">
-          <input type="password" id="loginPassword" placeholder="••••••••" required>
-        </div>
-        <button type="submit" id="loginButton">
-          <span id="loginButtonText">Entrar</span>
-          <svg id="loginSpinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-          </svg>
-        </button>
-        <p id="loginError" class="error hidden"></p>
-        <div class="links">
-          <a href="#" id="showRegister">Cadastre-se</a>
-        </div>
-      </form>
-    </div>
+<div id="center">
+  <div id="fire"></div>
 
-    <!-- Cadastro -->
-    <div id="registerContainer" class="container hidden">
-      <h2>Criar Conta</h2>
-      <form id="registerForm">
-        <div class="inputBx">
-          <input type="text" id="registerName" placeholder="Nome Completo" required>
-        </div>
-        <div class="inputBx">
-          <input type="email" id="registerEmail" placeholder="seu.email@exemplo.com" required>
-        </div>
-        <div class="inputBx">
-          <input type="password" id="registerPassword" placeholder="Mínimo 6 caracteres" required>
-        </div>
-        <button type="submit" id="registerButton">
-          <span id="registerButtonText">Cadastrar</span>
-          <svg id="registerSpinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-          </svg>
-        </button>
-        <p id="registerError" class="error hidden"></p>
-        <div class="links">
-          <a href="#" id="showLogin">Já tem conta? Faça login</a>
-        </div>
-      </form>
-    </div>
+  <!-- Menu com todos os arquivos -->
+  <select id="animSelector">
+    <option value="./aprendendo na nuvem.json">Aprendendo na Nuvem</option>
+    <option value="./Tenda.json">Tenda</option>
+    <option value="./sarsaArdente.json">Sarsa Ardente</option>
+    <option value="./fire.json">Chama (Fire)</option>
+  </select>
+
+  <div>
+    <button class="btn" id="playBtn">Play</button>
+    <button class="btn" id="resetBtn">Reset</button>
   </div>
+</div>
 
-  <!-- Mensagem flutuante -->
-  <div id="messageBox">
-    <p id="messageText"></p>
-  </div>
+<script src="https://unpkg.com/lottie-web/build/player/lottie.min.js"></script>
 
-  <script>
-    const API_BASE_URL = 'https://o-migrante.onrender.com';
+<script>
+  const fireContainer = document.getElementById("fire");
+  const selector = document.getElementById("animSelector");
+  let fireAnim = null;
 
-    // Mensagem bonita no canto
-    function showMessage(msg, success = false) {
-      const box = document.getElementById('messageBox');
-      const text = document.getElementById('messageText');
-      text.textContent = msg;
-      box.className = success ? 'bg-green-600' : 'bg-red-600';
-      box.classList.add('show');
-      setTimeout(() => box.classList.remove('show'), 4000);
-    }
+  function loadAnimation(path) {
+    if (fireAnim) fireAnim.destroy();
 
-    function mostrarErro(id, msg) {
-      const el = document.getElementById(id);
-      el.textContent = msg;
-      el.classList.remove('hidden');
-    }
-
-    function toggleLoading(btnId, spinId, textId, loading) {
-      const btn = document.getElementById(btnId);
-      const spin = document.getElementById(spinId);
-      const txt = document.getElementById(textId);
-      btn.disabled = loading;
-      spin.classList.toggle('hidden', !loading);
-      txt.textContent = loading ? '' : (btnId === 'loginButton' ? 'Entrar' : 'Cadastrar');
-    }
-
-    function validarEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginCont = document.getElementById('loginContainer');
-      const regCont   = document.getElementById('registerContainer');
-
-      document.getElementById('showRegister').onclick = e => { e.preventDefault(); loginCont.classList.add('hidden'); regCont.classList.remove('hidden'); };
-      document.getElementById('showLogin').onclick    = e => { e.preventDefault(); regCont.classList.add('hidden');   loginCont.classList.remove('hidden'); };
-
-      // CADASTRO
-      document.getElementById('registerForm').onsubmit = async e => {
-        e.preventDefault();
-        const nome = document.getElementById('registerName').value.trim();
-        const email = document.getElementById('registerEmail').value.trim();
-        const senha = document.getElementById('registerPassword').value;
-
-        document.getElementById('registerError').classList.add('hidden');
-
-        if (!nome || !email || !senha) return mostrarErro('registerError', 'Preencha todos os campos.');
-        if (!validarEmail(email)) return mostrarErro('registerError', 'Email inválido.');
-        if (senha.length < 6) return mostrarErro('registerError', 'Senha deve ter no mínimo 6 caracteres.');
-
-        toggleLoading('registerButton', 'registerSpinner', 'registerButtonText', true);
-
-        try {
-          const res = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome, email, senha })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            showMessage(data.message || 'Cadastro realizado com sucesso!', true);
-            e.target.reset();
-            regCont.classList.add('hidden');
-            loginCont.classList.remove('hidden');
-          } else {
-            mostrarErro('registerError', data.message || 'Erro no cadastro.');
-          }
-        } catch (err) {
-          mostrarErro('registerError', 'Erro de conexão. Tente novamente.');
-        } finally {
-          toggleLoading('registerButton', 'registerSpinner', 'registerButtonText', false);
-        }
-      };
-
-      // LOGIN
-      document.getElementById('loginForm').onsubmit = async e => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value.trim();
-        const senha = document.getElementById('loginPassword').value;
-
-        document.getElementById('loginError').classList.add('hidden');
-
-        if (!email || !senha) return mostrarErro('loginError', 'Preencha todos os campos.');
-        if (!validarEmail(email)) return mostrarErro('loginError', 'Email inválido.');
-
-        // toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', true);
-
-        try {
-          const res = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, senha })
-          });
-          const data = await res.json();
-
-          if (data.auth) {
-            localStorage.setItem('token', data.token);
-            showMessage('Login realizado com sucesso! Redirecionando...', true);
-            setTimeout(() => window.location.href = '/app/painel', 1500);
-          } else {
-            mostrarErro('loginError', data.message || 'Email ou senha incorretos.');
-          }
-        } catch (err) {
-          mostrarErro('loginError', 'Erro de conexão. Tente novamente.');
-        } finally {
-          // toggleLoading('loginButton', 'loginSpinner', 'loginButtonText', false);
-        }
-      };
+    fireAnim = lottie.loadAnimation({
+      container: fireContainer,
+      renderer: "svg",
+      loop: true,
+      autoplay: true,
+      path
     });
-  </script>
+
+    fireAnim.addEventListener("data_failed", () => {
+      console.error("Erro ao carregar:", path);
+    });
+  }
+
+  // Carrega a animação inicial
+  loadAnimation("./aprendendo na nuvem.json");
+
+  selector.addEventListener("change", (e) => {
+    loadAnimation(e.target.value);
+  });
+
+  const flash = document.getElementById("flash");
+
+  document.getElementById("playBtn").addEventListener("click", () => {
+    fireAnim.play();
+
+    // Somente fire.json terá efeito de brilho
+    const file = selector.value;
+
+    if (file.includes("fire.json")) {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      flash.style.left = centerX + "px";
+      flash.style.top = centerY + "px";
+
+      flash.style.opacity = "1";
+      flash.style.width = "40px";
+      flash.style.height = "40px";
+
+      setTimeout(() => {
+        flash.style.width = "2000px";
+        flash.style.height = "2000px";
+      }, 10);
+
+      setTimeout(() => {
+        flash.style.opacity = "0";
+      }, 800);
+    }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    if (fireAnim) {
+      fireAnim.stop();
+      fireAnim.playSegments([0, 1], true);
+    }
+
+    flash.style.opacity = "0";
+    flash.style.width = "0px";
+    flash.style.height = "0px";
+  });
+</script>
+
 </body>
 </html>
