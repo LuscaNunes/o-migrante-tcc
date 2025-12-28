@@ -436,6 +436,8 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'https://o-migrante.onrender.com';
+
         // Função para mostrar feedback
         function showFeedback(message, isError = true) {
             const feedbackDiv = document.createElement('div');
@@ -456,9 +458,9 @@
             }
 
             try {
-                const res = await fetch("http://localhost:3000/verifyToken", {
+                const res = await fetch(`${API_BASE_URL}/auth/verifyToken`, {
                     method: "GET",
-                    headers: { "Authorization": `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (!res.ok) {
