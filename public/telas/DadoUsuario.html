@@ -101,15 +101,11 @@
         /* Estilizar a barra de rolagem para friendsContent */
         .tab-content {
             max-height: 20rem;
-            /* Equivalente a max-h-80 */
             overflow-y: auto;
             scrollbar-width: thin;
-            /* Firefox */
             scrollbar-color: #2563EB #ddd;
-            /* Firefox */
         }
 
-        /* Estilizar a barra de rolagem para navegadores baseados em WebKit (Chrome, Safari, Edge) */
         .tab-content::-webkit-scrollbar {
             width: 8px;
         }
@@ -128,34 +124,13 @@
             background: #1e40af;
         }
 
-        /* Garantir que friendsList respeite a altura do contêiner */
         #friendsList {
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            /* Substitui space-y-4 para maior controle */
             min-height: 0;
-            /* Evita expansão além do contêiner */
         }
 
-        @media (max-width: 1024px) {
-            .sidebar-right {
-                position: static;
-                max-width: 100%;
-                margin: 1rem auto;
-            }
-
-            main {
-                margin-right: 0 !important;
-            }
-
-            /* Ajustar altura para telas menores */
-            .tab-content {
-                max-height: 24rem;
-                /* Aumentar ligeiramente para telas menores */
-            }
-        }
-        
         /* Menu mobile */
         .sidebar-desktop {
             transform: translateX(0);
@@ -175,12 +150,66 @@
         .rotate-180 {
             transform: rotate(180deg);
         }
+
+        /* Ajustes para layout responsivo */
+        @media (max-width: 1536px) {
+            .sidebar-right {
+                max-width: 350px;
+            }
+        }
+
+        @media (max-width: 1400px) {
+            .sidebar-right {
+                max-width: 320px;
+            }
+        }
+
+        @media (max-width: 1280px) {
+            .sidebar-right {
+                position: static;
+                max-width: 100%;
+                margin: 1rem auto;
+            }
+
+            .main-content-container {
+                margin-right: 0 !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content-container {
+                margin-left: 0 !important;
+                padding: 1rem !important;
+            }
+
+            .mobile-menu-button {
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                z-index: 40;
+            }
+        }
+
+        /* Garantir que o conteúdo principal tenha espaço */
+        .main-content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1280px) {
+            .main-content-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-gray-100">
-    <!-- Sidebar Esquerda (igual aos arquivos administrativos) -->
-    <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto" id="sidebar">
+    <!-- Sidebar Esquerda -->
+    <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto"
+        id="sidebar">
         <h2 class="text-2xl font-bold mb-6 select-none text-[#2563eb] flex items-center space-x-2">
             <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32" loading="lazy"
                 src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" width="32" />
@@ -209,7 +238,7 @@
                     href="../telas/telas testes/testestestes.html"><i class="fas fa-book mr-3"></i>The Good Friends</a>
             </li>
 
-            <!-- LÓGICA DE ADMINISTRAÇÃO USANDO JS/HTML -->
+            <!-- LÓGICA DE ADMINISTRAÇÃO -->
             <li class="mb-4 w-full hidden" id="adminDropdown">
                 <div class="relative w-full">
                     <button aria-controls="adminMenuItems" aria-expanded="false"
@@ -224,24 +253,24 @@
                         class="hidden absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg z-40"
                         id="adminMenuItems" role="menu">
                         <li role="none">
-                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                href="BuscaEdicaoUsuario.html" role="menuitem">Usuários</a>
+                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="BuscaEdicaoUsuario.html"
+                                role="menuitem">Usuários</a>
                         </li>
                         <li role="none">
-                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                href="CaPerguntas.html" role="menuitem">Cadastrar Níveis e Perguntas</a>
+                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="CaPerguntas.html"
+                                role="menuitem">Cadastrar Níveis e Perguntas</a>
                         </li>
                         <li role="none">
-                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                href="DadosFases.html" role="menuitem">Dados das Fases</a>
+                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="DadosFases.html"
+                                role="menuitem">Dados das Fases</a>
                         </li>
                         <li role="none">
-                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                href="DadosNiveis.html" role="menuitem">Editar Níveis e Perguntas</a>
+                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="DadosNiveis.html"
+                                role="menuitem">Editar Níveis e Perguntas</a>
                         </li>
                         <li role="none">
-                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                href="MensagemDiaria.html" role="menuitem">Cadastrar Mensagem do dia</a>
+                            <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="MensagemDiaria.html"
+                                role="menuitem">Cadastrar Mensagem do dia</a>
                         </li>
                         <li role="none">
                             <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
@@ -254,161 +283,262 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-8 md:ml-64">
-        <!-- Botão para mobile menu (adicionado para consistência) -->
-        <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg bg-white shadow mb-4">
-            <i class="fas fa-bars text-[#2563eb]"></i>
+    <div class="main-content-container ml-0 md:ml-64 p-4 sm:p-8 transition-all duration-300">
+        <!-- Botão para mobile menu -->
+        <button id="mobileMenuButton" class="mobile-menu-button md:hidden p-3 rounded-lg bg-white shadow mb-4">
+            <i class="fas fa-bars text-[#2563eb] text-xl"></i>
         </button>
 
-        <!-- Perfil do Usuário -->
-        <div class="w-full max-w-5xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-10 animate-fadeIn">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6">
-                    <div class="flex items-center space-x-4">
-                        <div class="relative">
-                            <img id="userAvatar" alt="Foto do perfil"
-                                class="w-24 h-24 rounded-full border-4 border-indigo-500 object-cover"
-                                src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
+        <!-- Layout com Grid para telas grandes -->
+        <div class="main-content-wrapper">
+            <!-- Conteúdo Principal (Lado Esquerdo) -->
+            <div class="max-w-4xl">
+                <!-- Perfil do Usuário -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 animate-fadeIn mb-6">
+                    <div
+                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <img id="userAvatar" alt="Foto do perfil"
+                                    class="w-24 h-24 rounded-full border-4 border-indigo-500 object-cover"
+                                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
+                                <button
+                                    class="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-2 shadow-lg edit-button">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <div>
+                                <h1 class="text-3xl font-semibold text-gray-900" id="userName" data-id="">Carregando...
+                                </h1>
+                                <p class="text-indigo-600 font-medium" id="userEmail">Carregando...</p>
+                                <p class="text-gray-500 text-sm mt-1" id="userJoined">Membro desde: Carregando...</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-4 sm:mt-0">
                             <button
-                                class="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-2 shadow-lg edit-button">
-                                <i class="fas fa-camera"></i>
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition flex items-center"
+                                id="editProfileBtn">
+                                <i class="fas fa-user-edit mr-2"></i>
+                                Editar Perfil
+                            </button>
+                            <button
+                                class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition flex items-center"
+                                id="logoutButton">
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                Sair
                             </button>
                         </div>
-                        <div>
-                            <h1 class="text-3xl font-semibold text-gray-900" id="userName" data-id="">Carregando...</h1>
-                            <p class="text-indigo-600 font-medium" id="userEmail">Carregando...</p>
-                            <p class="text-gray-500 text-sm mt-1" id="userJoined">Membro desde: Carregando...</p>
+                    </div>
+
+                    <!-- Estatísticas do Usuário -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+                        <div
+                            class="profile-card bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl p-6 text-white text-center">
+                            <i class="fas fa-star text-4xl mb-3 text-yellow-300"></i>
+                            <h3 class="text-lg font-semibold mb-1">XP Total</h3>
+                            <p class="text-3xl font-bold" id="xpTotal">0</p>
+                        </div>
+                        <div
+                            class="profile-card bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl p-6 text-white text-center">
+                            <i class="fas fa-medal text-4xl mb-3 text-yellow-300"></i>
+                            <h3 class="text-lg font-semibold mb-1">Níveis Iniciados</h3>
+                            <p class="text-3xl font-bold" id="niveisCompletos">0</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 mt-4 sm:mt-0">
-                        <button
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition flex items-center"
-                            id="editProfileBtn">
-                            <i class="fas fa-user-edit mr-2"></i>
-                            Editar Perfil
-                        </button>
-                        <button
-                            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition flex items-center"
-                            id="logoutButton">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
-                            Sair
-                        </button>
+
+                    <!-- Progresso por Nível -->
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Progresso por Nível</h2>
+                        <div class="bg-gray-50 rounded-xl p-6 shadow-sm space-y-6" id="progressoNiveis">
+                            <p class="text-gray-600">Carregando níveis...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Direita (Lado Direito - apenas em telas grandes) -->
+            <div class="hidden lg:block w-full max-w-sm">
+                <!-- Informações Pessoais -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Nome Completo</h3>
+                            <p class="text-gray-900 font-medium" id="fullName">Carregando...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Email</h3>
+                            <p class="text-gray-900 font-medium" id="emailInfo">Carregando...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Tipo de Conta</h3>
+                            <p class="text-gray-900 font-medium" id="accountType">Carregando...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Data de Cadastro</h3>
+                            <p class="text-gray-900 font-medium" id="registerDate">Carregando...</p>
+                        </div>
+                    </div>
+                    <!-- Botões de Ação -->
+                    <div class="mt-6 flex flex-col gap-2">
+                        <a href="Biblia.html"
+                            class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">
+                            Bíblia
+                        </a>
+                        <a href="../PaginaProducao.html"
+                            class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">
+                            Pergaminhos
+                        </a>
+                        <a href="DadosAnotacoes.html"
+                            class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">
+                            Anotações
+                        </a>
                     </div>
                 </div>
 
-                <!-- Estatísticas do Usuário -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-                    <div
-                        class="profile-card bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl p-6 text-white text-center">
-                        <i class="fas fa-star text-4xl mb-3 text-yellow-300"></i>
-                        <h3 class="text-lg font-semibold mb-1">XP Total</h3>
-                        <p class="text-3xl font-bold" id="xpTotal">0</p>
-                    </div>
-                    <div
-                        class="profile-card bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl p-6 text-white text-center">
-                        <i class="fas fa-medal text-4xl mb-3 text-yellow-300"></i>
-                        <h3 class="text-lg font-semibold mb-1">Níveis Iniciados</h3>
-                        <p class="text-3xl font-bold" id="niveisCompletos">0</p>
-                    </div>
-                </div>
+                <!-- Amigos e Pesquisa de Usuários -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Amigos e Usuários</h2>
 
-                <!-- Progresso por Nível -->
-                <div>
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Progresso por Nível</h2>
-                    <div class="bg-gray-50 rounded-xl p-6 shadow-sm space-y-6" id="progressoNiveis">
-                        <p class="text-gray-600">Carregando níveis...</p>
+                    <!-- Abas -->
+                    <div class="flex border-b border-gray-200 mb-6">
+                        <button class="tab px-4 py-2 text-gray-700 font-medium rounded-t-lg active"
+                            id="friendsTab">Amigos</button>
+                        <button class="tab px-4 py-2 text-gray-700 font-medium rounded-t-lg"
+                            id="requestsTab">Solicitações</button>
+                        <button class="tab px-4 py-2 text-gray-700 font-medium rounded-t-lg"
+                            id="searchUsersTab">Pesquisar
+                            Usuários</button>
+                    </div>
+
+                    <!-- Conteúdo das Abas -->
+                    <div id="friendsContent" class="tab-content">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Seus Amigos</h3>
+                            <span class="text-gray-500 text-sm" id="friendsCount">0 amigos</span>
+                        </div>
+                        <div id="friendsList" class="space-y-4">
+                            <p class="text-gray-600">Carregando amigos...</p>
+                        </div>
+                    </div>
+
+                    <div id="requestsContent" class="tab-content hidden max-h-40 overflow-y-auto">
+                        <div class="mb-6">
+                            <h3 class="text-sm font-semibold text-gray-900 mb-1">Solicitações Recebidas</h3>
+                            <div id="receivedRequestsList" class="space-y-4">
+                                <p class="text-gray-600">Carregando solicitações recebidas...</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-900 mb-2">Solicitações Enviadas</h3>
+                            <div id="sentRequestsList" class="space-y-4">
+                                <p class="text-gray-600">Carregando solicitações enviadas...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="searchUsersContent" class="tab-content hidden max-h-80 overflow-y-auto">
+                        <div class="mb-4">
+                            <input type="text" id="searchInput"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                placeholder="Pesquisar por nome ou email">
+                        </div>
+                        <div id="searchResults" class="space-y-4">
+                            <p class="text-gray-600">Digite para pesquisar usuários...</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar Direita (Informações Pessoais e Amigos) -->
-        <div class="sidebar-right">
+        <!-- Sidebar Direita (para telas médias/pequenas - abaixo do conteúdo) -->
+        <div class="lg:hidden mt-8">
             <!-- Informações Pessoais -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-10 animate-fadeIn">
+            <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn mb-6">
                 <h2 class="text-2xl font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <h3 class="text-gray-500 text-sm">Nome Completo</h3>
-                        <p class="text-gray-900 font-medium" id="fullName">Carregando...</p>
+                        <p class="text-gray-900 font-medium" id="fullNameMobile">Carregando...</p>
                     </div>
                     <div>
                         <h3 class="text-gray-500 text-sm">Email</h3>
-                        <p class="text-gray-900 font-medium" id="emailInfo">Carregando...</p>
+                        <p class="text-gray-900 font-medium" id="emailInfoMobile">Carregando...</p>
                     </div>
                     <div>
                         <h3 class="text-gray-500 text-sm">Tipo de Conta</h3>
-                        <p class="text-gray-900 font-medium" id="accountType">Carregando...</p>
+                        <p class="text-gray-900 font-medium" id="accountTypeMobile">Carregando...</p>
                     </div>
                     <div>
                         <h3 class="text-gray-500 text-sm">Data de Cadastro</h3>
-                        <p class="text-gray-900 font-medium" id="registerDate">Carregando...</p>
+                        <p class="text-gray-900 font-medium" id="registerDateMobile">Carregando...</p>
                     </div>
                 </div>
                 <!-- Botões de Ação -->
-                <div class="mt-6 flex flex-col sm:flex-row gap-1">
+                <div class="mt-6 flex flex-col sm:flex-row gap-2">
                     <a href="Biblia.html"
-                        class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">
+                        class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center flex-1">
                         Bíblia
                     </a>
                     <a href="../PaginaProducao.html"
-                        class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">
+                        class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center flex-1">
                         Pergaminhos
                     </a>
                     <a href="DadosAnotacoes.html"
-                        class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">
+                        class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center flex-1">
                         Anotações
                     </a>
                 </div>
             </div>
 
             <!-- Amigos e Pesquisa de Usuários -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-10 animate-fadeIn">
+            <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn">
                 <h2 class="text-2xl font-semibold text-gray-900 mb-4">Amigos e Usuários</h2>
 
                 <!-- Abas -->
                 <div class="flex border-b border-gray-200 mb-6">
-                    <button class="tab px-4 py-2 text-gray-700 font-medium rounded-t-lg active"
-                        id="friendsTab">Amigos</button>
-                    <button class="tab px-4 py-2 text-gray-700 font-medium rounded-t-lg"
-                        id="requestsTab">Solicitações</button>
-                    <button class="tab px-4 py-2 text-gray-700 font-medium rounded-t-lg" id="searchUsersTab">Pesquisar
+                    <button class="tab-mobile px-4 py-2 text-gray-700 font-medium rounded-t-lg active"
+                        id="friendsTabMobile">Amigos</button>
+                    <button class="tab-mobile px-4 py-2 text-gray-700 font-medium rounded-t-lg"
+                        id="requestsTabMobile">Solicitações</button>
+                    <button class="tab-mobile px-4 py-2 text-gray-700 font-medium rounded-t-lg"
+                        id="searchUsersTabMobile">Pesquisar
                         Usuários</button>
                 </div>
 
                 <!-- Conteúdo das Abas -->
-                <div id="friendsContent" class="tab-content">
+                <div id="friendsContentMobile" class="tab-content">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Seus Amigos</h3>
-                        <span class="text-gray-500 text-sm" id="friendsCount">0 amigos</span>
+                        <span class="text-gray-500 text-sm" id="friendsCountMobile">0 amigos</span>
                     </div>
-                    <div id="friendsList" class="space-y-4">
+                    <div id="friendsListMobile" class="space-y-4">
                         <p class="text-gray-600">Carregando amigos...</p>
                     </div>
                 </div>
 
-                <div id="requestsContent" class="tab-content hidden max-h-40 overflow-y-auto">
+                <div id="requestsContentMobile" class="tab-content hidden max-h-40 overflow-y-auto">
                     <div class="mb-6">
                         <h3 class="text-sm font-semibold text-gray-900 mb-1">Solicitações Recebidas</h3>
-                        <div id="receivedRequestsList" class="space-y-4">
+                        <div id="receivedRequestsListMobile" class="space-y-4">
                             <p class="text-gray-600">Carregando solicitações recebidas...</p>
                         </div>
                     </div>
                     <div>
                         <h3 class="text-sm font-semibold text-gray-900 mb-2">Solicitações Enviadas</h3>
-                        <div id="sentRequestsList" class="space-y-4">
+                        <div id="sentRequestsListMobile" class="space-y-4">
                             <p class="text-gray-600">Carregando solicitações enviadas...</p>
                         </div>
                     </div>
                 </div>
 
-                <div id="searchUsersContent" class="tab-content hidden max-h-80 overflow-y-auto">
+                <div id="searchUsersContentMobile" class="tab-content hidden max-h-80 overflow-y-auto">
                     <div class="mb-4">
-                        <input type="text" id="searchInput"
+                        <input type="text" id="searchInputMobile"
                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             placeholder="Pesquisar por nome ou email">
                     </div>
-                    <div id="searchResults" class="space-y-4">
+                    <div id="searchResultsMobile" class="space-y-4">
                         <p class="text-gray-600">Digite para pesquisar usuários...</p>
                     </div>
                 </div>
@@ -416,9 +546,9 @@
         </div>
     </div>
 
-    <!-- Modal de Edição -->
+    <!-- Modal de Edição (mantido igual) -->
     <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-8 w-full max-w-md">
+        <div class="bg-white rounded-lg p-8 w-full max-w-md mx-4">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-semibold">Editar Perfil</h2>
                 <button class="text-gray-500 hover:text-gray-700" id="closeModalBtn">
@@ -473,15 +603,15 @@
 
     <script>
         // Detecta automaticamente o ambiente (igual ao index)
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? `http://${window.location.hostname}:${window.location.port || 3000}` 
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://${window.location.hostname}:${window.location.port || 3000}`
             : 'https://o-migrante.onrender.com';
-        
+
         console.log('🌐 API Base URL:', API_BASE_URL);
-        
+
         // Variável global para userId
         let currentUserId = null;
-        
+
         // Função para mostrar feedback
         function showFeedback(message, isError = true) {
             const feedbackDiv = document.createElement('div');
@@ -490,7 +620,7 @@
             document.body.appendChild(feedbackDiv);
             setTimeout(() => feedbackDiv.remove(), 3000);
         }
-        
+
         // Função para fazer requisições autenticadas
         async function makeAuthenticatedRequest(url, options = {}) {
             const defaultOptions = {
@@ -500,9 +630,9 @@
                     ...options.headers
                 }
             };
-            
+
             const finalOptions = { ...defaultOptions, ...options };
-            
+
             try {
                 const response = await fetch(`${API_BASE_URL}${url}`, finalOptions);
                 return response;
@@ -511,31 +641,31 @@
                 throw error;
             }
         }
-        
+
         // Função para verificar autenticação (igual ao index)
         async function checkAuthentication() {
             try {
                 const response = await makeAuthenticatedRequest('/auth/verifyToken', {
                     method: 'GET'
                 });
-                
+
                 if (response.status === 401 || response.status === 403) {
                     return { auth: false, message: 'Não autenticado' };
                 }
-                
+
                 if (!response.ok) {
                     return { auth: false, message: 'Erro na verificação' };
                 }
-                
+
                 const data = await response.json();
                 return data;
-                
+
             } catch (error) {
                 console.error('Erro ao verificar autenticação:', error);
                 return { auth: false, message: error.message };
             }
         }
-        
+
         // Função para logout (igual ao index)
         async function logout() {
             try {
@@ -554,27 +684,27 @@
         // Verificar autenticação e carregar dados do usuário
         document.addEventListener("DOMContentLoaded", async () => {
             console.log('Página carregada, inicializando...');
-            
+
             // Menu mobile toggle
             const sidebar = document.getElementById('sidebar');
             const mobileMenuButton = document.getElementById('mobileMenuButton');
-            
+
             mobileMenuButton.addEventListener('click', () => {
                 sidebar.classList.toggle('-translate-x-full');
             });
 
             // Verificar autenticação
             const authData = await checkAuthentication();
-            
+
             if (!authData.auth) {
                 showFeedback("Sessão inválida ou expirada.");
                 setTimeout(() => window.location.href = "/", 2000);
                 return;
             }
-            
+
             const user = authData.user;
             currentUserId = user.id_usuario;
-            
+
             // Update user information
             document.getElementById('userName').textContent = user.nome || 'Usuário';
             document.getElementById('userName').dataset.id = user.id_usuario;
@@ -598,7 +728,7 @@
             // Admin menu (igual aos outros arquivos)
             if (user.tipo === 'admin') {
                 document.getElementById('adminDropdown').classList.remove('hidden');
-                
+
                 const adminMenuButton = document.getElementById('adminMenuButton');
                 const adminMenuItems = document.getElementById('adminMenuItems');
                 const adminDropdown = document.getElementById('adminDropdown');
@@ -630,7 +760,7 @@
         async function carregarProgressoDetalhado() {
             try {
                 const response = await makeAuthenticatedRequest('/progresso/detalhado');
-                
+
                 if (response.ok) {
                     const progressData = await response.json();
                     const niveisCompletos = Object.keys(progressData.niveisCompletos || {}).length;
@@ -652,7 +782,7 @@
                 progressoNiveis.innerHTML = '<p class="text-gray-600">Carregando níveis...</p>';
 
                 const niveisRes = await makeAuthenticatedRequest('/niveis/ativos');
-                
+
                 if (!niveisRes.ok) {
                     throw new Error(`Erro ao buscar níveis ativos: ${niveisRes.status}`);
                 }
@@ -669,10 +799,10 @@
                 }
 
                 progressoNiveis.innerHTML = '';
-                
+
                 for (const nivel of niveis) {
                     const botoesRes = await makeAuthenticatedRequest(`/progresso/botoes/${nivel.id}`);
-                    
+
                     let botaoAtual = 0;
                     if (botoesRes.ok) {
                         const { botoesCompletos } = await botoesRes.json();
@@ -826,7 +956,7 @@
                         document.getElementById('emailInfo').textContent = user.email || 'Sem email';
                         document.getElementById('xpTotal').textContent = user.xp_total != null ? user.xp_total : 0;
                         document.getElementById('accountType').textContent = user.tipo === 'admin' ? 'Administrador' : 'Usuário';
-                        
+
                         let registerDate = 'Data não disponível';
                         if (user.criado_em) {
                             const date = new Date(user.criado_em);
@@ -885,7 +1015,7 @@
                 friendsList.innerHTML = '<p class="text-gray-600">Carregando amigos...</p>';
 
                 const response = await makeAuthenticatedRequest('/amizades/listar');
-                
+
                 if (!response.ok) {
                     throw new Error(`Erro ao buscar amigos: ${response.status}`);
                 }
@@ -937,7 +1067,7 @@
                 sentRequestsList.innerHTML = '<p class="text-gray-600">Carregando solicitações enviadas...</p>';
 
                 const response = await makeAuthenticatedRequest('/amizades/listar');
-                
+
                 if (!response.ok) {
                     throw new Error(`Erro ao buscar solicitações: ${response.status}`);
                 }
@@ -1094,7 +1224,7 @@
 
             try {
                 const response = await makeAuthenticatedRequest(`/amizades/pesquisar?termo=${encodeURIComponent(termo)}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`Erro ao buscar usuários: ${response.status}`);
                 }
@@ -1162,4 +1292,5 @@
         document.getElementById('logoutButton').addEventListener('click', logout);
     </script>
 </body>
+
 </html>
