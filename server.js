@@ -125,7 +125,10 @@ app.get('/admin/pesquisar', authenticateToken, checkAdmin, async (req, res) => {
         res.status(500).send('Erro interno ao carregar a página administrativa.');
     }
 });
-
+app.get('/app/perfil', authenticateToken, async (req, res) => {
+  const body = await renderViewToString(req.app, 'DadoUsuario', { user: req.user });
+  res.render('layout', { title: 'Perfil | O Migrante', body, user: req.user });
+});
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================
