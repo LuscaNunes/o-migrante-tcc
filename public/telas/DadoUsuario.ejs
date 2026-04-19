@@ -2,6 +2,7 @@
 <html class="scroll-smooth" lang="pt-BR">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1" name="viewport" />
     <title>Perfil do Usuário</title>
@@ -252,6 +253,48 @@
         .rotate-180 {
             transform: rotate(180deg);
         }
+
+        @media (max-width: 640px) {
+            .profile-card {
+                transform: none !important; /* Remove hover effects no mobile */
+            }
+            
+            button, 
+            .action-button,
+            .tab {
+                min-height: 44px; /* Tamanho mínimo para toque (WCAG) */
+            }
+            
+            .main-content-container {
+                padding: 0.75rem;
+            }
+        }
+
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
     </style>
 </head>
 
@@ -325,9 +368,14 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6">
                         <div class="flex items-center space-x-4">
                             <div class="relative">
-                                <img id="userAvatar" alt="Foto do perfil"
+                                <img id="userAvatar" 
+                                    alt="Foto do perfil"
                                     class="w-24 h-24 rounded-full border-4 border-indigo-500 object-cover"
-                                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
+                                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
+                                    loading="lazy"
+                                    srcset="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg?w=96 96w,
+                                            https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg?w=192 192w"
+                                    sizes="(max-width: 768px) 96px, 96px" />
                                 <button class="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-2 shadow-lg edit-button">
                                     <i class="fas fa-camera"></i>
                                 </button>
@@ -492,9 +540,15 @@
 
         function showFeedback(message, isError = true) {
             const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
+            feedbackDiv.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 text-center max-w-[90vw]`;
             feedbackDiv.textContent = message;
             document.body.appendChild(feedbackDiv);
+            
+            // Adicionar haptic feedback (se disponível)
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(isError ? 200 : 50);
+            }
+            
             setTimeout(() => feedbackDiv.remove(), 3000);
         }
 
@@ -560,6 +614,35 @@
                 }
             });
         });
+
+        
+        function setupAccessibility() {
+            // Fechar sidebar com ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const sidebar = document.getElementById('sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    if (sidebar.classList.contains('sidebar-open')) {
+                        sidebar.classList.remove('sidebar-open');
+                        overlay.classList.remove('active');
+                    }
+                }
+            });
+            
+            // Indicadores de carregamento em botões
+            document.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (this.classList.contains('loading')) return;
+                    const originalText = this.innerHTML;
+                    this.classList.add('loading');
+                    this.disabled = true;
+                    setTimeout(() => {
+                        this.classList.remove('loading');
+                        this.disabled = false;
+                    }, 1000);
+                });
+            });
+        }
 
         // ADMIN DROPDOWN
         function setupAdminDropdown() {
@@ -641,38 +724,30 @@
 
         // TABS
         function setupTabs() {
-            const friendsTab = document.getElementById('friendsTab');
-            const requestsTab = document.getElementById('requestsTab');
-            const searchUsersTab = document.getElementById('searchUsersTab');
-            const friendsContent = document.getElementById('friendsContent');
-            const requestsContent = document.getElementById('requestsContent');
-            const searchUsersContent = document.getElementById('searchUsersContent');
-
-            function activateTab(activeTab, activeContent) {
-                [friendsTab, requestsTab, searchUsersTab].forEach(t => t.classList.remove('active'));
-                [friendsContent, requestsContent, searchUsersContent].forEach(c => c.classList.add('hidden'));
-                activeTab.classList.add('active');
-                activeContent.classList.remove('hidden');
-            }
-
-            friendsTab.addEventListener('click', () => {
-                activateTab(friendsTab, friendsContent);
-                carregarAmigos();
-            });
-            requestsTab.addEventListener('click', () => {
-                activateTab(requestsTab, requestsContent);
-                carregarSolicitacoes();
-            });
-            searchUsersTab.addEventListener('click', () => {
-                activateTab(searchUsersTab, searchUsersContent);
-                document.getElementById('searchInput').value = '';
-                document.getElementById('searchResults').innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
+            const tabs = [friendsTab, requestsTab, searchUsersTab];
+            const contents = [friendsContent, requestsContent, searchUsersContent];
+            
+            // Adicionar swipe nas tabs (mobile)
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            const tabsContainer = document.querySelector('.tabs-container');
+            tabsContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
             });
             
-            // Ativar primeira tab por padrão
-            friendsTab.classList.add('active');
+            tabsContainer.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                const diff = touchEndX - touchStartX;
+                if (Math.abs(diff) > 50) {
+                    const activeIndex = tabs.findIndex(tab => tab.classList.contains('active'));
+                    let newIndex = diff > 0 ? activeIndex - 1 : activeIndex + 1;
+                    if (newIndex >= 0 && newIndex < tabs.length) {
+                        tabs[newIndex].click();
+                    }
+                }
+            });
         }
-
         async function carregarAmigos() {
             try {
                 const friendsList = document.getElementById('friendsList');
@@ -838,8 +913,15 @@
         const closeModalBtn = document.getElementById('closeModalBtn');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const editProfileForm = document.getElementById('editProfileForm');
+        function openModal() {
+            editModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Previne scroll do fundo
+        }
 
-        function closeModal() { editModal.classList.add('hidden'); }
+        function closeModal() { 
+            editModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
         if (editProfileBtn) editProfileBtn.addEventListener('click', () => {
             document.getElementById('editName').value = document.getElementById('fullName').textContent;
             document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
@@ -945,6 +1027,20 @@
             await carregarAmigos();
             setupTabs();
         }
+
+        // Para atualizar dados com gesto
+        let touchStart = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStart = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            const touchEnd = e.touches[0].clientY;
+            const diff = touchEnd - touchStart;
+            if (diff > 80 && window.scrollY === 0) {
+                location.reload(); // Recarrega página
+            }
+        });
         
         init();
     </script>
