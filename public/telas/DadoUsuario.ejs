@@ -9,313 +9,111 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
     <style>
+        /* Configurações Globais */
         * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* SIDEBAR ESQUERDA */
-        #sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 16rem;
-            height: 100vh;
-            background: white;
-            z-index: 40;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-
-        #sidebar.sidebar-open {
-            transform: translateX(0);
-        }
-
-        /* OVERLAY MOBILE */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 35;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* MAIN CONTENT */
-        .main-content-container {
-            min-height: 100vh;
-            padding: 1rem;
-            transition: margin-left 0.3s ease;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            .main-content-container {
-                margin-left: 0;
-                padding: 2rem;
-            }
-            
-            #sidebar {
-                transform: translateX(0);
-            }
-        }
-
-        /* BOTÃO MOBILE */
-        .mobile-menu-button {
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 45;
-            background: white;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        body {
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        @media (min-width: 768px) {
-            .mobile-menu-button {
-                display: none;
-            }
-        }
-
-        /* GRID LAYOUT */
-        .main-content-wrapper {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        @media (min-width: 1024px) {
-            .main-content-wrapper {
-                display: grid;
-                grid-template-columns: 1fr 22rem;
-                gap: 2rem;
-                align-items: start;
-            }
-        }
-
-        /* SIDEBAR DIREITA */
-        .sidebar-right {
+        /* Container Principal */
+        .container {
             width: 100%;
+            max-width: 500px; /* Limita o tamanho no desktop */
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
-        @media (max-width: 1023px) {
-            .main-content-wrapper {
-                display: flex;
-                flex-direction: column;
-            }
-            
-            /* Move a sidebar direita para depois do conteúdo principal */
-            .sidebar-right {
-                order: 2;
-            }
-            
-            /* Garante que o conteúdo principal venha primeiro */
-            .main-content-wrapper > div:first-child {
-                order: 1;
-            }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
         }
 
-        @media (min-width: 1024px) {
-            .sidebar-right {
-                position: sticky;
-                top: 2rem;
-                height: fit-content;
-            }
+        /* Estilização do Formulário */
+        .form-group {
+            margin-bottom: 15px;
         }
 
-        /* CARDS */
-        .profile-card {
-            transition: all 0.3s ease;
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
         }
 
-        .profile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0,0, 0.1), 0 10px 10px -5px rgba(0, 0,0, 0.04);
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="password"],
+        select, 
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px; /* Essencial para evitar zoom automático no iPhone */
+            transition: border-color 0.3s;
         }
 
-        /* TABS */
-        .tabs-container {
-            display: flex;
-            overflow-x: auto;
-            scrollbar-width: none;
+        input:focus {
+            border-color: #3498db;
+            outline: none;
         }
 
-        .tabs-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tab, .tab-mobile {
-            flex-shrink: 0;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .tab.active, .tab-mobile.active {
-            background: #2563EB;
+        /* Botões */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #3498db;
             color: white;
-            border-bottom-color: #2563EB;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
         }
 
-        .tab.active, .tab-mobile.active {
-            background: #2563EB !important;
-            color: white !important;
+        .btn:hover {
+            background-color: #2980b9;
         }
 
-        /* TAB CONTENT SCROLL */
-        .tab-content {
-            max-height: 20rem;
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
+        /* --- REGRAS PARA CELULAR (Media Queries) --- */
 
-        .tab-content::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .tab-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-
-        .tab-content::-webkit-scrollbar-thumb {
-            background: #2563EB;
-            border-radius: 3px;
-        }
-
-        /* SIDEBAR LINKS */
-        .sidebar-link {
-            transition: all 0.2s ease;
-        }
-
-        .sidebar-link:hover {
-            color: #2563EB;
-            background-color: #EFF6FF;
-        }
-
-        /* BUTTONS */
-        .action-button {
-            transition: all 0.2s ease;
-        }
-
-        .action-button:hover {
-            transform: scale(1.02);
-            background-color: #EFF6FF;
-            color: #2563EB;
-        }
-
-        .edit-button {
-            transition: all 0.2s ease;
-        }
-
-        .edit-button:hover {
-            background-color: #EFF6FF;
-        }
-
-        /* ANIMATIONS */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                align-items: flex-start; /* No celular, o formulário começa do topo */
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+
+            .container {
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: none; /* Simplifica o visual em telas pequenas */
             }
-        }
 
-        .animate-fadeIn {
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        @keyframes progress-bar-fill {
-            0% { width: 0%; }
-            100% { width: var(--progress); }
-        }
-
-        /* HIDDEN UTILITY */
-        .hidden {
-            display: none !important;
-        }
-
-        /* ROTATE ICON */
-        .rotate-180 {
-            transform: rotate(180deg);
-        }
-
-        @media (max-width: 640px) {
-            .profile-card {
-                transform: none !important; /* Remove hover effects no mobile */
+            h1 {
+                font-size: 1.5rem;
             }
-            
-            button, 
-            .action-button,
-            .tab {
-                min-height: 44px; /* Tamanho mínimo para toque (WCAG) */
-            }
-            
-            .main-content-container {
-                padding: 0.75rem;
-            }
-        }
 
-        .loading {
-            position: relative;
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
-        .loading::after {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            top: 50%;
-            left: 50%;
-            margin-left: -8px;
-            margin-top: -8px;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Esconder botões mobile em desktop */
-        @media (min-width: 1024px) {
-            .mobile-only-buttons {
-                display: none !important;
-            }
-        }
-
-        /* Esconder botões desktop em mobile */
-        @media (max-width: 1023px) {
-            .desktop-only-buttons {
-                display: none !important;
+            /* Aumenta a área de toque dos inputs e botões */
+            .btn, input, select {
+                height: 50px;
             }
         }
 
