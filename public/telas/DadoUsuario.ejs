@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html class="scroll-smooth" lang="pt-BR">
-
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
     <meta charset="utf-8" />
@@ -9,45 +8,45 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 0; 
             overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
         }
 
-        /* SIDEBAR ESQUERDA */
+        /* === SIDEBAR MOBILE === */
         #sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 16rem;
+            width: 85vw; /* Mais largo no mobile */
+            max-width: 320px;
             height: 100vh;
             background: white;
-            z-index: 40;
+            z-index: 1000;
             transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.15);
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         #sidebar.sidebar-open {
             transform: translateX(0);
         }
 
-        /* OVERLAY MOBILE */
+        /* === OVERLAY MOBILE MELHORADO === */
         .sidebar-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 35;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
@@ -58,480 +57,348 @@
             visibility: visible;
         }
 
-        /* MAIN CONTENT */
-        .main-content-container {
-            min-height: 100vh;
-            padding: 1rem;
-            transition: margin-left 0.3s ease;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            .main-content-container {
-                margin-left: 0;
-                padding: 2rem;
-            }
-            
-            #sidebar {
-                transform: translateX(0);
-            }
-        }
-
-        /* BOTÃO MOBILE */
+        /* === BOTÃO MOBILE MAIOR === */
         .mobile-menu-button {
             position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 45;
+            top: 16px; /* Mais espaço da borda */
+            left: 16px;
+            z-index: 1001;
+            width: 56px; /* Tamanho WCAG */
+            height: 56px;
             background: white;
             border: none;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        @media (min-width: 768px) {
-            .mobile-menu-button {
-                display: none;
-            }
-        }
-
-        /* GRID LAYOUT */
-        .main-content-wrapper {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        @media (min-width: 1024px) {
-            .main-content-wrapper {
-                display: grid;
-                grid-template-columns: 1fr 22rem;
-                gap: 2rem;
-                align-items: start;
-            }
-        }
-
-        /* SIDEBAR DIREITA */
-        .sidebar-right {
+        /* === MAIN CONTENT MOBILE === */
+        .main-content-container {
+            min-height: 100vh;
+            padding: 80px 16px 24px; /* Espaço pro botão fixo */
+            transition: all 0.3s ease;
             width: 100%;
         }
 
+        /* === DESKTOP === */
+        @media (min-width: 768px) {
+            .main-content-container {
+                padding: 24px;
+                margin-left: 0;
+            }
+            #sidebar {
+                transform: translateX(0) !important;
+                position: relative;
+                z-index: 10;
+                width: 16rem;
+            }
+            .mobile-menu-button,
+            .sidebar-overlay {
+                display: none !important;
+            }
+        }
+
+        /* === BOTÕES TOUCH FRIENDLY === */
+        @media (max-width: 767px) {
+            button, 
+            .action-button,
+            .tab,
+            .tab-mobile,
+            a[href] {
+                min-height: 48px !important;
+                min-width: 48px !important;
+                padding: 12px 16px !important;
+            }
+            
+            .tabs-container {
+                padding-bottom: 8px;
+            }
+            
+            .tab {
+                flex: 1;
+                text-align: center;
+                font-size: 14px;
+                padding: 12px 8px !important;
+            }
+        }
+
+        /* === LAYOUT MOBILE SIMPLIFICADO === */
         @media (max-width: 1023px) {
             .main-content-wrapper {
                 display: flex;
                 flex-direction: column;
+                gap: 24px;
+            }
+        }
+
+        /* === CARDS MOBILE === */
+        @media (max-width: 640px) {
+            .profile-card {
+                padding: 24px 20px !important;
             }
             
-            /* Move a sidebar direita para depois do conteúdo principal */
-            .sidebar-right {
-                order: 2;
-            }
-            
-            /* Garante que o conteúdo principal venha primeiro */
-            .main-content-wrapper > div:first-child {
-                order: 1;
+            .main-content-container {
+                padding: 80px 12px 20px;
             }
         }
 
-        @media (min-width: 1024px) {
-            .sidebar-right {
-                position: sticky;
-                top: 2rem;
-                height: fit-content;
-            }
-        }
-
-        /* CARDS */
-        .profile-card {
-            transition: all 0.3s ease;
-        }
-
-        .profile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0,0, 0.1), 0 10px 10px -5px rgba(0, 0,0, 0.04);
-        }
-
-        /* TABS */
+        /* === TABS RESPONSIVAS === */
         .tabs-container {
             display: flex;
             overflow-x: auto;
             scrollbar-width: none;
+            padding: 8px 0;
+            gap: 4px;
         }
 
-        .tabs-container::-webkit-scrollbar {
-            display: none;
-        }
+        .tabs-container::-webkit-scrollbar { display: none; }
 
-        .tab, .tab-mobile {
-            flex-shrink: 0;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .tab.active, .tab-mobile.active {
-            background: #2563EB;
-            color: white;
-            border-bottom-color: #2563EB;
-        }
-
-        .tab.active, .tab-mobile.active {
-            background: #2563EB !important;
-            color: white !important;
-        }
-
-        /* TAB CONTENT SCROLL */
+        /* === PROGRESS BARS === */
         .tab-content {
-            max-height: 20rem;
+            max-height: 300px;
             overflow-y: auto;
-            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
         }
 
-        .tab-content::-webkit-scrollbar {
-            width: 6px;
+        /* === BOTÕES RESPONSIVOS === */
+        .mobile-action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 24px 0;
         }
 
-        .tab-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
+        .mobile-action-grid a {
+            padding: 16px 12px;
+            font-size: 14px;
+            border-radius: 12px;
+            text-align: center;
+            min-height: 56px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
         }
 
-        .tab-content::-webkit-scrollbar-thumb {
-            background: #2563EB;
-            border-radius: 3px;
-        }
-
-        /* SIDEBAR LINKS */
+        /* === SIDEBAR LINKS MOBILE === */
         .sidebar-link {
-            transition: all 0.2s ease;
+            padding: 16px 20px !important;
+            margin-bottom: 4px !important;
+            border-radius: 12px !important;
+            font-size: 16px !important;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
         }
 
-        .sidebar-link:hover {
-            color: #2563EB;
-            background-color: #EFF6FF;
-        }
-
-        /* BUTTONS */
-        .action-button {
-            transition: all 0.2s ease;
-        }
-
-        .action-button:hover {
-            transform: scale(1.02);
-            background-color: #EFF6FF;
-            color: #2563EB;
-        }
-
-        .edit-button {
-            transition: all 0.2s ease;
-        }
-
-        .edit-button:hover {
-            background-color: #EFF6FF;
-        }
-
-        /* ANIMATIONS */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fadeIn {
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        @keyframes progress-bar-fill {
-            0% { width: 0%; }
-            100% { width: var(--progress); }
-        }
-
-        /* HIDDEN UTILITY */
-        .hidden {
-            display: none !important;
-        }
-
-        /* ROTATE ICON */
-        .rotate-180 {
-            transform: rotate(180deg);
-        }
-
-        @media (max-width: 640px) {
-            .profile-card {
-                transform: none !important; /* Remove hover effects no mobile */
-            }
-            
-            button, 
-            .action-button,
-            .tab {
-                min-height: 44px; /* Tamanho mínimo para toque (WCAG) */
-            }
-            
-            .main-content-container {
-                padding: 0.75rem;
-            }
-        }
-
-        .loading {
-            position: relative;
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
+        /* === LOADING E ANIMATIONS === */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading { position: relative; pointer-events: none; opacity: 0.7; }
         .loading::after {
             content: '';
             position: absolute;
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             top: 50%;
             left: 50%;
-            margin-left: -8px;
-            margin-top: -8px;
+            margin-left: -10px;
+            margin-top: -10px;
             border: 2px solid #fff;
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 0.6s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* === PULL TO REFRESH === */
+        .pull-to-refresh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(180deg, #2563EB, #1D4ED8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 100;
+            font-weight: 600;
         }
 
-        /* Esconder botões mobile em desktop */
-        @media (min-width: 1024px) {
-            .mobile-only-buttons {
-                display: none !important;
-            }
-        }
-
-        /* Esconder botões desktop em mobile */
-        @media (max-width: 1023px) {
-            .desktop-only-buttons {
-                display: none !important;
-            }
-        }
-
+        .pull-to-refresh.show { transform: translateY(0); }
     </style>
 </head>
 
 <body class="bg-gray-100">
+    <!-- PULL TO REFRESH -->
+    <div id="pullToRefresh" class="pull-to-refresh hidden">
+        <i class="fas fa-sync-alt mr-2 animate-spin"></i>
+        Atualizando...
+    </div>
+
     <!-- OVERLAY MOBILE -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <!-- Sidebar Esquerda -->
-    <div id="sidebar" class="bg-white p-6 shadow-lg">
-        <h2 class="text-2xl font-bold mb-6 text-[#2563eb] flex items-center space-x-2">
-            <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" 
-                 src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
-            <span>O Migrante</span>
-        </h2>
-        <ul class="flex flex-col gap-2 w-full justify-start">
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="/app/painel"><i class="fas fa-home mr-3"></i>Início</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="DadoUsuario.html"><i class="fas fa-user mr-3"></i>Perfil</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="Fases.html"><i class="fas fa-tasks mr-3"></i>Missão</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="../Biblioteca/paginaBiblioteca.html"><i class="fas fa-book mr-3"></i>Biblioteca</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="../telas/telas testes/testestestes.html"><i class="fas fa-users mr-3"></i>The Good Friends</a>
-            </li>
-
-            <!-- Admin Dropdown -->
-            <li class="mb-4 w-full hidden" id="adminDropdown">
-                <div class="relative w-full">
-                    <button aria-controls="adminMenuItems" aria-expanded="false"
-                        class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg w-full transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] justify-between"
-                        id="adminMenuButton">
-                        <span>
-                            <i class="fas fa-cog mr-3"></i>Administração
-                        </span>
-                        <i class="fas fa-chevron-down ml-2 transition-transform duration-200" id="adminChevron"></i>
-                    </button>
-                    <ul class="hidden absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg z-40" id="adminMenuItems">
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="BuscaEdicaoUsuario.html">Usuários</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="CaPerguntas.html">Cadastrar Níveis e Perguntas</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="DadosFases.html">Dados das Fases</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="DadosNiveis.html">Editar Níveis e Perguntas</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="MensagemDiaria.html">Cadastrar Mensagem do dia</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="../telas/telas testes/testestestes.html">Tela de Teste</a></li>
-                    </ul>
-                </div>
-            </li>
+    <div id="sidebar" class="bg-white p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-bold text-[#2563eb] flex items-center space-x-3">
+                <img alt="Logo" class="w-10 h-10 rounded-full" 
+                     src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" 
+                     loading="lazy" />
+                <span>O Migrante</span>
+            </h2>
+            <button id="closeSidebarMobile" class="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <ul class="flex flex-col gap-2 w-full">
+            <li><a class="sidebar-link text-[#111827] hover:bg-[#dbeafe] hover:text-[#2563eb]" href="/app/painel"><i class="fas fa-home mr-4"></i>Início</a></li>
+            <li><a class="sidebar-link text-[#111827] hover:bg-[#dbeafe] hover:text-[#2563eb]" href="DadoUsuario.html"><i class="fas fa-user mr-4"></i>Perfil</a></li>
+            <li><a class="sidebar-link text-[#111827] hover:bg-[#dbeafe] hover:text-[#2563eb]" href="Fases.html"><i class="fas fa-tasks mr-4"></i>Missão</a></li>
+            <li><a class="sidebar-link text-[#111827] hover:bg-[#dbeafe] hover:text-[#2563eb]" href="../Biblioteca/paginaBiblioteca.html"><i class="fas fa-book mr-4"></i>Biblioteca</a></li>
+            <li><a class="sidebar-link text-[#111827] hover:bg-[#dbeafe] hover:text-[#2563eb]" href="../telas/telas testes/testestestes.html"><i class="fas fa-users mr-4"></i>The Good Friends</a></li>
         </ul>
     </div>
 
     <!-- Main Content -->
     <div class="main-content-container">
-        <button id="mobileMenuButton" class="mobile-menu-button">
+        <button id="mobileMenuButton" class="mobile-menu-button shadow-lg">
             <i class="fas fa-bars text-[#2563eb] text-xl"></i>
         </button>
 
         <div class="main-content-wrapper">
             <!-- CONTEÚDO PRINCIPAL -->
-            <div>
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6">
-                        <div class="flex items-center space-x-4">
-                            <div class="relative">
-                                <img id="userAvatar" 
-                                    alt="Foto do perfil"
-                                    class="w-24 h-24 rounded-full border-4 border-indigo-500 object-cover"
-                                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
-                                    loading="lazy"
-                                    srcset="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg?w=96 96w,
-                                            https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg?w=192 192w"
-                                    sizes="(max-width: 768px) 96px, 96px" />
-                                <button class="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-2 shadow-lg edit-button">
-                                    <i class="fas fa-camera"></i>
-                                </button>
-                            </div>
-                            <div>
-                                <h1 class="text-3xl font-semibold text-gray-900" id="userName">Carregando...</h1>
-                                <p class="text-indigo-600 font-medium" id="userEmail">Carregando...</p>
-                                <p class="text-gray-500 text-sm mt-1" id="userJoined">Membro desde: Carregando...</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 mt-4 sm:mt-0">
-                            <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition flex items-center" id="editProfileBtn">
-                                <i class="fas fa-user-edit mr-2"></i>Editar Perfil
-                            </button>
-                            <button class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition flex items-center" id="logoutButton">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Sair
-                            </button>
-                        </div>
+            <div class="bg-white rounded-3xl shadow-xl p-6 mb-6 animate-fadeIn">
+                <!-- HEADER -->
+                <div class="flex flex-col items-center text-center mb-8 pb-6 border-b">
+                    <div class="relative mb-6">
+                        <img id="userAvatar" 
+                             alt="Foto do perfil"
+                             class="w-28 h-28 rounded-full border-4 border-indigo-500 object-cover shadow-2xl"
+                             src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
+                             loading="lazy" />
+                        <button class="absolute -bottom-2 -right-2 bg-indigo-500 text-white rounded-full p-3 shadow-lg hover:scale-110 transition">
+                            <i class="fas fa-camera text-lg"></i>
+                        </button>
                     </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-                        <div class="profile-card bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl p-6 text-white text-center">
-                            <i class="fas fa-star text-4xl mb-3 text-yellow-300"></i>
-                            <h3 class="text-lg font-semibold mb-1">XP Total</h3>
-                            <p class="text-3xl font-bold" id="xpTotal">0</p>
-                        </div>
-                        <div class="profile-card bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl p-6 text-white text-center">
-                            <i class="fas fa-medal text-4xl mb-3 text-yellow-300"></i>
-                            <h3 class="text-lg font-semibold mb-1">Níveis Iniciados</h3>
-                            <p class="text-3xl font-bold" id="niveisCompletos">0</p>
-                        </div>
-                    </div>
-
-                    <!-- BOTÕES MOBILE - Visíveis apenas em telas menores -->
-                    <div class="grid grid-cols-3 gap-3 mb-8 mobile-only-buttons">
-                        <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
-                            <i class="fas fa-book-open mr-1"></i> Bíblia
-                        </a>
-                        <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
-                            <i class="fas fa-scroll mr-1"></i> Pergaminhos
-                        </a>
-                        <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
-                            <i class="fas fa-pen mr-1"></i> Anotações
-                        </a>
-                    </div>
-
                     <div>
-                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Progresso por Nível</h2>
-                        <div class="bg-gray-50 rounded-xl p-6 shadow-sm space-y-6" id="progressoNiveis">
-                            <p class="text-gray-600">Carregando níveis...</p>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-1" id="userName">Carregando...</h1>
+                        <p class="text-indigo-600 font-semibold text-lg" id="userEmail">Carregando...</p>
+                        <p class="text-gray-500 mt-2" id="userJoined">Membro desde: Carregando...</p>
+                    </div>
+                </div>
+
+                <!-- STATS -->
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <div class="profile-card bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl p-8 text-white text-center shadow-xl">
+                        <i class="fas fa-star text-4xl mb-4 text-yellow-300"></i>
+                        <h3 class="text-lg font-semibold mb-2">XP Total</h3>
+                        <p class="text-3xl font-bold" id="xpTotal">0</p>
+                    </div>
+                    <div class="profile-card bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl p-8 text-white text-center shadow-xl">
+                        <i class="fas fa-medal text-4xl mb-4 text-yellow-300"></i>
+                        <h3 class="text-lg font-semibold mb-2">Níveis Iniciados</h3>
+                        <p class="text-3xl font-bold" id="niveisCompletos">0</p>
+                    </div>
+                </div>
+
+                <!-- BOTÕES RÁPIDOS MOBILE -->
+                <div class="mobile-action-grid">
+                    <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
+                        <i class="fas fa-book-open text-xl"></i>
+                        <span>Bíblia</span>
+                    </a>
+                    <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
+                        <i class="fas fa-scroll text-xl"></i>
+                        <span>Pergaminhos</span>
+                    </a>
+                    <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
+                        <i class="fas fa-pen text-xl"></i>
+                        <span>Anotações</span>
+                    </a>
+                </div>
+
+                <!-- PROGRESSO -->
+                <div class="mt-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                        <i class="fas fa-chart-line text-indigo-500 mr-3"></i>
+                        Progresso por Nível
+                    </h2>
+                    <div id="progressoNiveis" class="space-y-4">
+                        <div class="text-center py-12 text-gray-500">
+                            <i class="fas fa-spinner fa-spin text-3xl mb-4 text-indigo-400"></i>
+                            <p>Carregando níveis...</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- BOTÕES DE AÇÃO -->
+                <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-8 border-t">
+                    <button id="editProfileBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-2xl transition flex items-center justify-center shadow-lg">
+                        <i class="fas fa-user-edit mr-2"></i>Editar Perfil
+                    </button>
+                    <button id="logoutButton" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-4 px-6 rounded-2xl transition flex items-center justify-center shadow-lg">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Sair
+                    </button>
                 </div>
             </div>
 
-            <!-- Sidebar Direita -->
-            <div class="sidebar-right">
-
-                <!-- Amigos e Pesquisa -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                    <div class="tabs-container mb-6">
-                        <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="friendsTab">Amigos</button>
-                        <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="requestsTab">Solicitações</button>
-                        <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="searchUsersTab">Pesquisar</button>
+            <!-- SIDEBAR DIREITA (STACKED NO MOBILE) -->
+            <div class="space-y-6">
+                <!-- FRIENDS TABS -->
+                <div class="bg-white rounded-3xl shadow-xl p-6">
+                    <div class="tabs-container mb-6" role="tablist">
+                        <button class="tab px-6 py-3 font-semibold rounded-2xl shadow-sm active:bg-indigo-500 active:text-white" id="friendsTab">
+                            Amigos
+                        </button>
+                        <button class="tab px-6 py-3 font-semibold rounded-2xl shadow-sm" id="requestsTab">
+                            Pedidos
+                        </button>
+                        <button class="tab px-6 py-3 font-semibold rounded-2xl shadow-sm" id="searchUsersTab">
+                            Pesquisar
+                        </button>
                     </div>
 
                     <div id="friendsContent" class="tab-content">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Seus Amigos</h3>
-                            <span class="text-gray-500 text-sm" id="friendsCount">0 amigos</span>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-900">Seus Amigos</h3>
+                            <span class="text-indigo-600 font-semibold" id="friendsCount">0 amigos</span>
                         </div>
-                        <div id="friendsList" class="space-y-4">
-                            <p class="text-gray-600">Carregando amigos...</p>
-                        </div>
+                        <div id="friendsList" class="space-y-4 max-h-80 overflow-y-auto"></div>
                     </div>
 
-                    <div id="requestsContent" class="tab-content hidden">
-                        <div class="mb-6">
-                            <h3 class="text-sm font-semibold text-gray-900 mb-1">Solicitações Recebidas</h3>
-                            <div id="receivedRequestsList" class="space-y-4">
-                                <p class="text-gray-600">Carregando solicitações recebidas...</p>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-2">Solicitações Enviadas</h3>
-                            <div id="sentRequestsList" class="space-y-4">
-                                <p class="text-gray-600">Carregando solicitações enviadas...</p>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="requestsContent" class="tab-content hidden"></div>
+                    <div id="searchUsersContent" class="tab-content hidden"></div>
+                </div>
 
-                    <div id="searchUsersContent" class="tab-content hidden">
-                        <div class="mb-4">
-                            <input type="text" id="searchInput"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                placeholder="Pesquisar por nome ou email">
+                <!-- INFO PESSOAL -->
+                <div class="bg-white rounded-3xl shadow-xl p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Informações</h2>
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <h3 class="text-gray-500 font-semibold text-sm uppercase tracking-wide">Nome Completo</h3>
+                            <p class="text-xl font-bold text-gray-900" id="fullName">Carregando...</p>
                         </div>
-                        <div id="searchResults" class="space-y-4">
-                            <p class="text-gray-600">Digite para pesquisar usuários...</p>
+                        <div class="space-y-2">
+                            <h3 class="text-gray-500 font-semibold text-sm uppercase tracking-wide">Email</h3>
+                            <p class="text-lg font-semibold text-gray-900" id="emailInfo">Carregando...</p>
+                        </p>
+                        <div class="space-y-2">
+                            <h3 class="text-gray-500 font-semibold text-sm uppercase tracking-wide">Tipo de Conta</h3>
+                            <p class="text-lg font-semibold text-indigo-600" id="accountType">Carregando...</p>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-gray-500 font-semibold text-sm uppercase tracking-wide">Data de Cadastro</h3>
+                            <p class="text-lg font-semibold text-gray-900" id="registerDate">Carregando...</p>
                         </div>
                     </div>
                 </div>
-
-                <!-- Informações Pessoais -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn">
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Nome Completo</h3>
-                            <p class="text-gray-900 font-medium" id="fullName">Carregando...</p>
-                        </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Email</h3>
-                            <p class="text-gray-900 font-medium" id="emailInfo">Carregando...</p>
-                        </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Tipo de Conta</h3>
-                            <p class="text-gray-900 font-medium" id="accountType">Carregando...</p>
-                        </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Data de Cadastro</h3>
-                            <p class="text-gray-900 font-medium" id="registerDate">Carregando...</p>
-                        </div>
-                    </div>
-                    <div class="mt-6 flex flex-col gap-2 desktop-only-buttons">
-                        <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Bíblia</a>
-                        <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Pergaminhos</a>
-                        <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Anotações</a>
-                    </div>
-                </div>
-
-                
             </div>
         </div>
     </div>
