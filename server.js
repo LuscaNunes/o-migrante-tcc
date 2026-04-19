@@ -129,6 +129,23 @@ app.get('/app/perfil', authenticateToken, async (req, res) => {
   const body = await renderViewToString(req.app, 'DadoUsuario', { user: req.user });
   res.render('layout', { title: 'Perfil | O Migrante', body, user: req.user });
 });
+
+app.get('/app/biblia', authenticateToken, async (req, res) => {
+    try {
+        const bodyContent = await renderViewToString(req.app, 'Biblia', {
+            user: req.user
+        });
+
+        res.render('layout', {
+            title: 'Bíblia | O Migrante',
+            body: bodyContent,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Erro ao renderizar Bíblia:', error);
+        res.status(500).send('Erro interno ao carregar a página: ' + error.message);
+    }
+});
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================
