@@ -403,610 +403,400 @@
         </div>
     </div>
 
-    <!-- Modal de Edição -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-8 w-full max-w-md mx-4">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold">Editar Perfil</h2>
-                <button class="text-gray-500 hover:text-gray-700" id="closeModalBtn">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
+       <!-- Modal de Edição -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-60 z-[10000] flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto">
+            <div class="p-8 pb-4 sticky top-0 bg-white border-b rounded-t-3xl">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-2xl font-bold text-gray-900">Editar Perfil</h2>
+                    <button id="closeModalBtn" class="p-3 rounded-2xl hover:bg-gray-100 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
             </div>
-            <form id="editProfileForm">
-                <div class="mb-4">
+            
+            <form id="editProfileForm" class="p-8 space-y-6">
+                <div class="space-y-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="editName">Nome Completo</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="editName" type="text" placeholder="Seu nome">
-                    <p class="text-red-500 text-xs italic hidden" id="editNameError">O nome é obrigatório.</p>
+                    <input class="w-full px-4 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 text-lg transition" 
+                           id="editName" type="text" placeholder="Seu nome completo" required>
+                    <p class="text-red-500 text-sm hidden" id="editNameError">O nome é obrigatório.</p>
                 </div>
-                <div class="mb-4">
+                
+                <div class="space-y-2">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="editEmail">Email</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="editEmail" type="email" placeholder="Seu email">
-                    <p class="text-red-500 text-xs italic hidden" id="editEmailError">Por favor, insira um email válido.</p>
+                    <input class="w-full px-4 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 text-lg transition" 
+                           id="editEmail" type="email" placeholder="seu@email.com" required>
+                    <p class="text-red-500 text-sm hidden" id="editEmailError">Por favor, insira um email válido.</p>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editPassword">Nova Senha (deixe em branco para manter a atual)</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="editPassword" type="password" placeholder="Nova senha">
-                    <p class="text-red-500 text-xs italic hidden" id="editPasswordError">A senha deve ter pelo menos 6 caracteres.</p>
+                
+                <div class="space-y-2">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editPassword">Nova Senha (opcional)</label>
+                    <input class="w-full px-4 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 text-lg transition" 
+                           id="editPassword" type="password" placeholder="Deixe em branco para manter atual">
+                    <p class="text-gray-500 text-xs italic">Mínimo 6 caracteres</p>
+                    <p class="text-red-500 text-sm hidden" id="editPasswordError">Senha deve ter pelo menos 6 caracteres.</p>
                 </div>
-                <div class="flex items-center justify-end">
-                    <button class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2" type="button" id="cancelEditBtn">Cancelar</button>
-                    <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">Salvar Alterações</button>
+                
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button type="button" id="cancelEditBtn" 
+                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 px-6 rounded-2xl transition shadow-lg">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition shadow-lg loading">
+                        <i class="fas fa-save mr-2"></i>Salvar Alterações
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        // === CONFIG API ===
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? `http://${window.location.hostname}:${window.location.port || 3000}`
             : 'https://o-migrante.onrender.com';
 
-        console.log('API Base URL:', API_BASE_URL);
-
         let currentUserId = null;
+        let isSidebarOpen = false;
 
-        function showFeedback(message, isError = true) {
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 text-center max-w-[90vw]`;
-            feedbackDiv.textContent = message;
-            document.body.appendChild(feedbackDiv);
+        // === FEEDBACK ===
+        function showFeedback(message, isError = false) {
+            const feedback = document.createElement('div');
+            feedback.className = `fixed bottom-6 left-1/2 -translate-x-1/2 -translate-y-1/2 px-8 py-4 rounded-2xl shadow-2xl z-[10001] text-white text-lg font-semibold max-w-[90vw] transform transition-all ${
+                isError ? 'bg-red-500 animate-bounce' : 'bg-green-500'
+            }`;
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
             
-            // Adicionar haptic feedback (se disponível)
-            if (window.navigator && window.navigator.vibrate) {
-                window.navigator.vibrate(isError ? 200 : 50);
+            if ('vibrate' in navigator) {
+                navigator.vibrate(isError ? [100, 50, 100] : 50);
             }
             
-            setTimeout(() => feedbackDiv.remove(), 3000);
+            setTimeout(() => {
+                feedback.remove();
+            }, 3500);
         }
 
-        async function makeAuthenticatedRequest(url, options = {}) {
-            const defaultOptions = {
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json', ...options.headers }
-            };
-            const finalOptions = { ...defaultOptions, ...options };
+        // === API HELPER ===
+        async function apiCall(url, options = {}) {
             try {
-                const response = await fetch(`${API_BASE_URL}${url}`, finalOptions);
+                const response = await fetch(`${API_BASE_URL}${url}`, {
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json', ...options.headers },
+                    ...options
+                });
                 return response;
             } catch (error) {
-                console.error('Erro na requisição:', error);
+                console.error('API Error:', error);
                 throw error;
             }
         }
 
-        async function checkAuthentication() {
-            try {
-                const response = await makeAuthenticatedRequest('/auth/verifyToken', { method: 'GET' });
-                if (response.status === 401 || response.status === 403) return { auth: false };
-                if (!response.ok) return { auth: false };
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('Erro ao verificar autenticação:', error);
-                return { auth: false };
-            }
-        }
-
-        async function logout() {
-            try {
-                await makeAuthenticatedRequest('/auth/logout', { method: 'POST' });
-            } catch (error) {
-                console.error('Erro no logout:', error);
-            } finally {
-                localStorage.removeItem('token');
-                window.location.href = '/';
-            }
-        }
-
-        // MOBILE MENU
-        document.addEventListener("DOMContentLoaded", () => {
+        // === SIDEBAR MOBILE ===
+        function initMobileSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const mobileMenuButton = document.getElementById('mobileMenuButton');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const overlay = document.getElementById('sidebarOverlay');
+            const menuBtn = document.getElementById('mobileMenuButton');
+            const closeBtn = document.getElementById('closeSidebarMobile');
 
-            function toggleSidebar() {
-                sidebar.classList.toggle('sidebar-open');
-                sidebarOverlay.classList.toggle('active');
-                document.body.style.overflow = sidebar.classList.contains('sidebar-open') ? 'hidden' : '';
+            function openSidebar() {
+                sidebar.classList.add('sidebar-open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                isSidebarOpen = true;
             }
 
-            mobileMenuButton.addEventListener('click', toggleSidebar);
-            sidebarOverlay.addEventListener('click', toggleSidebar);
+            function closeSidebar() {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+                isSidebarOpen = false;
+            }
 
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
-                    sidebar.classList.remove('sidebar-open');
-                    sidebarOverlay.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
-        });
+            menuBtn?.addEventListener('click', openSidebar);
+            overlay?.addEventListener('click', closeSidebar);
+            closeBtn?.addEventListener('click', closeSidebar);
 
-        
-        function setupAccessibility() {
-            // Fechar sidebar com ESC
+            // ESC fecha sidebar
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    const sidebar = document.getElementById('sidebar');
-                    const overlay = document.getElementById('sidebarOverlay');
-                    if (sidebar.classList.contains('sidebar-open')) {
-                        sidebar.classList.remove('sidebar-open');
-                        overlay.classList.remove('active');
-                    }
+                if (e.key === 'Escape' && isSidebarOpen) {
+                    closeSidebar();
                 }
             });
-            
-            // Indicadores de carregamento em botões
-            document.querySelectorAll('button').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    if (this.classList.contains('loading')) return;
-                    const originalText = this.innerHTML;
-                    this.classList.add('loading');
-                    this.disabled = true;
-                    setTimeout(() => {
-                        this.classList.remove('loading');
-                        this.disabled = false;
-                    }, 1000);
-                });
+
+            // Fecha ao redimensionar para desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) closeSidebar();
             });
         }
 
-        // ADMIN DROPDOWN
-        function setupAdminDropdown() {
-            const adminMenuButton = document.getElementById('adminMenuButton');
-            const adminMenuItems = document.getElementById('adminMenuItems');
-            const adminChevron = document.getElementById('adminChevron');
-            
-            if (adminMenuButton) {
-                adminMenuButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    adminMenuItems.classList.toggle('hidden');
-                    if (adminChevron) adminChevron.classList.toggle('rotate-180');
+        // === PULL TO REFRESH ===
+        function initPullToRefresh() {
+            let startY = 0;
+            let startTime = 0;
+
+            document.addEventListener('touchstart', (e) => {
+                if (window.scrollY === 0) {
+                    startY = e.touches[0].clientY;
+                    startTime = Date.now();
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                if (window.scrollY === 0) {
+                    const endY = e.changedTouches[0].clientY;
+                    const diffY = endY - startY;
+                    const timeDiff = Date.now() - startTime;
+
+                    if (diffY > 100 && timeDiff < 400) {
+                        const refreshEl = document.getElementById('pullToRefresh');
+                        refreshEl.classList.remove('hidden');
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 800);
+                    }
+                }
+            }, { passive: true });
+        }
+
+        // === TABS ===
+        function initTabs() {
+            const tabs = {
+                friends: document.getElementById('friendsTab'),
+                requests: document.getElementById('requestsTab'),
+                search: document.getElementById('searchUsersTab')
+            };
+            const contents = {
+                friends: document.getElementById('friendsContent'),
+                requests: document.getElementById('requestsContent'),
+                search: document.getElementById('searchUsersContent')
+            };
+
+            Object.entries(tabs).forEach(([key, tab]) => {
+                if (!tab) return;
+                
+                tab.addEventListener('click', () => {
+                    // Remove active de todos
+                    Object.values(tabs).forEach(t => t.classList.remove('active', 'bg-indigo-500', 'text-white'));
+                    Object.values(contents).forEach(c => c.classList.add('hidden'));
+                    
+                    // Ativa atual
+                    tab.classList.add('active', 'bg-indigo-500', 'text-white');
+                    contents[key].classList.remove('hidden');
+                    
+                    // Carrega conteúdo
+                    if (key === 'friends') carregarAmigos();
+                    if (key === 'requests') carregarSolicitacoes();
+                    if (key === 'search') initSearch();
                 });
+            });
+
+            // Ativa primeira tab
+            tabs.friends?.click();
+        }
+
+        // === LOAD USER DATA ===
+        async function loadUserData() {
+            try {
+                const res = await apiCall('/auth/verifyToken');
+                if (!res.ok) throw new Error('Não autenticado');
+                
+                const data = await res.json();
+                if (!data.auth) throw new Error('Não autenticado');
+                
+                const user = data.user;
+                currentUserId = user.id_usuario;
+                
+                document.getElementById('userName').textContent = user.nome || 'Usuário';
+                document.getElementById('userEmail').textContent = user.email || 'Sem email';
+                document.getElementById('fullName').textContent = user.nome || 'Usuário';
+                document.getElementById('emailInfo').textContent = user.email || 'Sem email';
+                document.getElementById('xpTotal').textContent = user.xp_total || 0;
+                document.getElementById('accountType').textContent = user.tipo === 'admin' ? 'Administrador' : 'Usuário';
+                
+                const date = user.criado_em ? new Date(user.criado_em) : new Date();
+                const formattedDate = date.toLocaleDateString('pt-BR');
+                document.getElementById('registerDate').textContent = formattedDate;
+                document.getElementById('userJoined').textContent = `Membro desde: ${formattedDate}`;
+                
+            } catch (error) {
+                showFeedback('Erro ao carregar perfil', true);
+                setTimeout(() => window.location.href = '/', 2000);
             }
         }
 
-        async function carregarProgressoDetalhado() {
+        // === PROGRESSO ===
+        async function loadProgress() {
             try {
-                const response = await makeAuthenticatedRequest('/progresso/detalhado');
-                if (response.ok) {
-                    const progressData = await response.json();
-                    const niveisCompletos = Object.keys(progressData.niveisCompletos || {}).length;
-                    document.getElementById('niveisCompletos').textContent = niveisCompletos;
+                const res = await apiCall('/progresso/detalhado');
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('niveisCompletos').textContent = 
+                        Object.keys(data.niveisCompletos || {}).length;
+                }
+            } catch (error) {
+                console.error('Erro progresso:', error);
+            }
+        }
+
+        // === AMIGOS ===
+        async function carregarAmigos() {
+            const list = document.getElementById('friendsList');
+            list.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-4"></i>Carregando...</div>';
+            
+            try {
+                const res = await apiCall('/amizades/listar');
+                const data = await res.json();
+                list.innerHTML = '';
+                
+                if (data.amigos?.length) {
+                    data.amigos.forEach(amigo => {
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center p-6 bg-gray-50 rounded-2xl border';
+                        div.innerHTML = `
+                            <div>
+                                <p class="font-bold text-lg text-gray-900">${amigo.nome}</p>
+                                <p class="text-gray-500">${amigo.email}</p>
+                            </div>
+                            <button class="bg-red-100 text-red-700 px-6 py-3 rounded-xl font-semibold hover:bg-red-200 transition remove-friend" data-id="${amigo.id_amizade}">
+                                Remover
+                            </button>
+                        `;
+                        list.appendChild(div);
+                    });
+                    document.getElementById('friendsCount').textContent = `${data.amigos.length} amigo${data.amigos.length === 1 ? '' : 's'}`;
                 } else {
-                    document.getElementById('niveisCompletos').textContent = '0';
+                    list.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-users text-4xl mb-4"></i><p>Nenhum amigo ainda</p></div>';
                 }
-            } catch (error) {
-                console.error("Erro ao carregar progresso detalhado:", error);
-                document.getElementById('niveisCompletos').textContent = '0';
-            }
-        }
-
-        async function carregarProgressoNiveis() {
-            try {
-                const progressoNiveis = document.getElementById('progressoNiveis');
-                progressoNiveis.innerHTML = '<p class="text-gray-600">Carregando níveis...</p>';
-                const niveisRes = await makeAuthenticatedRequest('/niveis/ativos');
-                if (!niveisRes.ok) throw new Error(`Erro: ${niveisRes.status}`);
-                const { niveis } = await niveisRes.json();
-                if (!niveis || niveis.length === 0) {
-                    progressoNiveis.innerHTML = `<div class="text-center py-8 text-gray-500"><i class="fas fa-tasks text-4xl mb-3"></i><p>Nenhum nível ativo encontrado.</p></div>`;
-                    return;
-                }
-                progressoNiveis.innerHTML = '';
-                for (const nivel of niveis) {
-                    const botoesRes = await makeAuthenticatedRequest(`/progresso/botoes/${nivel.id}`);
-                    let botaoAtual = 0;
-                    if (botoesRes.ok) {
-                        const { botoesCompletos } = await botoesRes.json();
-                        const ordens = Object.keys(botoesCompletos).map(Number).sort((a, b) => b - a);
-                        for (const ordem of ordens) {
-                            if (botoesCompletos[ordem].concluido || botoesCompletos[ordem].xp_ganho > 0) {
-                                botaoAtual = ordem;
-                                break;
-                            }
-                        }
-                    }
-                    const totalBotoes = 12;
-                    const porcentagem = Math.round((botaoAtual / totalBotoes) * 100);
-                    const nivelElement = document.createElement('div');
-                    nivelElement.className = 'bg-white rounded-xl shadow-md p-5 border border-indigo-100 hover:shadow-lg transition cursor-default';
-                    nivelElement.innerHTML = `
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-indigo-700 font-semibold text-lg">Nível ${nivel.id}: ${nivel.titulo}</h3>
-                            <span class="text-indigo-600 font-semibold text-sm">Nível ${botaoAtual} de ${totalBotoes}</span>
-                        </div>
-                        <p class="text-gray-600 mb-3">${nivel.descricao || 'Sem descrição disponível'}</p>
-                        <div class="w-full bg-indigo-100 rounded-full h-4 overflow-hidden">
-                            <div class="bg-indigo-500 h-4 rounded-full" style="--progress: ${porcentagem}%; animation: progress-bar-fill 1.5s ease forwards"></div>
-                        </div>
-                    `;
-                    progressoNiveis.appendChild(nivelElement);
-                }
-            } catch (error) {
-                console.error("Erro ao carregar progresso por nível:", error);
-                document.getElementById('progressoNiveis').innerHTML = `<div class="text-center py-4 text-red-500"><p>Erro ao carregar progresso: ${error.message}</p></div>`;
-            }
-        }
-
-        // TABS
-        function setupTabs() {
-            const friendsTab = document.getElementById('friendsTab');
-            const requestsTab = document.getElementById('requestsTab');
-            const searchUsersTab = document.getElementById('searchUsersTab');
-            const friendsContent = document.getElementById('friendsContent');
-            const requestsContent = document.getElementById('requestsContent');
-            const searchUsersContent = document.getElementById('searchUsersContent');
-            
-            // Função para ativar tabs
-            function activateTab(activeTab, activeContent) {
-                [friendsTab, requestsTab, searchUsersTab].forEach(t => t?.classList.remove('active'));
-                [friendsContent, requestsContent, searchUsersContent].forEach(c => c?.classList.add('hidden'));
-                if (activeTab) activeTab.classList.add('active');
-                if (activeContent) activeContent.classList.remove('hidden');
-            }
-            
-            // Adicionar eventos de clique
-            if (friendsTab) {
-                friendsTab.addEventListener('click', () => {
-                    activateTab(friendsTab, friendsContent);
-                    carregarAmigos();
-                });
-            }
-            
-            if (requestsTab) {
-                requestsTab.addEventListener('click', () => {
-                    activateTab(requestsTab, requestsContent);
-                    carregarSolicitacoes();
-                });
-            }
-            
-            if (searchUsersTab) {
-                searchUsersTab.addEventListener('click', () => {
-                    activateTab(searchUsersTab, searchUsersContent);
-                    const searchInput = document.getElementById('searchInput');
-                    if (searchInput) searchInput.value = '';
-                    const searchResults = document.getElementById('searchResults');
-                    if (searchResults) searchResults.innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
-                });
-            }
-            
-            // Adicionar swipe nas tabs (mobile)
-            let touchStartX = 0;
-            let touchEndX = 0;
-            const tabsContainer = document.querySelector('.tabs-container');
-            
-            if (tabsContainer) {
-                tabsContainer.addEventListener('touchstart', (e) => {
-                    touchStartX = e.changedTouches[0].screenX;
+                
+                // Event listeners
+                document.querySelectorAll('.remove-friend').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        await removerAmizade(e.target.dataset.id);
+                    });
                 });
                 
-                tabsContainer.addEventListener('touchend', (e) => {
-                    touchEndX = e.changedTouches[0].screenX;
-                    const diff = touchEndX - touchStartX;
-                    if (Math.abs(diff) > 50) {
-                        const tabs = [friendsTab, requestsTab, searchUsersTab];
-                        const activeIndex = tabs.findIndex(tab => tab?.classList.contains('active'));
-                        let newIndex = diff > 0 ? activeIndex - 1 : activeIndex + 1;
-                        if (newIndex >= 0 && newIndex < tabs.length && tabs[newIndex]) {
-                            tabs[newIndex].click();
-                        }
-                    }
-                });
-            }
-            
-            // Ativar primeira tab por padrão
-            if (friendsTab && friendsContent) {
-                activateTab(friendsTab, friendsContent);
+            } catch (error) {
+                list.innerHTML = '<div class="text-center py-8 text-red-500">Erro ao carregar amigos</div>';
             }
         }
-        
-        async function carregarAmigos() {
+
+        async function removerAmizade(id) {
             try {
-                const friendsList = document.getElementById('friendsList');
-                const friendsCount = document.getElementById('friendsCount');
-                friendsList.innerHTML = '<p class="text-gray-600">Carregando amigos...</p>';
-                const response = await makeAuthenticatedRequest('/amizades/listar');
-                if (!response.ok) throw new Error(`Erro: ${response.status}`);
-                const { amigos } = await response.json();
-                friendsList.innerHTML = '';
-                if (amigos && amigos.length > 0) {
-                    amigos.forEach(amigo => {
-                        const amigoElement = document.createElement('div');
-                        amigoElement.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
-                        amigoElement.innerHTML = `
-                            <div><p class="text-gray-900 font-medium">${amigo.nome}</p><p class="text-gray-500 text-sm">${amigo.email}</p></div>
-                            <button class="action-button bg-red-100 text-red-700 font-medium py-1 px-3 rounded-lg transition remove-friend" data-id="${amigo.id_amizade}">Remover Amizade</button>
-                        `;
-                        friendsList.appendChild(amigoElement);
-                    });
-                    friendsCount.textContent = `${amigos.length} amigo${amigos.length !== 1 ? 's' : ''}`;
-                } else {
-                    friendsList.innerHTML = '<p class="text-gray-600">Você ainda não tem amigos adicionados.</p>';
-                    friendsCount.textContent = '0 amigos';
+                const res = await apiCall(`/amizades/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showFeedback('Amigo removido!', false);
+                    carregarAmigos();
                 }
-                document.querySelectorAll('.remove-friend').forEach(button => {
-                    button.addEventListener('click', async (e) => await removerAmizade(e.target.dataset.id));
-                });
             } catch (error) {
-                console.error("Erro ao carregar amigos:", error);
-                document.getElementById('friendsList').innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
+                showFeedback('Erro ao remover', true);
             }
         }
 
-        async function carregarSolicitacoes() {
-            try {
-                const receivedRequestsList = document.getElementById('receivedRequestsList');
-                const sentRequestsList = document.getElementById('sentRequestsList');
-                receivedRequestsList.innerHTML = '<p class="text-gray-600">Carregando...</p>';
-                sentRequestsList.innerHTML = '<p class="text-gray-600">Carregando...</p>';
-                const response = await makeAuthenticatedRequest('/amizades/listar');
-                if (!response.ok) throw new Error(`Erro: ${response.status}`);
-                const { pedidosPendentes, solicitacoesEnviadas } = await response.json();
-                receivedRequestsList.innerHTML = '';
-                sentRequestsList.innerHTML = '';
-                if (pedidosPendentes && pedidosPendentes.length > 0) {
-                    pedidosPendentes.forEach(pedido => {
-                        const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
-                        div.innerHTML = `<div><p class="text-gray-900 font-medium">${pedido.nome}</p><p class="text-gray-500 text-sm">${pedido.email}</p></div>
-                            <div class="flex gap-2"><button class="accept-friend bg-green-100 text-green-700 py-1 px-3 rounded" data-id="${pedido.id_amizade}">Aceitar</button>
-                            <button class="reject-friend bg-red-100 text-red-700 py-1 px-3 rounded" data-id="${pedido.id_amizade}">Recusar</button></div>`;
-                        receivedRequestsList.appendChild(div);
-                    });
-                } else {
-                    receivedRequestsList.innerHTML = '<p class="text-gray-600">Nenhuma solicitação recebida.</p>';
-                }
-                if (solicitacoesEnviadas && solicitacoesEnviadas.length > 0) {
-                    solicitacoesEnviadas.forEach(solicitacao => {
-                        const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
-                        div.innerHTML = `<div><p class="text-gray-900 font-medium">${solicitacao.nome}</p><p class="text-gray-500 text-sm">${solicitacao.email}</p></div>
-                            <button class="cancel-request bg-red-100 text-red-700 py-1 px-3 rounded" data-id="${solicitacao.id_amizade}">Cancelar</button>`;
-                        sentRequestsList.appendChild(div);
-                    });
-                } else {
-                    sentRequestsList.innerHTML = '<p class="text-gray-600">Nenhuma solicitação enviada.</p>';
-                }
-                document.querySelectorAll('.accept-friend').forEach(btn => btn.addEventListener('click', async (e) => await atualizarAmizade(e.target.dataset.id, 'aceito')));
-                document.querySelectorAll('.reject-friend').forEach(btn => btn.addEventListener('click', async (e) => await atualizarAmizade(e.target.dataset.id, 'recusado')));
-                document.querySelectorAll('.cancel-request').forEach(btn => btn.addEventListener('click', async (e) => await cancelarSolicitacao(e.target.dataset.id)));
-            } catch (error) {
-                console.error("Erro ao carregar solicitações:", error);
-                document.getElementById('receivedRequestsList').innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
-                document.getElementById('sentRequestsList').innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
-            }
-        }
+        // === MODAL EDITAR ===
+        function initEditModal() {
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editProfileForm');
+            const editBtn = document.getElementById('editProfileBtn');
+            const closeBtns = document.querySelectorAll('#closeModalBtn, #cancelEditBtn');
 
-        async function atualizarAmizade(idAmizade, status) {
-            try {
-                const response = await makeAuthenticatedRequest(`/amizades/${idAmizade}/atualizar`, { method: "PATCH", body: JSON.stringify({ status }) });
-                const data = await response.json();
-                if (data.success) {
-                    showFeedback(`Amizade ${status === 'aceito' ? 'aceita' : 'recusada'}!`, false);
-                    await carregarSolicitacoes();
-                } else showFeedback(data.message || "Erro.", true);
-            } catch (error) {
-                showFeedback("Erro: " + error.message, true);
+            function openModal() {
+                document.getElementById('editName').value = document.getElementById('fullName').textContent;
+                document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
+                document.getElementById('editPassword').value = '';
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
             }
-        }
 
-        async function cancelarSolicitacao(idAmizade) {
-            try {
-                const response = await makeAuthenticatedRequest(`/amizades/${idAmizade}`, { method: "DELETE" });
-                const data = await response.json();
-                if (data.success) {
-                    showFeedback("Solicitação cancelada!", false);
-                    await carregarSolicitacoes();
-                } else showFeedback(data.message || "Erro.", true);
-            } catch (error) {
-                showFeedback("Erro: " + error.message, true);
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
             }
-        }
 
-        async function removerAmizade(idAmizade) {
-            try {
-                const response = await makeAuthenticatedRequest(`/amizades/${idAmizade}`, { method: "DELETE" });
-                const data = await response.json();
-                if (data.success) {
-                    showFeedback("Amizade removida!", false);
-                    await carregarAmigos();
-                } else showFeedback(data.message || "Erro.", true);
-            } catch (error) {
-                showFeedback("Erro: " + error.message, true);
-            }
-        }
+            editBtn?.addEventListener('click', openModal);
+            closeBtns.forEach(btn => btn.addEventListener('click', closeModal));
 
-        // PESQUISA
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', async () => {
-                const termo = searchInput.value.trim();
-                const searchResults = document.getElementById('searchResults');
-                if (!termo) { searchResults.innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>'; return; }
-                try {
-                    const response = await makeAuthenticatedRequest(`/amizades/pesquisar?termo=${encodeURIComponent(termo)}`);
-                    if (!response.ok) throw new Error(`Erro: ${response.status}`);
-                    const { usuarios } = await response.json();
-                    searchResults.innerHTML = '';
-                    if (usuarios && usuarios.length > 0) {
-                        usuarios.forEach(usuario => {
-                            if (usuario.id_usuario == currentUserId) return;
-                            const div = document.createElement('div');
-                            div.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
-                            div.innerHTML = `<div><p class="text-gray-900 font-medium">${usuario.nome}</p><p class="text-gray-500 text-sm">${usuario.email}</p></div>
-                                <button class="add-friend bg-indigo-100 text-indigo-700 py-1 px-3 rounded" data-id="${usuario.id_usuario}">Adicionar Amigo</button>`;
-                            searchResults.appendChild(div);
-                        });
-                        document.querySelectorAll('.add-friend').forEach(btn => btn.addEventListener('click', async (e) => await enviarPedidoAmizade(e.target.dataset.id)));
-                    } else searchResults.innerHTML = '<p class="text-gray-600">Nenhum usuário encontrado.</p>';
-                } catch (error) {
-                    searchResults.innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
-                }
+            // Clique fora fecha
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
             });
-        }
 
-        async function enviarPedidoAmizade(idUsuario2) {
-            try {
-                const response = await makeAuthenticatedRequest('/amizades/criar', { method: "POST", body: JSON.stringify({ id_usuario2: idUsuario2 }) });
-                const data = await response.json();
-                if (data.success) {
-                    showFeedback("Pedido enviado!", false);
-                    document.getElementById('searchInput').value = '';
-                    document.getElementById('searchResults').innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
-                } else showFeedback(data.message || "Erro.", true);
-            } catch (error) {
-                showFeedback("Erro: " + error.message, true);
-            }
-        }
-
-        // EDIT PROFILE MODAL
-        const editProfileBtn = document.getElementById('editProfileBtn');
-        const editModal = document.getElementById('editModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const cancelEditBtn = document.getElementById('cancelEditBtn');
-        const editProfileForm = document.getElementById('editProfileForm');
-        function openModal() {
-            editModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Previne scroll do fundo
-        }
-
-        function closeModal() { 
-            editModal.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-        if (editProfileBtn) editProfileBtn.addEventListener('click', () => {
-            document.getElementById('editName').value = document.getElementById('fullName').textContent;
-            document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
-            document.getElementById('editPassword').value = '';
-            document.getElementById('editNameError').classList.add('hidden');
-            document.getElementById('editEmailError').classList.add('hidden');
-            document.getElementById('editPasswordError').classList.add('hidden');
-            editModal.classList.remove('hidden');
-        });
-        if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-        if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeModal);
-        if (editProfileForm) {
-            editProfileForm.addEventListener('submit', async (e) => {
+            form?.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                btn.classList.add('loading');
+                btn.disabled = true;
+
                 const nome = document.getElementById('editName').value.trim();
                 const email = document.getElementById('editEmail').value.trim();
                 const senha = document.getElementById('editPassword').value.trim();
-                let isValid = true;
-                document.getElementById('editNameError').classList.add('hidden');
-                document.getElementById('editEmailError').classList.add('hidden');
-                document.getElementById('editPasswordError').classList.add('hidden');
-                if (!nome) { document.getElementById('editNameError').classList.remove('hidden'); isValid = false; }
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (email && !emailRegex.test(email)) { document.getElementById('editEmailError').classList.remove('hidden'); isValid = false; }
-                if (senha && senha.length < 6) { document.getElementById('editPasswordError').classList.remove('hidden'); isValid = false; }
-                const currentName = document.getElementById('fullName').textContent;
-                const currentEmail = document.getElementById('emailInfo').textContent;
-                if (nome === currentName && (!email || email === currentEmail) && !senha) { showFeedback("Nenhuma alteração foi feita.", true); return; }
-                if (!isValid) return;
-                const userData = { nome };
-                if (email && email !== currentEmail) userData.email = email;
-                if (senha) userData.senha = senha;
+
+                const data = { nome };
+                if (email !== document.getElementById('emailInfo').textContent) data.email = email;
+                if (senha) data.senha = senha;
+
                 try {
-                    const response = await makeAuthenticatedRequest('/usuarios/atualizar', { method: "PUT", body: JSON.stringify(userData) });
-                    const data = await response.json();
-                    if (data.success) {
-                        document.getElementById('userName').textContent = nome;
-                        document.getElementById('fullName').textContent = nome;
-                        if (email && email !== currentEmail) {
-                            document.getElementById('userEmail').textContent = email;
-                            document.getElementById('emailInfo').textContent = email;
-                        }
-                        showFeedback("Perfil atualizado!", false);
+                    const res = await apiCall('/usuarios/atualizar', {
+                        method: 'PUT',
+                        body: JSON.stringify(data)
+                    });
+                    const result = await res.json();
+                    
+                    if (result.success) {
+                        showFeedback('Perfil atualizado!', false);
                         closeModal();
-                        const authData = await checkAuthentication();
-                        if (authData.auth) {
-                            const user = authData.user;
-                            document.getElementById('userName').textContent = user.nome || 'Usuário';
-                            document.getElementById('userName').dataset.id = user.id_usuario;
-                            document.getElementById('userEmail').textContent = user.email || 'Sem email';
-                            document.getElementById('fullName').textContent = user.nome || 'Usuário';
-                            document.getElementById('emailInfo').textContent = user.email || 'Sem email';
-                            document.getElementById('xpTotal').textContent = user.xp_total != null ? user.xp_total : 0;
-                            document.getElementById('accountType').textContent = user.tipo === 'admin' ? 'Administrador' : 'Usuário';
-                            let registerDate = 'Data não disponível';
-                            if (user.criado_em) {
-                                const date = new Date(user.criado_em);
-                                if (!isNaN(date.getTime())) registerDate = date.toLocaleDateString('pt-BR');
-                            }
-                            document.getElementById('registerDate').textContent = registerDate;
-                            document.getElementById('userJoined').textContent = `Membro desde: ${registerDate}`;
-                        }
-                    } else showFeedback(data.message || "Erro ao atualizar.", true);
-                } catch (error) { showFeedback("Erro: " + error.message, true); }
+                        loadUserData();
+                    } else {
+                        showFeedback(result.message || 'Erro ao atualizar', true);
+                    }
+                } catch (error) {
+                    showFeedback('Erro de conexão', true);
+                } finally {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
             });
         }
 
-        // LOGOUT
-        document.getElementById('logoutButton')?.addEventListener('click', logout);
-
-
-
-         // PULL-TO-REFRESH CORRIGIDO (apenas uma versão)
-        let touchStartY = 0;
-        let touchStartTime = 0;
-
-        document.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            touchStartTime = Date.now();
+        // === LOGOUT ===
+        document.getElementById('logoutButton')?.addEventListener('click', async () => {
+            try {
+                await apiCall('/auth/logout', { method: 'POST' });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            window.location.href = '/';
         });
 
-        document.addEventListener('touchmove', (e) => {
-            const touchEndY = e.touches[0].clientY;
-            const diff = touchEndY - touchStartY;
-            const timeDiff = Date.now() - touchStartTime;
-            
-            // Só recarrega se for um movimento rápido e no topo da página
-            if (diff > 80 && window.scrollY === 0 && timeDiff < 300) {
-                e.preventDefault(); // Previne comportamento padrão
-                showFeedback('Atualizando...', false);
-                setTimeout(() => location.reload(), 100);
-            }
-        }, { passive: false });
-
+        // === INIT ===
         async function init() {
-            const authData = await checkAuthentication();
-            if (!authData.auth) {
-                window.location.href = '/';
-                return;
-            }
-            currentUserId = authData.user?.id_usuario;
-            const user = authData.user;
-            document.getElementById('userName').textContent = user.nome || 'Usuário';
-            document.getElementById('userName').dataset.id = user.id_usuario;
-            document.getElementById('userEmail').textContent = user.email || 'Sem email';
-            document.getElementById('fullName').textContent = user.nome || 'Usuário';
-            document.getElementById('emailInfo').textContent = user.email || 'Sem email';
-            document.getElementById('xpTotal').textContent = user.xp_total != null ? user.xp_total : 0;
-            document.getElementById('accountType').textContent = user.tipo === 'admin' ? 'Administrador' : 'Usuário';
-            let registerDate = 'Data não disponível';
-            if (user.criado_em) {
-                const date = new Date(user.criado_em);
-                if (!isNaN(date.getTime())) registerDate = date.toLocaleDateString('pt-BR');
-            }
-            document.getElementById('registerDate').textContent = registerDate;
-            document.getElementById('userJoined').textContent = `Membro desde: ${registerDate}`;
+            initMobileSidebar();
+            initPullToRefresh();
+            initTabs();
+            initEditModal();
             
-            if (user.tipo === 'admin') {
-                document.getElementById('adminDropdown').classList.remove('hidden');
-                setupAdminDropdown();
-            }
+            await loadUserData();
+            await loadProgress();
             
-            await carregarProgressoDetalhado();
-            await carregarProgressoNiveis();
-            await carregarAmigos();
-            setupTabs();
-            setupAccessibility();
+            // Loading skeletons
+            setTimeout(() => {
+                document.querySelectorAll('[id*="Carregando"]').forEach(el => {
+                    el.textContent = 'Não disponível';
+                });
+            }, 3000);
         }
 
-        init();
-
+        // Start app
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
-
 </html>
