@@ -120,8 +120,19 @@
         }
 
         @media (max-width: 1023px) {
+            .main-content-wrapper {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Move a sidebar direita para depois do conteúdo principal */
             .sidebar-right {
-                margin-top: 2rem;
+                order: 2;
+            }
+            
+            /* Garante que o conteúdo principal venha primeiro */
+            .main-content-wrapper > div:first-child {
+                order: 1;
             }
         }
 
