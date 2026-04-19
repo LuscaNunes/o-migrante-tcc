@@ -2,9 +2,8 @@
 <html class="scroll-smooth" lang="pt-BR">
 
 <head>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
     <title>Perfil do Usuário</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
@@ -121,8 +120,19 @@
         }
 
         @media (max-width: 1023px) {
+            .main-content-wrapper {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            /* Move a sidebar direita para depois do conteúdo principal */
             .sidebar-right {
-                margin-top: 2rem;
+                order: 2;
+            }
+            
+            /* Garante que o conteúdo principal venha primeiro */
+            .main-content-wrapper > div:first-child {
+                order: 1;
             }
         }
 
@@ -254,6 +264,61 @@
             transform: rotate(180deg);
         }
 
+        @media (max-width: 640px) {
+            .profile-card {
+                transform: none !important; /* Remove hover effects no mobile */
+            }
+            
+            button, 
+            .action-button,
+            .tab {
+                min-height: 44px; /* Tamanho mínimo para toque (WCAG) */
+            }
+            
+            .main-content-container {
+                padding: 0.75rem;
+            }
+        }
+
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Esconder botões mobile em desktop */
+        @media (min-width: 1024px) {
+            .mobile-only-buttons {
+                display: none !important;
+            }
+        }
+
+        /* Esconder botões desktop em mobile */
+        @media (max-width: 1023px) {
+            .desktop-only-buttons {
+                display: none !important;
+            }
+        }
+
     </style>
 </head>
 
@@ -327,14 +392,14 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6">
                         <div class="flex items-center space-x-4">
                             <div class="relative">
-                                <img id="userAvatar" alt="Foto do perfil"
-
+                                <img id="userAvatar" 
+                                    alt="Foto do perfil"
                                     class="w-24 h-24 rounded-full border-4 border-indigo-500 object-cover"
-                                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
-
-
-
-
+                                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg"
+                                    loading="lazy"
+                                    srcset="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg?w=96 96w,
+                                            https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg?w=192 192w"
+                                    sizes="(max-width: 768px) 96px, 96px" />
                                 <button class="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-2 shadow-lg edit-button">
                                     <i class="fas fa-camera"></i>
                                 </button>
@@ -368,6 +433,19 @@
                         </div>
                     </div>
 
+                    <!-- BOTÕES MOBILE - Visíveis apenas em telas menores -->
+                    <div class="grid grid-cols-3 gap-3 mb-8 mobile-only-buttons">
+                        <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
+                            <i class="fas fa-book-open mr-1"></i> Bíblia
+                        </a>
+                        <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
+                            <i class="fas fa-scroll mr-1"></i> Pergaminhos
+                        </a>
+                        <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
+                            <i class="fas fa-pen mr-1"></i> Anotações
+                        </a>
+                    </div>
+
                     <div>
                         <h2 class="text-2xl font-semibold text-gray-900 mb-4">Progresso por Nível</h2>
                         <div class="bg-gray-50 rounded-xl p-6 shadow-sm space-y-6" id="progressoNiveis">
@@ -379,36 +457,9 @@
 
             <!-- Sidebar Direita -->
             <div class="sidebar-right">
-                <!-- Informações Pessoais -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Nome Completo</h3>
-                            <p class="text-gray-900 font-medium" id="fullName">Carregando...</p>
-                        </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Email</h3>
-                            <p class="text-gray-900 font-medium" id="emailInfo">Carregando...</p>
-                        </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Tipo de Conta</h3>
-                            <p class="text-gray-900 font-medium" id="accountType">Carregando...</p>
-                        </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Data de Cadastro</h3>
-                            <p class="text-gray-900 font-medium" id="registerDate">Carregando...</p>
-                        </div>
-                    </div>
-                    <div class="mt-6 flex flex-col gap-2">
-                        <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Bíblia</a>
-                        <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Pergaminhos</a>
-                        <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Anotações</a>
-                    </div>
-                </div>
 
                 <!-- Amigos e Pesquisa -->
-                <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div class="tabs-container mb-6">
                         <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="friendsTab">Amigos</button>
                         <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="requestsTab">Solicitações</button>
@@ -451,6 +502,36 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Informações Pessoais -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Nome Completo</h3>
+                            <p class="text-gray-900 font-medium" id="fullName">Carregando...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Email</h3>
+                            <p class="text-gray-900 font-medium" id="emailInfo">Carregando...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Tipo de Conta</h3>
+                            <p class="text-gray-900 font-medium" id="accountType">Carregando...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-gray-500 text-sm">Data de Cadastro</h3>
+                            <p class="text-gray-900 font-medium" id="registerDate">Carregando...</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-col gap-2 desktop-only-buttons">
+                        <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Bíblia</a>
+                        <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Pergaminhos</a>
+                        <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Anotações</a>
+                    </div>
+                </div>
+
+                
             </div>
         </div>
     </div>
@@ -499,15 +580,15 @@
 
         function showFeedback(message, isError = true) {
             const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
+            feedbackDiv.className = `fixed bottom-4 left-1/2 transform -translate-x-1/2 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 text-center max-w-[90vw]`;
             feedbackDiv.textContent = message;
             document.body.appendChild(feedbackDiv);
-
-
-
-
-
-
+            
+            // Adicionar haptic feedback (se disponível)
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(isError ? 200 : 50);
+            }
+            
             setTimeout(() => feedbackDiv.remove(), 3000);
         }
 
@@ -573,6 +654,36 @@
                 }
             });
         });
+
+        
+        function setupAccessibility() {
+            // Fechar sidebar com ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const sidebar = document.getElementById('sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    if (sidebar.classList.contains('sidebar-open')) {
+                        sidebar.classList.remove('sidebar-open');
+                        overlay.classList.remove('active');
+                    }
+                }
+            });
+            
+            // Indicadores de carregamento em botões
+            document.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (this.classList.contains('loading')) return;
+                    const originalText = this.innerHTML;
+                    this.classList.add('loading');
+                    this.disabled = true;
+                    setTimeout(() => {
+                        this.classList.remove('loading');
+                        this.disabled = false;
+                    }, 1000);
+                });
+            });
+        }
+
         // ADMIN DROPDOWN
         function setupAdminDropdown() {
             const adminMenuButton = document.getElementById('adminMenuButton');
@@ -659,41 +770,70 @@
             const friendsContent = document.getElementById('friendsContent');
             const requestsContent = document.getElementById('requestsContent');
             const searchUsersContent = document.getElementById('searchUsersContent');
-
+            
+            // Função para ativar tabs
             function activateTab(activeTab, activeContent) {
-                [friendsTab, requestsTab, searchUsersTab].forEach(t => t.classList.remove('active'));
-                [friendsContent, requestsContent, searchUsersContent].forEach(c => c.classList.add('hidden'));
-                activeTab.classList.add('active');
-                activeContent.classList.remove('hidden');
+                [friendsTab, requestsTab, searchUsersTab].forEach(t => t?.classList.remove('active'));
+                [friendsContent, requestsContent, searchUsersContent].forEach(c => c?.classList.add('hidden'));
+                if (activeTab) activeTab.classList.add('active');
+                if (activeContent) activeContent.classList.remove('hidden');
             }
-
-            friendsTab.addEventListener('click', () => {
-                activateTab(friendsTab, friendsContent);
-                carregarAmigos();
-            });
-            requestsTab.addEventListener('click', () => {
-                activateTab(requestsTab, requestsContent);
-                carregarSolicitacoes();
-            });
-            searchUsersTab.addEventListener('click', () => {
-                activateTab(searchUsersTab, searchUsersContent);
-                document.getElementById('searchInput').value = '';
-                document.getElementById('searchResults').innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
-            });
+            
+            // Adicionar eventos de clique
+            if (friendsTab) {
+                friendsTab.addEventListener('click', () => {
+                    activateTab(friendsTab, friendsContent);
+                    carregarAmigos();
+                });
+            }
+            
+            if (requestsTab) {
+                requestsTab.addEventListener('click', () => {
+                    activateTab(requestsTab, requestsContent);
+                    carregarSolicitacoes();
+                });
+            }
+            
+            if (searchUsersTab) {
+                searchUsersTab.addEventListener('click', () => {
+                    activateTab(searchUsersTab, searchUsersContent);
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput) searchInput.value = '';
+                    const searchResults = document.getElementById('searchResults');
+                    if (searchResults) searchResults.innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
+                });
+            }
+            
+            // Adicionar swipe nas tabs (mobile)
+            let touchStartX = 0;
+            let touchEndX = 0;
+            const tabsContainer = document.querySelector('.tabs-container');
+            
+            if (tabsContainer) {
+                tabsContainer.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+                
+                tabsContainer.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    const diff = touchEndX - touchStartX;
+                    if (Math.abs(diff) > 50) {
+                        const tabs = [friendsTab, requestsTab, searchUsersTab];
+                        const activeIndex = tabs.findIndex(tab => tab?.classList.contains('active'));
+                        let newIndex = diff > 0 ? activeIndex - 1 : activeIndex + 1;
+                        if (newIndex >= 0 && newIndex < tabs.length && tabs[newIndex]) {
+                            tabs[newIndex].click();
+                        }
+                    }
+                });
+            }
             
             // Ativar primeira tab por padrão
-            friendsTab.classList.add('active');
-
-
-
-
-
-
-
-
-
+            if (friendsTab && friendsContent) {
+                activateTab(friendsTab, friendsContent);
+            }
         }
-
+        
         async function carregarAmigos() {
             try {
                 const friendsList = document.getElementById('friendsList');
@@ -859,15 +999,15 @@
         const closeModalBtn = document.getElementById('closeModalBtn');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const editProfileForm = document.getElementById('editProfileForm');
+        function openModal() {
+            editModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Previne scroll do fundo
+        }
 
-
-
-
-
-        function closeModal() { editModal.classList.add('hidden'); }
-
-
-
+        function closeModal() { 
+            editModal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
         if (editProfileBtn) editProfileBtn.addEventListener('click', () => {
             document.getElementById('editName').value = document.getElementById('fullName').textContent;
             document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
@@ -938,7 +1078,30 @@
         // LOGOUT
         document.getElementById('logoutButton')?.addEventListener('click', logout);
 
-        // INICIALIZAÇÃO
+
+
+         // PULL-TO-REFRESH CORRIGIDO (apenas uma versão)
+        let touchStartY = 0;
+        let touchStartTime = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            const touchEndY = e.touches[0].clientY;
+            const diff = touchEndY - touchStartY;
+            const timeDiff = Date.now() - touchStartTime;
+            
+            // Só recarrega se for um movimento rápido e no topo da página
+            if (diff > 80 && window.scrollY === 0 && timeDiff < 300) {
+                e.preventDefault(); // Previne comportamento padrão
+                showFeedback('Atualizando...', false);
+                setTimeout(() => location.reload(), 100);
+            }
+        }, { passive: false });
+
         async function init() {
             const authData = await checkAuthentication();
             if (!authData.auth) {
@@ -962,7 +1125,6 @@
             document.getElementById('registerDate').textContent = registerDate;
             document.getElementById('userJoined').textContent = `Membro desde: ${registerDate}`;
             
-            // Admin dropdown visibility
             if (user.tipo === 'admin') {
                 document.getElementById('adminDropdown').classList.remove('hidden');
                 setupAdminDropdown();
@@ -972,7 +1134,12 @@
             await carregarProgressoNiveis();
             await carregarAmigos();
             setupTabs();
+            setupAccessibility();
         }
+
         init();
+
     </script>
 </body>
+
+</html>
