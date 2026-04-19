@@ -294,6 +294,20 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Esconder botões mobile em desktop */
+        @media (min-width: 1024px) {
+            .mobile-only-buttons {
+                display: none !important;
+            }
+        }
+
+        /* Esconder botões desktop em mobile */
+        @media (max-width: 1023px) {
+            .desktop-only-buttons {
+                display: none !important;
+            }
+        }
+
     </style>
 </head>
 
@@ -408,6 +422,19 @@
                         </div>
                     </div>
 
+                    <!-- BOTÕES MOBILE - Visíveis apenas em telas menores -->
+                    <div class="grid grid-cols-3 gap-3 mb-8 mobile-only-buttons">
+                        <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
+                            <i class="fas fa-book-open mr-1"></i> Bíblia
+                        </a>
+                        <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
+                            <i class="fas fa-scroll mr-1"></i> Pergaminhos
+                        </a>
+                        <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-3 px-2 rounded-lg transition text-center text-sm">
+                            <i class="fas fa-pen mr-1"></i> Anotações
+                        </a>
+                    </div>
+
                     <div>
                         <h2 class="text-2xl font-semibold text-gray-900 mb-4">Progresso por Nível</h2>
                         <div class="bg-gray-50 rounded-xl p-6 shadow-sm space-y-6" id="progressoNiveis">
@@ -440,7 +467,7 @@
                             <p class="text-gray-900 font-medium" id="registerDate">Carregando...</p>
                         </div>
                     </div>
-                    <div class="mt-6 flex flex-col gap-2">
+                    <div class="mt-6 flex flex-col gap-2 desktop-only-buttons">
                         <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Bíblia</a>
                         <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Pergaminhos</a>
                         <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Anotações</a>
