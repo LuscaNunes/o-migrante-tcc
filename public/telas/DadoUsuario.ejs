@@ -4,7 +4,6 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
     <title>Perfil do Usuário</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
@@ -724,30 +723,76 @@
 
         // TABS
         function setupTabs() {
-            const tabs = [friendsTab, requestsTab, searchUsersTab];
-            const contents = [friendsContent, requestsContent, searchUsersContent];
+            const friendsTab = document.getElementById('friendsTab');
+            const requestsTab = document.getElementById('requestsTab');
+            const searchUsersTab = document.getElementById('searchUsersTab');
+            const friendsContent = document.getElementById('friendsContent');
+            const requestsContent = document.getElementById('requestsContent');
+            const searchUsersContent = document.getElementById('searchUsersContent');
+            
+            // Função para ativar tabs
+            function activateTab(activeTab, activeContent) {
+                [friendsTab, requestsTab, searchUsersTab].forEach(t => t?.classList.remove('active'));
+                [friendsContent, requestsContent, searchUsersContent].forEach(c => c?.classList.add('hidden'));
+                if (activeTab) activeTab.classList.add('active');
+                if (activeContent) activeContent.classList.remove('hidden');
+            }
+            
+            // Adicionar eventos de clique
+            if (friendsTab) {
+                friendsTab.addEventListener('click', () => {
+                    activateTab(friendsTab, friendsContent);
+                    carregarAmigos();
+                });
+            }
+            
+            if (requestsTab) {
+                requestsTab.addEventListener('click', () => {
+                    activateTab(requestsTab, requestsContent);
+                    carregarSolicitacoes();
+                });
+            }
+            
+            if (searchUsersTab) {
+                searchUsersTab.addEventListener('click', () => {
+                    activateTab(searchUsersTab, searchUsersContent);
+                    const searchInput = document.getElementById('searchInput');
+                    if (searchInput) searchInput.value = '';
+                    const searchResults = document.getElementById('searchResults');
+                    if (searchResults) searchResults.innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
+                });
+            }
             
             // Adicionar swipe nas tabs (mobile)
             let touchStartX = 0;
             let touchEndX = 0;
-            
             const tabsContainer = document.querySelector('.tabs-container');
-            tabsContainer.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            });
             
-            tabsContainer.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                const diff = touchEndX - touchStartX;
-                if (Math.abs(diff) > 50) {
-                    const activeIndex = tabs.findIndex(tab => tab.classList.contains('active'));
-                    let newIndex = diff > 0 ? activeIndex - 1 : activeIndex + 1;
-                    if (newIndex >= 0 && newIndex < tabs.length) {
-                        tabs[newIndex].click();
+            if (tabsContainer) {
+                tabsContainer.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+                
+                tabsContainer.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    const diff = touchEndX - touchStartX;
+                    if (Math.abs(diff) > 50) {
+                        const tabs = [friendsTab, requestsTab, searchUsersTab];
+                        const activeIndex = tabs.findIndex(tab => tab?.classList.contains('active'));
+                        let newIndex = diff > 0 ? activeIndex - 1 : activeIndex + 1;
+                        if (newIndex >= 0 && newIndex < tabs.length && tabs[newIndex]) {
+                            tabs[newIndex].click();
+                        }
                     }
-                }
-            });
+                });
+            }
+            
+            // Ativar primeira tab por padrão
+            if (friendsTab && friendsContent) {
+                activateTab(friendsTab, friendsContent);
+            }
         }
+        
         async function carregarAmigos() {
             try {
                 const friendsList = document.getElementById('friendsList');
@@ -992,7 +1037,30 @@
         // LOGOUT
         document.getElementById('logoutButton')?.addEventListener('click', logout);
 
-        // INICIALIZAÇÃO
+
+
+         // PULL-TO-REFRESH CORRIGIDO (apenas uma versão)
+        let touchStartY = 0;
+        let touchStartTime = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            const touchEndY = e.touches[0].clientY;
+            const diff = touchEndY - touchStartY;
+            const timeDiff = Date.now() - touchStartTime;
+            
+            // Só recarrega se for um movimento rápido e no topo da página
+            if (diff > 80 && window.scrollY === 0 && timeDiff < 300) {
+                e.preventDefault(); // Previne comportamento padrão
+                showFeedback('Atualizando...', false);
+                setTimeout(() => location.reload(), 100);
+            }
+        }, { passive: false });
+
         async function init() {
             const authData = await checkAuthentication();
             if (!authData.auth) {
@@ -1016,7 +1084,6 @@
             document.getElementById('registerDate').textContent = registerDate;
             document.getElementById('userJoined').textContent = `Membro desde: ${registerDate}`;
             
-            // Admin dropdown visibility
             if (user.tipo === 'admin') {
                 document.getElementById('adminDropdown').classList.remove('hidden');
                 setupAdminDropdown();
@@ -1026,23 +1093,11 @@
             await carregarProgressoNiveis();
             await carregarAmigos();
             setupTabs();
+            setupAccessibility();
         }
 
-        // Para atualizar dados com gesto
-        let touchStart = 0;
-        document.addEventListener('touchstart', (e) => {
-            touchStart = e.touches[0].clientY;
-        });
-
-        document.addEventListener('touchmove', (e) => {
-            const touchEnd = e.touches[0].clientY;
-            const diff = touchEnd - touchStart;
-            if (diff > 80 && window.scrollY === 0) {
-                location.reload(); // Recarrega página
-            }
-        });
-        
         init();
+
     </script>
 </body>
 
