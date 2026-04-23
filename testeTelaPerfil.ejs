@@ -2,7 +2,6 @@
 <html class="scroll-smooth" lang="pt-BR">
 
 <head>
-
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1" name="viewport" />
     <title>Perfil do Usuário</title>
@@ -253,7 +252,6 @@
         .rotate-180 {
             transform: rotate(180deg);
         }
-
     </style>
 </head>
 
@@ -328,13 +326,8 @@
                         <div class="flex items-center space-x-4">
                             <div class="relative">
                                 <img id="userAvatar" alt="Foto do perfil"
-
                                     class="w-24 h-24 rounded-full border-4 border-indigo-500 object-cover"
                                     src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
-
-
-
-
                                 <button class="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-2 shadow-lg edit-button">
                                     <i class="fas fa-camera"></i>
                                 </button>
@@ -502,12 +495,6 @@
             feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
             feedbackDiv.textContent = message;
             document.body.appendChild(feedbackDiv);
-
-
-
-
-
-
             setTimeout(() => feedbackDiv.remove(), 3000);
         }
 
@@ -573,6 +560,7 @@
                 }
             });
         });
+
         // ADMIN DROPDOWN
         function setupAdminDropdown() {
             const adminMenuButton = document.getElementById('adminMenuButton');
@@ -683,15 +671,6 @@
             
             // Ativar primeira tab por padrão
             friendsTab.classList.add('active');
-
-
-
-
-
-
-
-
-
         }
 
         async function carregarAmigos() {
@@ -860,14 +839,7 @@
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const editProfileForm = document.getElementById('editProfileForm');
 
-
-
-
-
         function closeModal() { editModal.classList.add('hidden'); }
-
-
-
         if (editProfileBtn) editProfileBtn.addEventListener('click', () => {
             document.getElementById('editName').value = document.getElementById('fullName').textContent;
             document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
@@ -973,6 +945,9 @@
             await carregarAmigos();
             setupTabs();
         }
+        
         init();
     </script>
 </body>
+
+</html>

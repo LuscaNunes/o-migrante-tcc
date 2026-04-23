@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <title>Perfil do Usuário</title>
+    <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport" />
+    <title>Perfil do Usuário | O Migrante</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
         * {
             box-sizing: border-box;
@@ -18,25 +18,36 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            background: #f3f4f6;
         }
 
-        /* SIDEBAR ESQUERDA */
+        /* SIDEBAR ESQUERDA - Desktop */
         #sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 16rem;
+            width: 280px;
             height: 100vh;
             background: white;
             z-index: 40;
             transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 20px rgba(0,0,0,0.08);
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         #sidebar.sidebar-open {
             transform: translateX(0);
+        }
+
+        /* Desktop Sidebar */
+        @media (min-width: 1024px) {
+            #sidebar {
+                transform: translateX(0);
+                box-shadow: none;
+                border-right: 1px solid #e5e7eb;
+            }
         }
 
         /* OVERLAY MOBILE */
@@ -51,6 +62,7 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
         }
 
         .sidebar-overlay.active {
@@ -62,18 +74,21 @@
         .main-content-container {
             min-height: 100vh;
             padding: 1rem;
-            transition: margin-left 0.3s ease;
+            transition: all 0.3s ease;
             width: 100%;
         }
 
         @media (min-width: 768px) {
             .main-content-container {
-                margin-left: 0;
-                padding: 2rem;
+                padding: 1.5rem;
             }
-            
-            #sidebar {
-                transform: translateX(0);
+        }
+
+        @media (min-width: 1024px) {
+            .main-content-container {
+                margin-left: 280px;
+                width: calc(100% - 280px);
+                padding: 2rem;
             }
         }
 
@@ -86,29 +101,37 @@
             background: white;
             border: none;
             padding: 0.75rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        @media (min-width: 768px) {
+        .mobile-menu-button:hover {
+            background: #f3f4f6;
+            transform: scale(1.05);
+        }
+
+        @media (min-width: 1024px) {
             .mobile-menu-button {
                 display: none;
             }
         }
 
-        /* GRID LAYOUT */
+        /* GRID LAYOUT RESPONSIVO */
         .main-content-wrapper {
-            max-width: 100%;
+            max-width: 1400px;
             margin: 0 auto;
+            width: 100%;
         }
 
         @media (min-width: 1024px) {
             .main-content-wrapper {
                 display: grid;
-                grid-template-columns: 1fr 22rem;
+                grid-template-columns: 1fr 380px;
                 gap: 2rem;
                 align-items: start;
             }
@@ -121,7 +144,7 @@
 
         @media (max-width: 1023px) {
             .sidebar-right {
-                margin-top: 2rem;
+                margin-top: 1.5rem;
             }
         }
 
@@ -136,6 +159,7 @@
         /* CARDS */
         .profile-card {
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .profile-card:hover {
@@ -148,33 +172,38 @@
             display: flex;
             overflow-x: auto;
             scrollbar-width: none;
+            gap: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
         }
 
         .tabs-container::-webkit-scrollbar {
             display: none;
         }
 
-        .tab, .tab-mobile {
+        .tab {
             flex-shrink: 0;
             white-space: nowrap;
             transition: all 0.2s ease;
             cursor: pointer;
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            color: #6b7280;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
         }
 
-        .tab.active, .tab-mobile.active {
-            background: #2563EB;
-            color: white;
+        .tab:hover {
+            color: #2563EB;
+        }
+
+        .tab.active {
+            color: #2563EB;
             border-bottom-color: #2563EB;
-        }
-
-        .tab.active, .tab-mobile.active {
-            background: #2563EB !important;
-            color: white !important;
         }
 
         /* TAB CONTENT SCROLL */
         .tab-content {
-            max-height: 20rem;
+            max-height: 500px;
             overflow-y: auto;
             scrollbar-width: thin;
         }
@@ -196,11 +225,13 @@
         /* SIDEBAR LINKS */
         .sidebar-link {
             transition: all 0.2s ease;
+            border-radius: 0.75rem;
         }
 
         .sidebar-link:hover {
-            color: #2563EB;
             background-color: #EFF6FF;
+            color: #2563EB;
+            transform: translateX(4px);
         }
 
         /* BUTTONS */
@@ -220,13 +251,14 @@
 
         .edit-button:hover {
             background-color: #EFF6FF;
+            transform: scale(1.1);
         }
 
         /* ANIMATIONS */
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -234,8 +266,23 @@
             }
         }
 
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         .animate-fadeIn {
             animation: fadeIn 0.5s ease forwards;
+        }
+
+        .animate-slideIn {
+            animation: slideIn 0.3s ease forwards;
         }
 
         @keyframes progress-bar-fill {
@@ -252,6 +299,47 @@
         .rotate-180 {
             transform: rotate(180deg);
         }
+
+        /* LOADING SPINNER */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #2563EB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* RESPONSIVE IMAGES */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* SCROLLBAR PERSONALIZADA */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2563EB;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1d4ed8;
+        }
     </style>
 </head>
 
@@ -260,187 +348,243 @@
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <!-- Sidebar Esquerda -->
-    <div id="sidebar" class="bg-white p-6 shadow-lg">
-        <h2 class="text-2xl font-bold mb-6 text-[#2563eb] flex items-center space-x-2">
-            <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" 
-                 src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
-            <span>O Migrante</span>
-        </h2>
-        <ul class="flex flex-col gap-2 w-full justify-start">
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="/app/painel"><i class="fas fa-home mr-3"></i>Início</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="DadoUsuario.html"><i class="fas fa-user mr-3"></i>Perfil</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="Fases.html"><i class="fas fa-tasks mr-3"></i>Missão</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="../Biblioteca/paginaBiblioteca.html"><i class="fas fa-book mr-3"></i>Biblioteca</a>
-            </li>
-            <li>
-                <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                    href="../telas/telas testes/testestestes.html"><i class="fas fa-users mr-3"></i>The Good Friends</a>
-            </li>
+    <div id="sidebar" class="bg-white shadow-xl">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <img alt="Logo O Migrante" class="w-10 h-10 rounded-full object-cover" 
+                     src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
+                <h2 class="text-2xl font-bold text-[#2563eb]">O Migrante</h2>
+            </div>
+        </div>
+        <nav class="p-4">
+            <ul class="flex flex-col gap-2">
+                <li>
+                    <a class="sidebar-link flex items-center text-gray-700 py-3 px-4 rounded-xl transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 group" href="/app/painel">
+                        <i class="fas fa-home mr-3 w-5 text-gray-400 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Início</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="sidebar-link flex items-center text-gray-700 py-3 px-4 rounded-xl transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 group bg-blue-50 text-blue-600" href="DadoUsuario.html">
+                        <i class="fas fa-user mr-3 w-5 text-blue-600"></i>
+                        <span class="font-medium">Perfil</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="sidebar-link flex items-center text-gray-700 py-3 px-4 rounded-xl transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 group" href="Fases.html">
+                        <i class="fas fa-tasks mr-3 w-5 text-gray-400 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Missão</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="sidebar-link flex items-center text-gray-700 py-3 px-4 rounded-xl transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 group" href="../Biblioteca/paginaBiblioteca.html">
+                        <i class="fas fa-book mr-3 w-5 text-gray-400 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Biblioteca</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="sidebar-link flex items-center text-gray-700 py-3 px-4 rounded-xl transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 group" href="../telas/telas testes/testestestes.html">
+                        <i class="fas fa-users mr-3 w-5 text-gray-400 group-hover:text-blue-600"></i>
+                        <span class="font-medium">The Good Friends</span>
+                    </a>
+                </li>
 
-            <!-- Admin Dropdown -->
-            <li class="mb-4 w-full hidden" id="adminDropdown">
-                <div class="relative w-full">
-                    <button aria-controls="adminMenuItems" aria-expanded="false"
-                        class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg w-full transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] justify-between"
-                        id="adminMenuButton">
-                        <span>
-                            <i class="fas fa-cog mr-3"></i>Administração
-                        </span>
-                        <i class="fas fa-chevron-down ml-2 transition-transform duration-200" id="adminChevron"></i>
-                    </button>
-                    <ul class="hidden absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg z-40" id="adminMenuItems">
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="BuscaEdicaoUsuario.html">Usuários</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="CaPerguntas.html">Cadastrar Níveis e Perguntas</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="DadosFases.html">Dados das Fases</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="DadosNiveis.html">Editar Níveis e Perguntas</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="MensagemDiaria.html">Cadastrar Mensagem do dia</a></li>
-                        <li><a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]" href="../telas/telas testes/testestestes.html">Tela de Teste</a></li>
-                    </ul>
-                </div>
-            </li>
-        </ul>
+                <!-- Admin Dropdown -->
+                <li class="mt-2 hidden" id="adminDropdown">
+                    <div class="relative">
+                        <button aria-controls="adminMenuItems" aria-expanded="false"
+                            class="sidebar-link flex items-center text-gray-700 py-3 px-4 rounded-xl w-full transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 justify-between group"
+                            id="adminMenuButton">
+                            <span class="flex items-center">
+                                <i class="fas fa-cog mr-3 w-5 text-gray-400 group-hover:text-blue-600"></i>
+                                <span class="font-medium">Administração</span>
+                            </span>
+                            <i class="fas fa-chevron-down ml-2 transition-transform duration-200" id="adminChevron"></i>
+                        </button>
+                        <ul class="hidden mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden" id="adminMenuItems">
+                            <li><a class="block px-4 py-3 hover:bg-blue-50 text-gray-700 transition" href="BuscaEdicaoUsuario.html">Usuários</a></li>
+                            <li><a class="block px-4 py-3 hover:bg-blue-50 text-gray-700 transition" href="CaPerguntas.html">Cadastrar Níveis e Perguntas</a></li>
+                            <li><a class="block px-4 py-3 hover:bg-blue-50 text-gray-700 transition" href="DadosFases.html">Dados das Fases</a></li>
+                            <li><a class="block px-4 py-3 hover:bg-blue-50 text-gray-700 transition" href="DadosNiveis.html">Editar Níveis e Perguntas</a></li>
+                            <li><a class="block px-4 py-3 hover:bg-blue-50 text-gray-700 transition" href="MensagemDiaria.html">Cadastrar Mensagem do dia</a></li>
+                            <li><a class="block px-4 py-3 hover:bg-blue-50 text-gray-700 transition" href="../telas/telas testes/testestestes.html">Tela de Teste</a></li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </nav>
     </div>
 
     <!-- Main Content -->
     <div class="main-content-container">
         <button id="mobileMenuButton" class="mobile-menu-button">
-            <i class="fas fa-bars text-[#2563eb] text-xl"></i>
+            <i class="fas fa-bars text-blue-600 text-xl"></i>
         </button>
 
         <div class="main-content-wrapper">
             <!-- CONTEÚDO PRINCIPAL -->
-            <div>
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6">
-                        <div class="flex items-center space-x-4">
-                            <div class="relative">
-                                <img id="userAvatar" alt="Foto do perfil"
-                                    class="w-24 h-24 rounded-full border-4 border-indigo-500 object-cover"
-                                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
-                                <button class="absolute bottom-0 right-0 bg-indigo-500 text-white rounded-full p-2 shadow-lg edit-button">
-                                    <i class="fas fa-camera"></i>
+            <div class="animate-fadeIn">
+                <!-- Card Principal do Perfil -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-32"></div>
+                    <div class="px-6 pb-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center -mt-16 mb-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="relative">
+                                    <img id="userAvatar" alt="Foto do perfil"
+                                        class="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover bg-white"
+                                        src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
+                                    <button class="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 shadow-lg edit-button hover:bg-blue-700 transition">
+                                        <i class="fas fa-camera text-sm"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-12 md:mt-0">
+                                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900" id="userName">Carregando...</h1>
+                                    <p class="text-blue-600 font-medium text-sm md:text-base" id="userEmail">Carregando...</p>
+                                    <p class="text-gray-500 text-xs md:text-sm mt-1" id="userJoined">Membro desde: Carregando...</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 mt-4 md:mt-0 w-full md:w-auto">
+                                <button class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-xl transition flex items-center justify-center gap-2 shadow-md" id="editProfileBtn">
+                                    <i class="fas fa-user-edit"></i>
+                                    <span>Editar</span>
+                                </button>
+                                <button class="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white font-medium py-2.5 px-5 rounded-xl transition flex items-center justify-center gap-2 shadow-md" id="logoutButton">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Sair</span>
                                 </button>
                             </div>
-                            <div>
-                                <h1 class="text-3xl font-semibold text-gray-900" id="userName">Carregando...</h1>
-                                <p class="text-indigo-600 font-medium" id="userEmail">Carregando...</p>
-                                <p class="text-gray-500 text-sm mt-1" id="userJoined">Membro desde: Carregando...</p>
+                        </div>
+
+                        <!-- Cards de Estatísticas -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            <div class="profile-card bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-5 text-white text-center shadow-md">
+                                <i class="fas fa-star text-3xl mb-2 text-yellow-300"></i>
+                                <h3 class="text-sm font-semibold mb-1 opacity-90">XP Total</h3>
+                                <p class="text-3xl font-bold" id="xpTotal">0</p>
+                            </div>
+                            <div class="profile-card bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-5 text-white text-center shadow-md">
+                                <i class="fas fa-medal text-3xl mb-2 text-yellow-300"></i>
+                                <h3 class="text-sm font-semibold mb-1 opacity-90">Níveis Iniciados</h3>
+                                <p class="text-3xl font-bold" id="niveisCompletos">0</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 mt-4 sm:mt-0">
-                            <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition flex items-center" id="editProfileBtn">
-                                <i class="fas fa-user-edit mr-2"></i>Editar Perfil
-                            </button>
-                            <button class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition flex items-center" id="logoutButton">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Sair
-                            </button>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-                        <div class="profile-card bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl p-6 text-white text-center">
-                            <i class="fas fa-star text-4xl mb-3 text-yellow-300"></i>
-                            <h3 class="text-lg font-semibold mb-1">XP Total</h3>
-                            <p class="text-3xl font-bold" id="xpTotal">0</p>
-                        </div>
-                        <div class="profile-card bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl p-6 text-white text-center">
-                            <i class="fas fa-medal text-4xl mb-3 text-yellow-300"></i>
-                            <h3 class="text-lg font-semibold mb-1">Níveis Iniciados</h3>
-                            <p class="text-3xl font-bold" id="niveisCompletos">0</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Progresso por Nível</h2>
-                        <div class="bg-gray-50 rounded-xl p-6 shadow-sm space-y-6" id="progressoNiveis">
-                            <p class="text-gray-600">Carregando níveis...</p>
+                        <!-- Progresso por Nível -->
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-chart-line text-blue-600"></i>
+                                Progresso por Nível
+                            </h2>
+                            <div class="bg-gray-50 rounded-xl p-5 shadow-sm space-y-4" id="progressoNiveis">
+                                <div class="text-center py-8">
+                                    <div class="loading-spinner"></div>
+                                    <p class="text-gray-600 mt-2">Carregando níveis...</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Sidebar Direita -->
-            <div class="sidebar-right">
+            <div class="sidebar-right space-y-6 animate-fadeIn" style="animation-delay: 0.1s;">
                 <!-- Informações Pessoais -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Informações Pessoais</h2>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Nome Completo</h3>
-                            <p class="text-gray-900 font-medium" id="fullName">Carregando...</p>
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-blue-600"></i>
+                        Informações Pessoais
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-500 text-sm">Nome Completo</span>
+                            <span class="text-gray-900 font-medium text-sm" id="fullName">Carregando...</span>
                         </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Email</h3>
-                            <p class="text-gray-900 font-medium" id="emailInfo">Carregando...</p>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-500 text-sm">Email</span>
+                            <span class="text-gray-900 font-medium text-sm" id="emailInfo">Carregando...</span>
                         </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Tipo de Conta</h3>
-                            <p class="text-gray-900 font-medium" id="accountType">Carregando...</p>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-500 text-sm">Tipo de Conta</span>
+                            <span class="text-gray-900 font-medium text-sm" id="accountType">Carregando...</span>
                         </div>
-                        <div>
-                            <h3 class="text-gray-500 text-sm">Data de Cadastro</h3>
-                            <p class="text-gray-900 font-medium" id="registerDate">Carregando...</p>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-500 text-sm">Data de Cadastro</span>
+                            <span class="text-gray-900 font-medium text-sm" id="registerDate">Carregando...</span>
                         </div>
                     </div>
-                    <div class="mt-6 flex flex-col gap-2">
-                        <a href="/app/biblia" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Bíblia</a>
-                        <a href="../PaginaProducao.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Pergaminhos</a>
-                        <a href="DadosAnotacoes.html" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition text-center">Anotações</a>
+                    <div class="mt-6 grid grid-cols-1 gap-2">
+                        <a href="/app/biblia" class="action-button bg-blue-50 text-blue-700 font-medium py-2.5 px-4 rounded-xl transition text-center hover:bg-blue-100">
+                            <i class="fas fa-bible mr-2"></i>Bíblia
+                        </a>
+                        <a href="../PaginaProducao.html" class="action-button bg-blue-50 text-blue-700 font-medium py-2.5 px-4 rounded-xl transition text-center hover:bg-blue-100">
+                            <i class="fas fa-scroll mr-2"></i>Pergaminhos
+                        </a>
+                        <a href="DadosAnotacoes.html" class="action-button bg-blue-50 text-blue-700 font-medium py-2.5 px-4 rounded-xl transition text-center hover:bg-blue-100">
+                            <i class="fas fa-pen mr-2"></i>Anotações
+                        </a>
                     </div>
                 </div>
 
                 <!-- Amigos e Pesquisa -->
                 <div class="bg-white rounded-2xl shadow-lg p-6">
-                    <div class="tabs-container mb-6">
-                        <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="friendsTab">Amigos</button>
-                        <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="requestsTab">Solicitações</button>
-                        <button class="tab px-4 py-2 text-sm font-medium rounded-t-lg" id="searchUsersTab">Pesquisar</button>
+                    <div class="tabs-container mb-4">
+                        <button class="tab" id="friendsTab">
+                            <i class="fas fa-user-friends mr-2"></i>Amigos
+                        </button>
+                        <button class="tab" id="requestsTab">
+                            <i class="fas fa-envelope mr-2"></i>Solicitações
+                        </button>
+                        <button class="tab" id="searchUsersTab">
+                            <i class="fas fa-search mr-2"></i>Pesquisar
+                        </button>
                     </div>
 
                     <div id="friendsContent" class="tab-content">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Seus Amigos</h3>
-                            <span class="text-gray-500 text-sm" id="friendsCount">0 amigos</span>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-semibold text-gray-900">Seus Amigos</h3>
+                            <span class="text-gray-500 text-xs" id="friendsCount">0 amigos</span>
                         </div>
-                        <div id="friendsList" class="space-y-4">
-                            <p class="text-gray-600">Carregando amigos...</p>
+                        <div id="friendsList" class="space-y-2">
+                            <div class="text-center py-4">
+                                <div class="loading-spinner"></div>
+                                <p class="text-gray-600 text-sm mt-2">Carregando amigos...</p>
+                            </div>
                         </div>
                     </div>
 
                     <div id="requestsContent" class="tab-content hidden">
-                        <div class="mb-6">
-                            <h3 class="text-sm font-semibold text-gray-900 mb-1">Solicitações Recebidas</h3>
-                            <div id="receivedRequestsList" class="space-y-4">
-                                <p class="text-gray-600">Carregando solicitações recebidas...</p>
+                        <div class="mb-4">
+                            <h3 class="text-sm font-semibold text-gray-900 mb-2">Solicitações Recebidas</h3>
+                            <div id="receivedRequestsList" class="space-y-2">
+                                <div class="text-center py-4">
+                                    <div class="loading-spinner"></div>
+                                    <p class="text-gray-600 text-sm mt-2">Carregando...</p>
+                                </div>
                             </div>
                         </div>
                         <div>
                             <h3 class="text-sm font-semibold text-gray-900 mb-2">Solicitações Enviadas</h3>
-                            <div id="sentRequestsList" class="space-y-4">
-                                <p class="text-gray-600">Carregando solicitações enviadas...</p>
+                            <div id="sentRequestsList" class="space-y-2">
+                                <div class="text-center py-4">
+                                    <div class="loading-spinner"></div>
+                                    <p class="text-gray-600 text-sm mt-2">Carregando...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div id="searchUsersContent" class="tab-content hidden">
-                        <div class="mb-4">
-                            <input type="text" id="searchInput"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                placeholder="Pesquisar por nome ou email">
+                        <div class="mb-3">
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                                <input type="text" id="searchInput"
+                                    class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Pesquisar por nome ou email">
+                            </div>
                         </div>
-                        <div id="searchResults" class="space-y-4">
-                            <p class="text-gray-600">Digite para pesquisar usuários...</p>
+                        <div id="searchResults" class="space-y-2 max-h-80 overflow-y-auto">
+                            <p class="text-gray-500 text-sm text-center py-4">Digite para pesquisar usuários...</p>
                         </div>
                     </div>
                 </div>
@@ -449,33 +593,33 @@
     </div>
 
     <!-- Modal de Edição -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg p-8 w-full max-w-md mx-4">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold">Editar Perfil</h2>
-                <button class="text-gray-500 hover:text-gray-700" id="closeModalBtn">
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden transition-all duration-300">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 animate-slideIn">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-bold text-gray-900">Editar Perfil</h2>
+                <button class="text-gray-400 hover:text-gray-600 transition" id="closeModalBtn">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <form id="editProfileForm">
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editName">Nome Completo</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="editName" type="text" placeholder="Seu nome">
-                    <p class="text-red-500 text-xs italic hidden" id="editNameError">O nome é obrigatório.</p>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="editName">Nome Completo</label>
+                    <input class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" id="editName" type="text" placeholder="Seu nome">
+                    <p class="text-red-500 text-xs mt-1 hidden" id="editNameError">O nome é obrigatório.</p>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editEmail">Email</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="editEmail" type="email" placeholder="Seu email">
-                    <p class="text-red-500 text-xs italic hidden" id="editEmailError">Por favor, insira um email válido.</p>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="editEmail">Email</label>
+                    <input class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" id="editEmail" type="email" placeholder="Seu email">
+                    <p class="text-red-500 text-xs mt-1 hidden" id="editEmailError">Por favor, insira um email válido.</p>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="editPassword">Nova Senha (deixe em branco para manter a atual)</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="editPassword" type="password" placeholder="Nova senha">
-                    <p class="text-red-500 text-xs italic hidden" id="editPasswordError">A senha deve ter pelo menos 6 caracteres.</p>
+                <div class="mb-5">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="editPassword">Nova Senha <span class="text-gray-400 font-normal">(opcional)</span></label>
+                    <input class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" id="editPassword" type="password" placeholder="Nova senha">
+                    <p class="text-red-500 text-xs mt-1 hidden" id="editPasswordError">A senha deve ter pelo menos 6 caracteres.</p>
                 </div>
-                <div class="flex items-center justify-end">
-                    <button class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2" type="button" id="cancelEditBtn">Cancelar</button>
-                    <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">Salvar Alterações</button>
+                <div class="flex items-center justify-end gap-3">
+                    <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-xl transition text-sm" type="button" id="cancelEditBtn">Cancelar</button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-xl transition text-sm" type="submit">Salvar Alterações</button>
                 </div>
             </form>
         </div>
@@ -492,10 +636,13 @@
 
         function showFeedback(message, isError = true) {
             const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50`;
-            feedbackDiv.textContent = message;
+            feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-xl shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 animate-slideIn max-w-md`;
+            feedbackDiv.innerHTML = `<div class="flex items-center gap-2"><i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i><span>${message}</span></div>`;
             document.body.appendChild(feedbackDiv);
-            setTimeout(() => feedbackDiv.remove(), 3000);
+            setTimeout(() => {
+                feedbackDiv.style.opacity = '0';
+                setTimeout(() => feedbackDiv.remove(), 300);
+            }, 3000);
         }
 
         async function makeAuthenticatedRequest(url, options = {}) {
@@ -549,11 +696,15 @@
                 document.body.style.overflow = sidebar.classList.contains('sidebar-open') ? 'hidden' : '';
             }
 
-            mobileMenuButton.addEventListener('click', toggleSidebar);
-            sidebarOverlay.addEventListener('click', toggleSidebar);
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', toggleSidebar);
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
 
             window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
+                if (window.innerWidth >= 1024) {
                     sidebar.classList.remove('sidebar-open');
                     sidebarOverlay.classList.remove('active');
                     document.body.style.overflow = '';
@@ -570,6 +721,7 @@
             if (adminMenuButton) {
                 adminMenuButton.addEventListener('click', (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     adminMenuItems.classList.toggle('hidden');
                     if (adminChevron) adminChevron.classList.toggle('rotate-180');
                 });
@@ -595,15 +747,19 @@
         async function carregarProgressoNiveis() {
             try {
                 const progressoNiveis = document.getElementById('progressoNiveis');
-                progressoNiveis.innerHTML = '<p class="text-gray-600">Carregando níveis...</p>';
+                progressoNiveis.innerHTML = '<div class="text-center py-8"><div class="loading-spinner"></div><p class="text-gray-600 mt-2">Carregando níveis...</p></div>';
+                
                 const niveisRes = await makeAuthenticatedRequest('/niveis/ativos');
                 if (!niveisRes.ok) throw new Error(`Erro: ${niveisRes.status}`);
                 const { niveis } = await niveisRes.json();
+                
                 if (!niveis || niveis.length === 0) {
                     progressoNiveis.innerHTML = `<div class="text-center py-8 text-gray-500"><i class="fas fa-tasks text-4xl mb-3"></i><p>Nenhum nível ativo encontrado.</p></div>`;
                     return;
                 }
+                
                 progressoNiveis.innerHTML = '';
+                
                 for (const nivel of niveis) {
                     const botoesRes = await makeAuthenticatedRequest(`/progresso/botoes/${nivel.id}`);
                     let botaoAtual = 0;
@@ -619,23 +775,24 @@
                     }
                     const totalBotoes = 12;
                     const porcentagem = Math.round((botaoAtual / totalBotoes) * 100);
+                    
                     const nivelElement = document.createElement('div');
-                    nivelElement.className = 'bg-white rounded-xl shadow-md p-5 border border-indigo-100 hover:shadow-lg transition cursor-default';
+                    nivelElement.className = 'bg-white rounded-xl shadow-sm p-4 border border-gray-200 hover:shadow-md transition-all duration-300 cursor-default';
                     nivelElement.innerHTML = `
                         <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-indigo-700 font-semibold text-lg">Nível ${nivel.id}: ${nivel.titulo}</h3>
-                            <span class="text-indigo-600 font-semibold text-sm">Nível ${botaoAtual} de ${totalBotoes}</span>
+                            <h3 class="text-blue-700 font-semibold">Nível ${nivel.id}: ${nivel.titulo}</h3>
+                            <span class="text-blue-600 font-semibold text-xs bg-blue-50 px-2 py-1 rounded-full">${botaoAtual}/${totalBotoes}</span>
                         </div>
-                        <p class="text-gray-600 mb-3">${nivel.descricao || 'Sem descrição disponível'}</p>
-                        <div class="w-full bg-indigo-100 rounded-full h-4 overflow-hidden">
-                            <div class="bg-indigo-500 h-4 rounded-full" style="--progress: ${porcentagem}%; animation: progress-bar-fill 1.5s ease forwards"></div>
+                        <p class="text-gray-600 text-sm mb-3">${nivel.descricao || 'Sem descrição disponível'}</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-1000" style="width: ${porcentagem}%"></div>
                         </div>
                     `;
                     progressoNiveis.appendChild(nivelElement);
                 }
             } catch (error) {
                 console.error("Erro ao carregar progresso por nível:", error);
-                document.getElementById('progressoNiveis').innerHTML = `<div class="text-center py-4 text-red-500"><p>Erro ao carregar progresso: ${error.message}</p></div>`;
+                document.getElementById('progressoNiveis').innerHTML = `<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-circle text-2xl mb-2"></i><p>Erro ao carregar progresso: ${error.message}</p></div>`;
             }
         }
 
@@ -666,7 +823,7 @@
             searchUsersTab.addEventListener('click', () => {
                 activateTab(searchUsersTab, searchUsersContent);
                 document.getElementById('searchInput').value = '';
-                document.getElementById('searchResults').innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
+                document.getElementById('searchResults').innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Digite para pesquisar usuários...</p>';
             });
             
             // Ativar primeira tab por padrão
@@ -677,32 +834,38 @@
             try {
                 const friendsList = document.getElementById('friendsList');
                 const friendsCount = document.getElementById('friendsCount');
-                friendsList.innerHTML = '<p class="text-gray-600">Carregando amigos...</p>';
+                friendsList.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="text-gray-600 text-sm mt-2">Carregando amigos...</p></div>';
+                
                 const response = await makeAuthenticatedRequest('/amizades/listar');
                 if (!response.ok) throw new Error(`Erro: ${response.status}`);
                 const { amigos } = await response.json();
+                
                 friendsList.innerHTML = '';
                 if (amigos && amigos.length > 0) {
                     amigos.forEach(amigo => {
                         const amigoElement = document.createElement('div');
-                        amigoElement.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
+                        amigoElement.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition';
                         amigoElement.innerHTML = `
-                            <div><p class="text-gray-900 font-medium">${amigo.nome}</p><p class="text-gray-500 text-sm">${amigo.email}</p></div>
-                            <button class="action-button bg-red-100 text-red-700 font-medium py-1 px-3 rounded-lg transition remove-friend" data-id="${amigo.id_amizade}">Remover Amizade</button>
+                            <div class="flex-1">
+                                <p class="text-gray-900 font-medium text-sm">${amigo.nome}</p>
+                                <p class="text-gray-500 text-xs">${amigo.email}</p>
+                            </div>
+                            <button class="remove-friend bg-red-50 hover:bg-red-100 text-red-600 font-medium py-1.5 px-3 rounded-lg transition text-xs" data-id="${amigo.id_amizade}">Remover</button>
                         `;
                         friendsList.appendChild(amigoElement);
                     });
                     friendsCount.textContent = `${amigos.length} amigo${amigos.length !== 1 ? 's' : ''}`;
                 } else {
-                    friendsList.innerHTML = '<p class="text-gray-600">Você ainda não tem amigos adicionados.</p>';
+                    friendsList.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Você ainda não tem amigos adicionados.</p>';
                     friendsCount.textContent = '0 amigos';
                 }
+                
                 document.querySelectorAll('.remove-friend').forEach(button => {
                     button.addEventListener('click', async (e) => await removerAmizade(e.target.dataset.id));
                 });
             } catch (error) {
                 console.error("Erro ao carregar amigos:", error);
-                document.getElementById('friendsList').innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
+                document.getElementById('friendsList').innerHTML = `<p class="text-red-500 text-sm text-center py-4">Erro: ${error.message}</p>`;
             }
         }
 
@@ -710,43 +873,60 @@
             try {
                 const receivedRequestsList = document.getElementById('receivedRequestsList');
                 const sentRequestsList = document.getElementById('sentRequestsList');
-                receivedRequestsList.innerHTML = '<p class="text-gray-600">Carregando...</p>';
-                sentRequestsList.innerHTML = '<p class="text-gray-600">Carregando...</p>';
+                receivedRequestsList.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="text-gray-600 text-sm mt-2">Carregando...</p></div>';
+                sentRequestsList.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="text-gray-600 text-sm mt-2">Carregando...</p></div>';
+                
                 const response = await makeAuthenticatedRequest('/amizades/listar');
                 if (!response.ok) throw new Error(`Erro: ${response.status}`);
                 const { pedidosPendentes, solicitacoesEnviadas } = await response.json();
+                
                 receivedRequestsList.innerHTML = '';
                 sentRequestsList.innerHTML = '';
+                
                 if (pedidosPendentes && pedidosPendentes.length > 0) {
                     pedidosPendentes.forEach(pedido => {
                         const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
-                        div.innerHTML = `<div><p class="text-gray-900 font-medium">${pedido.nome}</p><p class="text-gray-500 text-sm">${pedido.email}</p></div>
-                            <div class="flex gap-2"><button class="accept-friend bg-green-100 text-green-700 py-1 px-3 rounded" data-id="${pedido.id_amizade}">Aceitar</button>
-                            <button class="reject-friend bg-red-100 text-red-700 py-1 px-3 rounded" data-id="${pedido.id_amizade}">Recusar</button></div>`;
+                        div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200';
+                        div.innerHTML = `
+                            <div class="flex-1">
+                                <p class="text-gray-900 font-medium text-sm">${pedido.nome}</p>
+                                <p class="text-gray-500 text-xs">${pedido.email}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="accept-friend bg-green-50 hover:bg-green-100 text-green-600 py-1.5 px-3 rounded-lg text-xs transition" data-id="${pedido.id_amizade}">Aceitar</button>
+                                <button class="reject-friend bg-red-50 hover:bg-red-100 text-red-600 py-1.5 px-3 rounded-lg text-xs transition" data-id="${pedido.id_amizade}">Recusar</button>
+                            </div>
+                        `;
                         receivedRequestsList.appendChild(div);
                     });
                 } else {
-                    receivedRequestsList.innerHTML = '<p class="text-gray-600">Nenhuma solicitação recebida.</p>';
+                    receivedRequestsList.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhuma solicitação recebida.</p>';
                 }
+                
                 if (solicitacoesEnviadas && solicitacoesEnviadas.length > 0) {
                     solicitacoesEnviadas.forEach(solicitacao => {
                         const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
-                        div.innerHTML = `<div><p class="text-gray-900 font-medium">${solicitacao.nome}</p><p class="text-gray-500 text-sm">${solicitacao.email}</p></div>
-                            <button class="cancel-request bg-red-100 text-red-700 py-1 px-3 rounded" data-id="${solicitacao.id_amizade}">Cancelar</button>`;
+                        div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200';
+                        div.innerHTML = `
+                            <div class="flex-1">
+                                <p class="text-gray-900 font-medium text-sm">${solicitacao.nome}</p>
+                                <p class="text-gray-500 text-xs">${solicitacao.email}</p>
+                            </div>
+                            <button class="cancel-request bg-red-50 hover:bg-red-100 text-red-600 py-1.5 px-3 rounded-lg text-xs transition" data-id="${solicitacao.id_amizade}">Cancelar</button>
+                        `;
                         sentRequestsList.appendChild(div);
                     });
                 } else {
-                    sentRequestsList.innerHTML = '<p class="text-gray-600">Nenhuma solicitação enviada.</p>';
+                    sentRequestsList.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhuma solicitação enviada.</p>';
                 }
+                
                 document.querySelectorAll('.accept-friend').forEach(btn => btn.addEventListener('click', async (e) => await atualizarAmizade(e.target.dataset.id, 'aceito')));
                 document.querySelectorAll('.reject-friend').forEach(btn => btn.addEventListener('click', async (e) => await atualizarAmizade(e.target.dataset.id, 'recusado')));
                 document.querySelectorAll('.cancel-request').forEach(btn => btn.addEventListener('click', async (e) => await cancelarSolicitacao(e.target.dataset.id)));
             } catch (error) {
                 console.error("Erro ao carregar solicitações:", error);
-                document.getElementById('receivedRequestsList').innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
-                document.getElementById('sentRequestsList').innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
+                document.getElementById('receivedRequestsList').innerHTML = `<p class="text-red-500 text-sm text-center py-4">Erro: ${error.message}</p>`;
+                document.getElementById('sentRequestsList').innerHTML = `<p class="text-red-500 text-sm text-center py-4">Erro: ${error.message}</p>`;
             }
         }
 
@@ -795,25 +975,43 @@
             searchInput.addEventListener('input', async () => {
                 const termo = searchInput.value.trim();
                 const searchResults = document.getElementById('searchResults');
-                if (!termo) { searchResults.innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>'; return; }
+                if (!termo) { 
+                    searchResults.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Digite para pesquisar usuários...</p>'; 
+                    return; 
+                }
+                
                 try {
                     const response = await makeAuthenticatedRequest(`/amizades/pesquisar?termo=${encodeURIComponent(termo)}`);
                     if (!response.ok) throw new Error(`Erro: ${response.status}`);
                     const { usuarios } = await response.json();
                     searchResults.innerHTML = '';
+                    
                     if (usuarios && usuarios.length > 0) {
-                        usuarios.forEach(usuario => {
-                            if (usuario.id_usuario == currentUserId) return;
+                        const filteredUsers = usuarios.filter(usuario => usuario.id_usuario != currentUserId);
+                        if (filteredUsers.length === 0) {
+                            searchResults.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum usuário encontrado.</p>';
+                            return;
+                        }
+                        
+                        filteredUsers.forEach(usuario => {
                             const div = document.createElement('div');
-                            div.className = 'flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200';
-                            div.innerHTML = `<div><p class="text-gray-900 font-medium">${usuario.nome}</p><p class="text-gray-500 text-sm">${usuario.email}</p></div>
-                                <button class="add-friend bg-indigo-100 text-indigo-700 py-1 px-3 rounded" data-id="${usuario.id_usuario}">Adicionar Amigo</button>`;
+                            div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200';
+                            div.innerHTML = `
+                                <div class="flex-1">
+                                    <p class="text-gray-900 font-medium text-sm">${usuario.nome}</p>
+                                    <p class="text-gray-500 text-xs">${usuario.email}</p>
+                                </div>
+                                <button class="add-friend bg-blue-50 hover:bg-blue-100 text-blue-600 py-1.5 px-3 rounded-lg transition text-xs" data-id="${usuario.id_usuario}">Adicionar</button>
+                            `;
                             searchResults.appendChild(div);
                         });
+                        
                         document.querySelectorAll('.add-friend').forEach(btn => btn.addEventListener('click', async (e) => await enviarPedidoAmizade(e.target.dataset.id)));
-                    } else searchResults.innerHTML = '<p class="text-gray-600">Nenhum usuário encontrado.</p>';
+                    } else {
+                        searchResults.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum usuário encontrado.</p>';
+                    }
                 } catch (error) {
-                    searchResults.innerHTML = `<p class="text-red-500">Erro: ${error.message}</p>`;
+                    searchResults.innerHTML = `<p class="text-red-500 text-sm text-center py-4">Erro: ${error.message}</p>`;
                 }
             });
         }
@@ -825,7 +1023,7 @@
                 if (data.success) {
                     showFeedback("Pedido enviado!", false);
                     document.getElementById('searchInput').value = '';
-                    document.getElementById('searchResults').innerHTML = '<p class="text-gray-600">Digite para pesquisar usuários...</p>';
+                    document.getElementById('searchResults').innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Digite para pesquisar usuários...</p>';
                 } else showFeedback(data.message || "Erro.", true);
             } catch (error) {
                 showFeedback("Erro: " + error.message, true);
@@ -839,39 +1037,67 @@
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const editProfileForm = document.getElementById('editProfileForm');
 
-        function closeModal() { editModal.classList.add('hidden'); }
-        if (editProfileBtn) editProfileBtn.addEventListener('click', () => {
-            document.getElementById('editName').value = document.getElementById('fullName').textContent;
-            document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
-            document.getElementById('editPassword').value = '';
-            document.getElementById('editNameError').classList.add('hidden');
-            document.getElementById('editEmailError').classList.add('hidden');
-            document.getElementById('editPasswordError').classList.add('hidden');
-            editModal.classList.remove('hidden');
-        });
+        function closeModal() { 
+            editModal.classList.add('hidden'); 
+        }
+        
+        if (editProfileBtn) {
+            editProfileBtn.addEventListener('click', () => {
+                document.getElementById('editName').value = document.getElementById('fullName').textContent;
+                document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
+                document.getElementById('editPassword').value = '';
+                document.getElementById('editNameError').classList.add('hidden');
+                document.getElementById('editEmailError').classList.add('hidden');
+                document.getElementById('editPasswordError').classList.add('hidden');
+                editModal.classList.remove('hidden');
+            });
+        }
+        
         if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
         if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeModal);
+        
         if (editProfileForm) {
             editProfileForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const nome = document.getElementById('editName').value.trim();
                 const email = document.getElementById('editEmail').value.trim();
                 const senha = document.getElementById('editPassword').value.trim();
+                
                 let isValid = true;
                 document.getElementById('editNameError').classList.add('hidden');
                 document.getElementById('editEmailError').classList.add('hidden');
                 document.getElementById('editPasswordError').classList.add('hidden');
-                if (!nome) { document.getElementById('editNameError').classList.remove('hidden'); isValid = false; }
+                
+                if (!nome) { 
+                    document.getElementById('editNameError').classList.remove('hidden'); 
+                    isValid = false; 
+                }
+                
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (email && !emailRegex.test(email)) { document.getElementById('editEmailError').classList.remove('hidden'); isValid = false; }
-                if (senha && senha.length < 6) { document.getElementById('editPasswordError').classList.remove('hidden'); isValid = false; }
+                if (email && !emailRegex.test(email)) { 
+                    document.getElementById('editEmailError').classList.remove('hidden'); 
+                    isValid = false; 
+                }
+                
+                if (senha && senha.length < 6) { 
+                    document.getElementById('editPasswordError').classList.remove('hidden'); 
+                    isValid = false; 
+                }
+                
                 const currentName = document.getElementById('fullName').textContent;
                 const currentEmail = document.getElementById('emailInfo').textContent;
-                if (nome === currentName && (!email || email === currentEmail) && !senha) { showFeedback("Nenhuma alteração foi feita.", true); return; }
+                
+                if (nome === currentName && (!email || email === currentEmail) && !senha) { 
+                    showFeedback("Nenhuma alteração foi feita.", true); 
+                    return; 
+                }
+                
                 if (!isValid) return;
+                
                 const userData = { nome };
                 if (email && email !== currentEmail) userData.email = email;
                 if (senha) userData.senha = senha;
+                
                 try {
                     const response = await makeAuthenticatedRequest('/usuarios/atualizar', { method: "PUT", body: JSON.stringify(userData) });
                     const data = await response.json();
@@ -882,8 +1108,9 @@
                             document.getElementById('userEmail').textContent = email;
                             document.getElementById('emailInfo').textContent = email;
                         }
-                        showFeedback("Perfil atualizado!", false);
+                        showFeedback("Perfil atualizado com sucesso!", false);
                         closeModal();
+                        
                         const authData = await checkAuthentication();
                         if (authData.auth) {
                             const user = authData.user;
@@ -903,7 +1130,9 @@
                             document.getElementById('userJoined').textContent = `Membro desde: ${registerDate}`;
                         }
                     } else showFeedback(data.message || "Erro ao atualizar.", true);
-                } catch (error) { showFeedback("Erro: " + error.message, true); }
+                } catch (error) { 
+                    showFeedback("Erro: " + error.message, true); 
+                }
             });
         }
 
@@ -919,6 +1148,7 @@
             }
             currentUserId = authData.user?.id_usuario;
             const user = authData.user;
+            
             document.getElementById('userName').textContent = user.nome || 'Usuário';
             document.getElementById('userName').dataset.id = user.id_usuario;
             document.getElementById('userEmail').textContent = user.email || 'Sem email';
@@ -926,6 +1156,7 @@
             document.getElementById('emailInfo').textContent = user.email || 'Sem email';
             document.getElementById('xpTotal').textContent = user.xp_total != null ? user.xp_total : 0;
             document.getElementById('accountType').textContent = user.tipo === 'admin' ? 'Administrador' : 'Usuário';
+            
             let registerDate = 'Data não disponível';
             if (user.criado_em) {
                 const date = new Date(user.criado_em);
