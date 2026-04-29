@@ -1,1044 +1,960 @@
-<!DOCTYPE html>
-<html class="scroll-smooth" lang="pt-BR">
-
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
-    <title>Perfil do Usuário</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
-    <style>
-        :root {
-            --sidebar-w: 16rem;
-            --blue: #2563EB;
-            --blue-light: #EFF6FF;
-            --blue-dark: #1D4ED8;
-            --text: #111827;
-            --muted: #6B7280;
-            --bg: #F3F6FB;
-            --card: #ffffff;
-            --border: #E5E7EB;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            overflow-x: hidden;
-        }
-
-        h1, h2, h3 { font-family: 'Sora', sans-serif; }
-
-        /* ─── SIDEBAR ─────────────────────────────────── */
-        #sidebar {
-            position: fixed;
-            top: 0; left: 0;
-            width: var(--sidebar-w);
-            height: 100dvh;
-            background: var(--card);
-            border-right: 1px solid var(--border);
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            transition: transform 0.3s cubic-bezier(.4,0,.2,1);
-        }
-
-        /* Mobile: escondida por padrão */
-        @media (max-width: 767px) {
-            #sidebar { transform: translateX(-100%); box-shadow: 4px 0 24px rgba(0,0,0,.12); }
-            #sidebar.open { transform: translateX(0); }
-        }
-
-        /* Desktop: sempre visível */
-        @media (min-width: 768px) {
-            #sidebar { transform: translateX(0) !important; }
-        }
-
-        /* ─── OVERLAY ─────────────────────────────────── */
-        #overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.45);
-            z-index: 45;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #overlay.active { opacity: 1; pointer-events: all; }
-
-        /* ─── LAYOUT ROOT ──────────────────────────────── */
-        #app {
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Desktop: deslocar conteúdo pela largura da sidebar */
-        @media (min-width: 768px) {
-            #app { margin-left: var(--sidebar-w); }
-        }
-
-        /* ─── TOP BAR (mobile only) ────────────────────── */
-        #topbar {
-            display: none;
-            position: sticky;
-            top: 0; z-index: 40;
-            background: var(--card);
-            border-bottom: 1px solid var(--border);
-            padding: 0.75rem 1rem;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        @media (max-width: 767px) {
-            #topbar { display: flex; }
-        }
-
-        #topbar .logo-text { font-family: 'Sora', sans-serif; font-weight: 700; color: var(--blue); font-size: 1.1rem; }
-
-        /* ─── MAIN CONTENT ─────────────────────────────── */
-        #main {
-            flex: 1;
-            padding: 1.5rem 1rem;
-        }
-
-        @media (min-width: 640px) { #main { padding: 2rem 1.5rem; } }
-        @media (min-width: 1024px) { #main { padding: 2.5rem 2rem; } }
-
-        /* Two-column layout em telas grandes */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        @media (min-width: 1100px) {
-            .content-grid { grid-template-columns: 1fr 22rem; }
-        }
-
-        /* ─── CARDS ────────────────────────────────────── */
-        .card {
-            background: var(--card);
-            border-radius: 1rem;
-            box-shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(37,99,235,.06);
-            padding: 1.5rem;
-        }
-
-        /* ─── PROFILE HEADER ───────────────────────────── */
-        .profile-header {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            padding-bottom: 1.25rem;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 1.5rem;
-        }
-
-        @media (min-width: 480px) {
-            .profile-header {
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-            }
-        }
-
-        .profile-identity { display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 0; }
-
-        .avatar-wrap { position: relative; flex-shrink: 0; }
-        .avatar-wrap img {
-            width: 4.5rem; height: 4.5rem;
-            border-radius: 50%;
-            border: 3px solid var(--blue);
-            object-fit: cover;
-        }
-        @media (min-width: 480px) {
-            .avatar-wrap img { width: 5.5rem; height: 5.5rem; }
-        }
-        .avatar-btn {
-            position: absolute; bottom: 0; right: 0;
-            background: var(--blue); color: white;
-            border: none; border-radius: 50%;
-            width: 1.75rem; height: 1.75rem;
-            display: flex; align-items: center; justify-content: center;
-            font-size: .75rem; cursor: pointer;
-            box-shadow: 0 2px 6px rgba(37,99,235,.4);
-        }
-
-        .profile-name { font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .profile-email { color: var(--blue); font-size: .9rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .profile-since { color: var(--muted); font-size: .8rem; margin-top: 2px; }
-
-        .profile-actions {
-            display: flex;
-            gap: .625rem;
-            flex-wrap: wrap;
-        }
-
-        @media (max-width: 479px) {
-            .profile-actions { width: 100%; }
-            .profile-actions .btn { flex: 1; justify-content: center; }
-        }
-
-        /* ─── BUTTONS ──────────────────────────────────── */
-        .btn {
-            display: inline-flex; align-items: center; gap: .4rem;
-            padding: .5rem 1rem;
-            border-radius: .625rem;
-            font-size: .875rem; font-weight: 600;
-            border: none; cursor: pointer;
-            transition: all .18s ease;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-        .btn-primary { background: var(--blue); color: white; }
-        .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
-        .btn-danger { background: #FEE2E2; color: #DC2626; }
-        .btn-danger:hover { background: #FECACA; }
-
-        /* ─── STATS GRID ───────────────────────────────── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            border-radius: .875rem;
-            padding: 1.25rem 1rem;
-            text-align: center;
-            color: white;
-        }
-        .stat-card.xp { background: linear-gradient(135deg, #4F46E5, #2563EB); }
-        .stat-card.niveis { background: linear-gradient(135deg, #0EA5E9, #06B6D4); }
-        .stat-card i { font-size: 1.75rem; opacity: .9; margin-bottom: .5rem; }
-        .stat-card .stat-label { font-size: .8rem; opacity: .85; font-weight: 500; }
-        .stat-card .stat-value { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 700; font-family: 'Sora', sans-serif; }
-
-        /* ─── PROGRESS SECTION ─────────────────────────── */
-        #progressoNiveis { display: flex; flex-direction: column; gap: .875rem; }
-
-        .nivel-card {
-            background: white;
-            border: 1px solid #E0E7FF;
-            border-radius: .875rem;
-            padding: 1rem 1.25rem;
-            transition: box-shadow .2s;
-        }
-        .nivel-card:hover { box-shadow: 0 4px 20px rgba(79,70,229,.12); }
-
-        .nivel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; margin-bottom: .375rem; flex-wrap: wrap; }
-        .nivel-title { font-weight: 600; color: #4338CA; font-size: .95rem; }
-        .nivel-count { font-size: .8rem; color: var(--blue); font-weight: 600; white-space: nowrap; }
-        .nivel-desc { font-size: .82rem; color: var(--muted); margin-bottom: .625rem; line-height: 1.4; }
-
-        .progress-track { background: #E0E7FF; border-radius: 99px; height: .625rem; overflow: hidden; }
-        .progress-fill {
-            height: 100%; border-radius: 99px;
-            background: linear-gradient(90deg, #4F46E5, #2563EB);
-            animation: fillBar 1.4s ease forwards;
-        }
-        @keyframes fillBar { from { width: 0; } to { width: var(--pct); } }
-
-        /* ─── TABS ─────────────────────────────────────── */
-        .tabs-bar {
-            display: flex;
-            border-bottom: 2px solid var(--border);
-            margin-bottom: 1.25rem;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .tabs-bar::-webkit-scrollbar { display: none; }
-
-        .tab-btn {
-            flex-shrink: 0;
-            padding: .625rem 1.1rem;
-            font-size: .875rem; font-weight: 500;
-            color: var(--muted);
-            border: none; background: none; cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            transition: all .18s;
-            white-space: nowrap;
-        }
-        .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
-
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-
-        /* ─── FRIEND ITEMS ─────────────────────────────── */
-        .friend-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: .75rem;
-            padding: .875rem 1rem;
-            background: var(--bg);
-            border-radius: .75rem;
-            border: 1px solid var(--border);
-            margin-bottom: .625rem;
-        }
-        .friend-item:last-child { margin-bottom: 0; }
-        .friend-info { min-width: 0; }
-        .friend-name { font-weight: 600; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .friend-email { font-size: .78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .friend-actions { display: flex; gap: .5rem; flex-shrink: 0; }
-
-        .btn-sm {
-            padding: .35rem .75rem;
-            font-size: .78rem; font-weight: 600;
-            border-radius: .5rem; border: none; cursor: pointer;
-            transition: all .15s;
-        }
-        .btn-sm-danger { background: #FEE2E2; color: #DC2626; }
-        .btn-sm-danger:hover { background: #FECACA; }
-        .btn-sm-success { background: #D1FAE5; color: #059669; }
-        .btn-sm-success:hover { background: #A7F3D0; }
-        .btn-sm-primary { background: var(--blue-light); color: var(--blue); }
-        .btn-sm-primary:hover { background: #DBEAFE; }
-
-        /* ─── SEARCH INPUT ─────────────────────────────── */
-        .search-input {
-            width: 100%;
-            padding: .625rem .875rem;
-            border: 1px solid var(--border);
-            border-radius: .625rem;
-            font-size: .9rem;
-            font-family: 'DM Sans', sans-serif;
-            outline: none;
-            transition: border-color .18s;
-        }
-        .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
-
-        /* ─── SIDEBAR LINKS ────────────────────────────── */
-        .sidebar-link {
-            display: flex; align-items: center; gap: .75rem;
-            padding: .625rem .875rem;
-            border-radius: .625rem;
-            font-size: .9rem; font-weight: 500;
-            color: var(--text);
-            text-decoration: none;
-            transition: all .15s;
-        }
-        .sidebar-link:hover, .sidebar-link.active {
-            background: var(--blue-light);
-            color: var(--blue);
-        }
-        .sidebar-link i { width: 1.125rem; text-align: center; }
-
-        /* ─── INFO GRID ────────────────────────────────── */
-        .info-grid { display: grid; gap: .875rem; }
-        .info-item label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 2px; }
-        .info-item p { font-weight: 600; font-size: .92rem; color: var(--text); }
-
-        /* ─── ACTION LINKS ─────────────────────────────── */
-        .action-links { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; margin-top: 1.25rem; }
-        .action-link {
-            display: flex; align-items: center; justify-content: center;
-            padding: .625rem;
-            background: var(--blue-light);
-            color: var(--blue);
-            border-radius: .625rem;
-            font-size: .85rem; font-weight: 600;
-            text-decoration: none;
-            text-align: center;
-            transition: all .15s;
-        }
-        .action-link:hover { background: #DBEAFE; transform: translateY(-1px); }
-
-        /* ─── MODAL ────────────────────────────────────── */
-        .modal-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,.5);
-            z-index: 100;
-            display: flex; align-items: center; justify-content: center;
-            padding: 1rem;
-        }
-        .modal-overlay.hidden { display: none; }
-        .modal-box {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.75rem;
-            width: 100%; max-width: 28rem;
-            max-height: 90dvh;
-            overflow-y: auto;
-        }
-
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: .85rem; font-weight: 600; color: var(--text); margin-bottom: .375rem; }
-        .form-input {
-            width: 100%; padding: .625rem .875rem;
-            border: 1px solid var(--border);
-            border-radius: .625rem;
-            font-size: .9rem; font-family: 'DM Sans', sans-serif;
-            outline: none; transition: border-color .18s;
-        }
-        .form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
-        .form-error { font-size: .78rem; color: #DC2626; margin-top: .25rem; }
-        .form-error.hidden { display: none; }
-
-        /* ─── TOAST ────────────────────────────────────── */
-        .toast {
-            position: fixed; bottom: 1.5rem; right: 1rem;
-            padding: .875rem 1.25rem;
-            border-radius: .75rem;
-            color: white; font-weight: 600; font-size: .875rem;
-            z-index: 200;
-            box-shadow: 0 4px 20px rgba(0,0,0,.15);
-            animation: slideUp .3s ease;
-        }
-        @keyframes slideUp { from { transform: translateY(2rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* ─── ADMIN DROPDOWN ───────────────────────────── */
-        .admin-menu {
-            position: relative;
-        }
-        .admin-menu-items {
-            position: absolute; left: 0; top: 100%;
-            width: 100%; background: white;
-            border: 1px solid var(--border);
-            border-radius: .625rem;
-            z-index: 60;
-            box-shadow: 0 8px 24px rgba(0,0,0,.1);
-            overflow: hidden;
-        }
-        .admin-menu-items.hidden { display: none; }
-        .admin-menu-items a {
-            display: block; padding: .625rem 1rem;
-            font-size: .85rem; color: var(--text); text-decoration: none;
-            transition: background .15s;
-        }
-        .admin-menu-items a:hover { background: var(--blue-light); color: var(--blue); }
-
-        /* ─── SECTION TITLE ────────────────────────────── */
-        .section-title {
-            font-size: 1rem; font-weight: 700;
-            color: var(--text); margin-bottom: 1rem;
-        }
-
-        /* ─── UTILITIES ────────────────────────────────── */
-        .hidden { display: none !important; }
-        .text-muted { color: var(--muted); font-size: .875rem; }
-
-        /* Smooth fade in */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn .4s ease forwards; }
-    </style>
-</head>
-
-<body>
-
-<!-- ░░ OVERLAY MOBILE ░░ -->
-<div id="overlay"></div>
-
-<!-- ░░ SIDEBAR ESQUERDA ░░ -->
-<nav id="sidebar">
-    <div style="padding: 1.25rem 1rem; border-bottom: 1px solid var(--border); display:flex; align-items:center; gap:.625rem;">
-        <img alt="Logo O Migrante" style="width:2rem; height:2rem; border-radius:50%; flex-shrink:0;"
-             src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
-        <span style="font-family:'Sora',sans-serif; font-weight:700; color:var(--blue); font-size:1.05rem;">O Migrante</span>
-    </div>
-
-    <div style="padding: .875rem .75rem; flex:1; overflow-y:auto;">
-        <ul style="list-style:none; display:flex; flex-direction:column; gap:.25rem;">
-            <li><a class="sidebar-link" href="/app/painel"><i class="fas fa-home"></i>Início</a></li>
-            <li><a class="sidebar-link active" href="DadoUsuario.html"><i class="fas fa-user"></i>Perfil</a></li>
-            <li><a class="sidebar-link" href="Fases.html"><i class="fas fa-tasks"></i>Missão</a></li>
-            <li><a class="sidebar-link" href="../Biblioteca/paginaBiblioteca.html"><i class="fas fa-book"></i>Biblioteca</a></li>
-            <li><a class="sidebar-link" href="../telas/telas testes/testestestes.html"><i class="fas fa-users"></i>The Good Friends</a></li>
-
-            <!-- Admin Dropdown -->
-            <li class="admin-menu hidden" id="adminDropdown" style="margin-top:.25rem;">
-                <button id="adminMenuButton" class="sidebar-link" style="width:100%; background:none; border:none; cursor:pointer; justify-content:space-between; text-align:left;">
-                    <span><i class="fas fa-cog"></i>Administração</span>
-                    <i class="fas fa-chevron-down" id="adminChevron" style="font-size:.75rem; transition: transform .2s;"></i>
-                </button>
-                <div class="admin-menu-items hidden" id="adminMenuItems">
-                    <a href="BuscaEdicaoUsuario.html">Usuários</a>
-                    <a href="CaPerguntas.html">Cadastrar Níveis e Perguntas</a>
-                    <a href="DadosFases.html">Dados das Fases</a>
-                    <a href="DadosNiveis.html">Editar Níveis e Perguntas</a>
-                    <a href="MensagemDiaria.html">Cadastrar Mensagem do dia</a>
-                    <a href="../telas/telas testes/testestestes.html">Tela de Teste</a>
-                </div>
-            </li>
-        </ul>
-    </div>
-</nav>
-
-<!-- ░░ APP WRAPPER ░░ -->
-<div id="app">
-
-    <!-- TOP BAR (mobile only) -->
-    <header id="topbar">
-        <button id="menuBtn" style="background:none; border:none; cursor:pointer; padding:.25rem; color:var(--blue); font-size:1.25rem;">
-            <i class="fas fa-bars"></i>
-        </button>
-        <span class="logo-text">O Migrante</span>
-    </header>
-
-    <!-- MAIN -->
-    <main id="main">
-        <div class="content-grid">
-
-            <!-- ── COLUNA ESQUERDA ── -->
-            <div>
-
-                <!-- Profile card -->
-                <div class="card fade-in" style="margin-bottom:1.25rem;">
-
-                    <!-- Header -->
-                    <div class="profile-header">
-                        <div class="profile-identity">
-                            <div class="avatar-wrap">
-                                <img id="userAvatar" alt="Foto do perfil"
-                                     src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
-                                <button class="avatar-btn" title="Alterar foto">
-                                    <i class="fas fa-camera"></i>
-                                </button>
-                            </div>
-                            <div style="min-width:0;">
-                                <p class="profile-name" id="userName">Carregando...</p>
-                                <p class="profile-email" id="userEmail">Carregando...</p>
-                                <p class="profile-since" id="userJoined">Membro desde: —</p>
-                            </div>
-                        </div>
-                        <div class="profile-actions">
-                            <button class="btn btn-primary" id="editProfileBtn">
-                                <i class="fas fa-user-edit"></i> Editar Perfil
-                            </button>
-                            <button class="btn btn-danger" id="logoutButton">
-                                <i class="fas fa-sign-out-alt"></i> Sair
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Stats -->
-                    <div class="stats-grid">
-                        <div class="stat-card xp">
-                            <i class="fas fa-star" style="color:#FDE68A;"></i>
-                            <div class="stat-label">XP Total</div>
-                            <div class="stat-value" id="xpTotal">0</div>
-                        </div>
-                        <div class="stat-card niveis">
-                            <i class="fas fa-medal" style="color:#FDE68A;"></i>
-                            <div class="stat-label">Níveis Iniciados</div>
-                            <div class="stat-value" id="niveisCompletos">0</div>
-                        </div>
-                    </div>
-
-                    <!-- Progresso -->
-                    <div>
-                        <h2 class="section-title">Progresso por Nível</h2>
-                        <div id="progressoNiveis" style="background:var(--bg); border-radius:.75rem; padding:1rem;">
-                            <p class="text-muted">Carregando níveis...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Amigos card -->
-                <div class="card fade-in" style="animation-delay:.1s;">
-                    <div class="tabs-bar">
-                        <button class="tab-btn active" data-tab="friends">
-                            <i class="fas fa-user-friends" style="margin-right:.4rem;"></i>Amigos
-                        </button>
-                        <button class="tab-btn" data-tab="requests">
-                            <i class="fas fa-bell" style="margin-right:.4rem;"></i>Solicitações
-                        </button>
-                        <button class="tab-btn" data-tab="search">
-                            <i class="fas fa-search" style="margin-right:.4rem;"></i>Pesquisar
-                        </button>
-                    </div>
-
-                    <!-- Amigos -->
-                    <div class="tab-panel active" id="panel-friends">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.875rem;">
-                            <h3 class="section-title" style="margin-bottom:0;">Seus Amigos</h3>
-                            <span class="text-muted" id="friendsCount">0 amigos</span>
-                        </div>
-                        <div id="friendsList"><p class="text-muted">Carregando amigos...</p></div>
-                    </div>
-
-                    <!-- Solicitações -->
-                    <div class="tab-panel" id="panel-requests">
-                        <h3 class="section-title">Solicitações Recebidas</h3>
-                        <div id="receivedRequestsList" style="margin-bottom:1.25rem;"><p class="text-muted">Carregando...</p></div>
-                        <h3 class="section-title">Solicitações Enviadas</h3>
-                        <div id="sentRequestsList"><p class="text-muted">Carregando...</p></div>
-                    </div>
-
-                    <!-- Pesquisar -->
-                    <div class="tab-panel" id="panel-search">
-                        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar por nome ou email"
-                               style="margin-bottom:1rem;" />
-                        <div id="searchResults"><p class="text-muted">Digite para pesquisar usuários...</p></div>
-                    </div>
-                </div>
-
-            </div><!-- /col esquerda -->
-
-            <!-- ── COLUNA DIREITA ── -->
-            <div>
-
-                <!-- Informações pessoais -->
-                <div class="card fade-in" style="animation-delay:.15s; margin-bottom:1.25rem;">
-                    <h2 class="section-title">Informações Pessoais</h2>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>Nome Completo</label>
-                            <p id="fullName">Carregando...</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Email</label>
-                            <p id="emailInfo">Carregando...</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Tipo de Conta</label>
-                            <p id="accountType">Carregando...</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Data de Cadastro</label>
-                            <p id="registerDate">Carregando...</p>
-                        </div>
-                    </div>
-                    <div class="action-links">
-                        <a href="/app/biblia" class="action-link"><i class="fas fa-bible" style="margin-right:.35rem;"></i>Bíblia</a>
-                        <a href="../PaginaProducao.html" class="action-link"><i class="fas fa-scroll" style="margin-right:.35rem;"></i>Pergaminhos</a>
-                        <a href="DadosAnotacoes.html" class="action-link" style="grid-column:span 2;"><i class="fas fa-sticky-note" style="margin-right:.35rem;"></i>Anotações</a>
-                    </div>
-                </div>
-
-            </div><!-- /col direita -->
-
-        </div><!-- /content-grid -->
-    </main>
-</div><!-- /app -->
-
-<!-- ░░ MODAL EDITAR PERFIL ░░ -->
-<div id="editModal" class="modal-overlay hidden">
-    <div class="modal-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-            <h2 style="font-size:1.25rem;">Editar Perfil</h2>
-            <button id="closeModalBtn" style="background:none; border:none; cursor:pointer; font-size:1.25rem; color:var(--muted);">
-                <i class="fas fa-times"></i>
+<%
+  // Esta página será injetada no layout.ejs como 'body'
+  // O objeto 'user' já vem do server.js
+  title = "Meu Perfil - O Migrante";
+%>
+
+<style>
+  /* Estilos específicos para a página de perfil */
+  :root {
+    --blue: #2563EB;
+    --blue-light: #EFF6FF;
+    --blue-dark: #1D4ED8;
+    --text: #111827;
+    --muted: #6B7280;
+    --bg: #F3F6FB;
+    --card: #ffffff;
+    --border: #E5E7EB;
+  }
+  
+  /* Two-column layout em telas grandes */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 1100px) {
+    .content-grid { grid-template-columns: 1fr 22rem; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border-radius: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(37,99,235,.06);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Profile Header */
+  .profile-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: 480px) {
+    .profile-header {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .profile-identity { 
+    display: flex; 
+    align-items: center; 
+    gap: 1rem; 
+    flex: 1; 
+    min-width: 0; 
+  }
+
+  .avatar-wrap { 
+    position: relative; 
+    flex-shrink: 0; 
+  }
+  
+  .avatar-wrap img {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    border: 3px solid var(--blue);
+    object-fit: cover;
+  }
+  
+  @media (min-width: 480px) {
+    .avatar-wrap img { width: 5.5rem; height: 5.5rem; }
+  }
+  
+  .avatar-btn {
+    position: absolute; 
+    bottom: 0; 
+    right: 0;
+    background: var(--blue); 
+    color: white;
+    border: none; 
+    border-radius: 50%;
+    width: 1.75rem; 
+    height: 1.75rem;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    font-size: .75rem; 
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(37,99,235,.4);
+  }
+
+  .profile-name { 
+    font-size: clamp(1.1rem, 4vw, 1.5rem); 
+    font-weight: 700; 
+    color: var(--text); 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+  }
+  
+  .profile-email { 
+    color: var(--blue); 
+    font-size: .9rem; 
+    font-weight: 500; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+  }
+  
+  .profile-since { 
+    color: var(--muted); 
+    font-size: .8rem; 
+    margin-top: 2px; 
+  }
+
+  .profile-actions {
+    display: flex;
+    gap: .625rem;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 479px) {
+    .profile-actions { width: 100%; }
+    .profile-actions .btn { flex: 1; justify-content: center; }
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; 
+    align-items: center; 
+    gap: .4rem;
+    padding: .5rem 1rem;
+    border-radius: .625rem;
+    font-size: .875rem; 
+    font-weight: 600;
+    border: none; 
+    cursor: pointer;
+    transition: all .18s ease;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+  .btn-danger { background: #FEE2E2; color: #DC2626; }
+  .btn-danger:hover { background: #FECACA; }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    border-radius: .875rem;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    color: white;
+  }
+  
+  .stat-card.xp { background: linear-gradient(135deg, #4F46E5, #2563EB); }
+  .stat-card.niveis { background: linear-gradient(135deg, #0EA5E9, #06B6D4); }
+  .stat-card i { font-size: 1.75rem; opacity: .9; margin-bottom: .5rem; }
+  .stat-card .stat-label { font-size: .8rem; opacity: .85; font-weight: 500; }
+  .stat-card .stat-value { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 700; }
+
+  /* Progresso por Nível */
+  #progressoNiveis { display: flex; flex-direction: column; gap: .875rem; }
+
+  .nivel-card {
+    background: white;
+    border: 1px solid #E0E7FF;
+    border-radius: .875rem;
+    padding: 1rem 1.25rem;
+    transition: box-shadow .2s;
+  }
+  
+  .nivel-card:hover { box-shadow: 0 4px 20px rgba(79,70,229,.12); }
+
+  .nivel-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    gap: .5rem; 
+    margin-bottom: .375rem; 
+    flex-wrap: wrap; 
+  }
+  
+  .nivel-title { font-weight: 600; color: #4338CA; font-size: .95rem; }
+  .nivel-count { font-size: .8rem; color: var(--blue); font-weight: 600; white-space: nowrap; }
+  .nivel-desc { font-size: .82rem; color: var(--muted); margin-bottom: .625rem; line-height: 1.4; }
+
+  .progress-track { background: #E0E7FF; border-radius: 99px; height: .625rem; overflow: hidden; }
+  .progress-fill {
+    height: 100%; 
+    border-radius: 99px;
+    background: linear-gradient(90deg, #4F46E5, #2563EB);
+    width: 0%;
+    transition: width 1s ease;
+  }
+
+  /* Tabs */
+  .tabs-bar {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  
+  .tabs-bar::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    flex-shrink: 0;
+    padding: .625rem 1.1rem;
+    font-size: .875rem; 
+    font-weight: 500;
+    color: var(--muted);
+    border: none; 
+    background: none; 
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all .18s;
+    white-space: nowrap;
+  }
+  
+  .tab-btn.active { 
+    color: var(--blue); 
+    border-bottom-color: var(--blue); 
+    font-weight: 700; 
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Friend Items */
+  .friend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    padding: .875rem 1rem;
+    background: var(--bg);
+    border-radius: .75rem;
+    border: 1px solid var(--border);
+    margin-bottom: .625rem;
+  }
+  
+  .friend-item:last-child { margin-bottom: 0; }
+  
+  .friend-info { min-width: 0; }
+  .friend-name { font-weight: 600; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .friend-email { font-size: .78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .friend-actions { display: flex; gap: .5rem; flex-shrink: 0; }
+
+  .btn-sm {
+    padding: .35rem .75rem;
+    font-size: .78rem; 
+    font-weight: 600;
+    border-radius: .5rem; 
+    border: none; 
+    cursor: pointer;
+    transition: all .15s;
+  }
+  
+  .btn-sm-danger { background: #FEE2E2; color: #DC2626; }
+  .btn-sm-danger:hover { background: #FECACA; }
+  .btn-sm-success { background: #D1FAE5; color: #059669; }
+  .btn-sm-success:hover { background: #A7F3D0; }
+  .btn-sm-primary { background: var(--blue-light); color: var(--blue); }
+  .btn-sm-primary:hover { background: #DBEAFE; }
+
+  /* Search Input */
+  .search-input {
+    width: 100%;
+    padding: .625rem .875rem;
+    border: 1px solid var(--border);
+    border-radius: .625rem;
+    font-size: .9rem;
+    outline: none;
+    transition: border-color .18s;
+  }
+  
+  .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+  /* Info Grid */
+  .info-grid { display: grid; gap: .875rem; }
+  .info-item label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 2px; }
+  .info-item p { font-weight: 600; font-size: .92rem; color: var(--text); }
+
+  /* Action Links */
+  .action-links { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; margin-top: 1.25rem; }
+  .action-link {
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    padding: .625rem;
+    background: var(--blue-light);
+    color: var(--blue);
+    border-radius: .625rem;
+    font-size: .85rem; 
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: all .15s;
+  }
+  
+  .action-link:hover { background: #DBEAFE; transform: translateY(-1px); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; 
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 1000;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    padding: 1rem;
+  }
+  
+  .modal-overlay.hidden { display: none; }
+  
+  .modal-box {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    width: 100%; 
+    max-width: 28rem;
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: .85rem; font-weight: 600; color: var(--text); margin-bottom: .375rem; }
+  .form-input {
+    width: 100%; 
+    padding: .625rem .875rem;
+    border: 1px solid var(--border);
+    border-radius: .625rem;
+    font-size: .9rem;
+    outline: none; 
+    transition: border-color .18s;
+  }
+  
+  .form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+  
+  .form-error { font-size: .78rem; color: #DC2626; margin-top: .25rem; }
+  .form-error.hidden { display: none; }
+
+  /* Toast */
+  .toast {
+    position: fixed; 
+    bottom: 1.5rem; 
+    right: 1rem;
+    padding: .875rem 1.25rem;
+    border-radius: .75rem;
+    color: white; 
+    font-weight: 600; 
+    font-size: .875rem;
+    z-index: 1100;
+    box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    animation: slideUp .3s ease;
+  }
+  
+  @keyframes slideUp { 
+    from { transform: translateY(2rem); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
+  }
+
+  /* Section Title */
+  .section-title {
+    font-size: 1rem; 
+    font-weight: 700;
+    color: var(--text); 
+    margin-bottom: 1rem;
+  }
+
+  /* Utilities */
+  .hidden { display: none !important; }
+  .text-muted { color: var(--muted); font-size: .875rem; }
+
+  @keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(8px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
+  
+  .fade-in { animation: fadeIn .4s ease forwards; }
+</style>
+
+<div class="content-grid">
+  
+  <!-- COLUNA ESQUERDA -->
+  <div>
+    <!-- Profile card -->
+    <div class="card fade-in">
+      <div class="profile-header">
+        <div class="profile-identity">
+          <div class="avatar-wrap">
+            <img id="userAvatar" alt="Foto do perfil"
+                 src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" />
+            <button class="avatar-btn" title="Alterar foto">
+              <i class="fas fa-camera"></i>
             </button>
+          </div>
+          <div style="min-width:0;">
+            <p class="profile-name" id="userName">Carregando...</p>
+            <p class="profile-email" id="userEmail">Carregando...</p>
+            <p class="profile-since" id="userJoined">Membro desde: —</p>
+          </div>
         </div>
-        <form id="editProfileForm">
-            <div class="form-group">
-                <label for="editName">Nome Completo</label>
-                <input class="form-input" id="editName" type="text" placeholder="Seu nome" />
-                <p class="form-error hidden" id="editNameError">O nome é obrigatório.</p>
-            </div>
-            <div class="form-group">
-                <label for="editEmail">Email</label>
-                <input class="form-input" id="editEmail" type="email" placeholder="Seu email" />
-                <p class="form-error hidden" id="editEmailError">Por favor, insira um email válido.</p>
-            </div>
-            <div class="form-group">
-                <label for="editPassword">Nova Senha <span style="font-weight:400; color:var(--muted);">(deixe em branco para manter)</span></label>
-                <input class="form-input" id="editPassword" type="password" placeholder="Nova senha" />
-                <p class="form-error hidden" id="editPasswordError">A senha deve ter pelo menos 6 caracteres.</p>
-            </div>
-            <div style="display:flex; justify-content:flex-end; gap:.625rem; margin-top:1.25rem;">
-                <button type="button" id="cancelEditBtn" class="btn" style="background:var(--border); color:var(--text);">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-            </div>
-        </form>
+        <div class="profile-actions">
+          <button class="btn btn-primary" id="editProfileBtn">
+            <i class="fas fa-user-edit"></i> Editar Perfil
+          </button>
+          <button class="btn btn-danger" id="logoutButton">
+            <i class="fas fa-sign-out-alt"></i> Sair
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card xp">
+          <i class="fas fa-star"></i>
+          <div class="stat-label">XP Total</div>
+          <div class="stat-value" id="xpTotal">0</div>
+        </div>
+        <div class="stat-card niveis">
+          <i class="fas fa-medal"></i>
+          <div class="stat-label">Níveis Iniciados</div>
+          <div class="stat-value" id="niveisCompletos">0</div>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="section-title">Progresso por Nível</h2>
+        <div id="progressoNiveis" style="background:var(--bg); border-radius:.75rem; padding:1rem;">
+          <p class="text-muted">Carregando níveis...</p>
+        </div>
+      </div>
     </div>
+
+    <!-- Amigos card -->
+    <div class="card fade-in" style="animation-delay:.1s;">
+      <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="friends">
+          <i class="fas fa-user-friends"></i> Amigos
+        </button>
+        <button class="tab-btn" data-tab="requests">
+          <i class="fas fa-bell"></i> Solicitações
+        </button>
+        <button class="tab-btn" data-tab="search">
+          <i class="fas fa-search"></i> Pesquisar
+        </button>
+      </div>
+
+      <div class="tab-panel active" id="panel-friends">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.875rem;">
+          <h3 class="section-title" style="margin-bottom:0;">Seus Amigos</h3>
+          <span class="text-muted" id="friendsCount">0 amigos</span>
+        </div>
+        <div id="friendsList"><p class="text-muted">Carregando amigos...</p></div>
+      </div>
+
+      <div class="tab-panel" id="panel-requests">
+        <h3 class="section-title">Solicitações Recebidas</h3>
+        <div id="receivedRequestsList" style="margin-bottom:1.25rem;"><p class="text-muted">Carregando...</p></div>
+        <h3 class="section-title">Solicitações Enviadas</h3>
+        <div id="sentRequestsList"><p class="text-muted">Carregando...</p></div>
+      </div>
+
+      <div class="tab-panel" id="panel-search">
+        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar por nome ou email"
+               style="margin-bottom:1rem;" />
+        <div id="searchResults"><p class="text-muted">Digite para pesquisar usuários...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLUNA DIREITA -->
+  <div>
+    <div class="card fade-in" style="animation-delay:.15s;">
+      <h2 class="section-title">Informações Pessoais</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nome Completo</label>
+          <p id="fullName">Carregando...</p>
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <p id="emailInfo">Carregando...</p>
+        </div>
+        <div class="info-item">
+          <label>Tipo de Conta</label>
+          <p id="accountType">Carregando...</p>
+        </div>
+        <div class="info-item">
+          <label>Data de Cadastro</label>
+          <p id="registerDate">Carregando...</p>
+        </div>
+      </div>
+      <div class="action-links">
+        <a href="/app/biblia" class="action-link"><i class="fas fa-bible"></i> Bíblia</a>
+        <a href="/app/pergaminhos" class="action-link"><i class="fas fa-scroll"></i> Pergaminhos</a>
+        <a href="/app/anotacoes" class="action-link" style="grid-column:span 2;"><i class="fas fa-sticky-note"></i> Minhas Anotações</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL EDITAR PERFIL -->
+<div id="editModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+      <h2 style="font-size:1.25rem;">Editar Perfil</h2>
+      <button id="closeModalBtn" style="background:none; border:none; cursor:pointer; font-size:1.25rem; color:var(--muted);">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="editProfileForm">
+      <div class="form-group">
+        <label for="editName">Nome Completo</label>
+        <input class="form-input" id="editName" type="text" placeholder="Seu nome" />
+        <p class="form-error hidden" id="editNameError">O nome é obrigatório.</p>
+      </div>
+      <div class="form-group">
+        <label for="editEmail">Email</label>
+        <input class="form-input" id="editEmail" type="email" placeholder="Seu email" />
+        <p class="form-error hidden" id="editEmailError">Por favor, insira um email válido.</p>
+      </div>
+      <div class="form-group">
+        <label for="editPassword">Nova Senha <span style="font-weight:400; color:var(--muted);">(deixe em branco para manter)</span></label>
+        <input class="form-input" id="editPassword" type="password" placeholder="Nova senha" />
+        <p class="form-error hidden" id="editPasswordError">A senha deve ter pelo menos 6 caracteres.</p>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:.625rem; margin-top:1.25rem;">
+        <button type="button" id="cancelEditBtn" class="btn" style="background:var(--border); color:var(--text);">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
+  (function() {
     const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? `http://${window.location.hostname}:${window.location.port || 3000}`
-        : 'https://o-migrante.onrender.com';
+      ? `http://${window.location.hostname}:${window.location.port || 3000}`
+      : 'https://o-migrante.onrender.com';
 
     let currentUserId = null;
 
-    /* ── TOAST ── */
     function showFeedback(message, isError = true) {
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.style.background = isError ? '#DC2626' : '#059669';
-        t.textContent = message;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.style.background = isError ? '#DC2626' : '#059669';
+      t.textContent = message;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
     }
 
-    /* ── API ── */
     async function makeAuthenticatedRequest(url, options = {}) {
-        const opts = {
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json', ...options.headers },
-            ...options
-        };
-        const response = await fetch(`${API_BASE_URL}${url}`, opts);
-        return response;
+      const opts = {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+        ...options
+      };
+      const response = await fetch(`${API_BASE_URL}${url}`, opts);
+      return response;
     }
 
     async function checkAuthentication() {
-        try {
-            const r = await makeAuthenticatedRequest('/auth/verifyToken', { method: 'GET' });
-            if (!r.ok) return { auth: false };
-            return await r.json();
-        } catch { return { auth: false }; }
+      try {
+        const r = await makeAuthenticatedRequest('/auth/verifyToken', { method: 'GET' });
+        if (!r.ok) return { auth: false };
+        return await r.json();
+      } catch { return { auth: false }; }
     }
 
     async function logout() {
-        try { await makeAuthenticatedRequest('/auth/logout', { method: 'POST' }); } catch {}
-        localStorage.removeItem('token');
-        window.location.href = '/';
+      try { await makeAuthenticatedRequest('/auth/logout', { method: 'POST' }); } catch {}
+      localStorage.removeItem('token');
+      window.location.href = '/';
     }
 
-    /* ── SIDEBAR MOBILE ── */
-    const sidebar  = document.getElementById('sidebar');
-    const overlay  = document.getElementById('overlay');
-    const menuBtn  = document.getElementById('menuBtn');
-
-    function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
-    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.style.overflow = ''; }
-
-    menuBtn.addEventListener('click', openSidebar);
-    overlay.addEventListener('click', closeSidebar);
-    window.addEventListener('resize', () => { if (window.innerWidth >= 768) closeSidebar(); });
-
-    /* ── ADMIN DROPDOWN ── */
-    function setupAdminDropdown() {
-        const btn     = document.getElementById('adminMenuButton');
-        const items   = document.getElementById('adminMenuItems');
-        const chevron = document.getElementById('adminChevron');
-        btn.addEventListener('click', e => {
-            e.preventDefault();
-            items.classList.toggle('hidden');
-            chevron.style.transform = items.classList.contains('hidden') ? '' : 'rotate(180deg)';
-        });
-    }
-
-    /* ── TABS ── */
+    // TABS
     function setupTabs() {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tab = btn.dataset.tab;
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(`panel-${tab}`).classList.add('active');
-                if (tab === 'friends') carregarAmigos();
-                if (tab === 'requests') carregarSolicitacoes();
-                if (tab === 'search') {
-                    document.getElementById('searchInput').value = '';
-                    document.getElementById('searchResults').innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
-                }
-            });
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.tab;
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(`panel-${tab}`).classList.add('active');
+          if (tab === 'friends') carregarAmigos();
+          if (tab === 'requests') carregarSolicitacoes();
+          if (tab === 'search') {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
+          }
         });
-        // Ativar amigos por padrão
-        carregarAmigos();
+      });
+      carregarAmigos();
     }
 
-    /* ── PROGRESSO DETALHADO ── */
     async function carregarProgressoDetalhado() {
-        try {
-            const r = await makeAuthenticatedRequest('/progresso/detalhado');
-            if (r.ok) {
-                const data = await r.json();
-                document.getElementById('niveisCompletos').textContent = Object.keys(data.niveisCompletos || {}).length;
-            }
-        } catch { document.getElementById('niveisCompletos').textContent = '0'; }
+      try {
+        const r = await makeAuthenticatedRequest('/progresso/detalhado');
+        if (r.ok) {
+          const data = await r.json();
+          document.getElementById('niveisCompletos').textContent = Object.keys(data.niveisCompletos || {}).length;
+        }
+      } catch { document.getElementById('niveisCompletos').textContent = '0'; }
     }
 
-    /* ── PROGRESSO POR NÍVEL ── */
     async function carregarProgressoNiveis() {
-        const container = document.getElementById('progressoNiveis');
-        container.innerHTML = '<p class="text-muted">Carregando níveis...</p>';
-        try {
-            const r = await makeAuthenticatedRequest('/niveis/ativos');
-            if (!r.ok) throw new Error(`Erro: ${r.status}`);
-            const { niveis } = await r.json();
-            if (!niveis || niveis.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--muted);">
-                    <i class="fas fa-tasks" style="font-size:2rem; margin-bottom:.75rem; display:block;"></i>
-                    <p>Nenhum nível ativo encontrado.</p></div>`;
-                return;
-            }
-            container.innerHTML = '';
-            for (const nivel of niveis) {
-                let botaoAtual = 0;
-                const br = await makeAuthenticatedRequest(`/progresso/botoes/${nivel.id}`);
-                if (br.ok) {
-                    const { botoesCompletos } = await br.json();
-                    const ordens = Object.keys(botoesCompletos).map(Number).sort((a, b) => b - a);
-                    for (const o of ordens) {
-                        if (botoesCompletos[o].concluido || botoesCompletos[o].xp_ganho > 0) { botaoAtual = o; break; }
-                    }
-                }
-                const total = 12;
-                const pct = Math.round((botaoAtual / total) * 100);
-                const el = document.createElement('div');
-                el.className = 'nivel-card';
-                el.innerHTML = `
-                    <div class="nivel-header">
-                        <span class="nivel-title">Nível ${nivel.id}: ${nivel.titulo}</span>
-                        <span class="nivel-count">${botaoAtual} / ${total}</span>
-                    </div>
-                    <p class="nivel-desc">${nivel.descricao || 'Sem descrição disponível'}</p>
-                    <div class="progress-track">
-                        <div class="progress-fill" style="--pct: ${pct}%;"></div>
-                    </div>`;
-                container.appendChild(el);
-            }
-        } catch (e) {
-            container.innerHTML = `<p style="color:#DC2626; font-size:.875rem;">Erro ao carregar: ${e.message}</p>`;
+      const container = document.getElementById('progressoNiveis');
+      container.innerHTML = '<p class="text-muted">Carregando níveis...</p>';
+      try {
+        const r = await makeAuthenticatedRequest('/niveis/ativos');
+        if (!r.ok) throw new Error(`Erro: ${r.status}`);
+        const { niveis } = await r.json();
+        if (!niveis || niveis.length === 0) {
+          container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--muted);">
+            <i class="fas fa-tasks" style="font-size:2rem; margin-bottom:.75rem; display:block;"></i>
+            <p>Nenhum nível ativo encontrado.</p></div>`;
+          return;
         }
+        container.innerHTML = '';
+        for (const nivel of niveis) {
+          let botaoAtual = 0;
+          const br = await makeAuthenticatedRequest(`/progresso/botoes/${nivel.id}`);
+          if (br.ok) {
+            const { botoesCompletos } = await br.json();
+            const ordens = Object.keys(botoesCompletos).map(Number).sort((a, b) => b - a);
+            for (const o of ordens) {
+              if (botoesCompletos[o].concluido || botoesCompletos[o].xp_ganho > 0) { botaoAtual = o; break; }
+            }
+          }
+          const total = 12;
+          const pct = Math.round((botaoAtual / total) * 100);
+          const el = document.createElement('div');
+          el.className = 'nivel-card';
+          el.innerHTML = `
+            <div class="nivel-header">
+              <span class="nivel-title">Nível ${nivel.id}: ${nivel.titulo}</span>
+              <span class="nivel-count">${botaoAtual} / ${total}</span>
+            </div>
+            <p class="nivel-desc">${nivel.descricao || 'Sem descrição disponível'}</p>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: ${pct}%;"></div>
+            </div>`;
+          container.appendChild(el);
+        }
+      } catch (e) {
+        container.innerHTML = `<p style="color:#DC2626; font-size:.875rem;">Erro ao carregar: ${e.message}</p>`;
+      }
     }
 
-    /* ── AMIGOS ── */
     async function carregarAmigos() {
-        const list  = document.getElementById('friendsList');
-        const count = document.getElementById('friendsCount');
-        list.innerHTML = '<p class="text-muted">Carregando...</p>';
-        try {
-            const r = await makeAuthenticatedRequest('/amizades/listar');
-            if (!r.ok) throw new Error(`Erro: ${r.status}`);
-            const { amigos } = await r.json();
-            list.innerHTML = '';
-            if (amigos && amigos.length > 0) {
-                amigos.forEach(a => {
-                    const el = document.createElement('div');
-                    el.className = 'friend-item';
-                    el.innerHTML = `
-                        <div class="friend-info">
-                            <p class="friend-name">${a.nome}</p>
-                            <p class="friend-email">${a.email}</p>
-                        </div>
-                        <div class="friend-actions">
-                            <button class="btn-sm btn-sm-danger remove-friend" data-id="${a.id_amizade}">Remover</button>
-                        </div>`;
-                    list.appendChild(el);
-                });
-                count.textContent = `${amigos.length} amigo${amigos.length !== 1 ? 's' : ''}`;
-            } else {
-                list.innerHTML = '<p class="text-muted">Você ainda não tem amigos adicionados.</p>';
-                count.textContent = '0 amigos';
-            }
-            document.querySelectorAll('.remove-friend').forEach(b => b.addEventListener('click', e => removerAmizade(e.target.dataset.id)));
-        } catch (e) {
-            list.innerHTML = `<p style="color:#DC2626; font-size:.875rem;">Erro: ${e.message}</p>`;
+      const list = document.getElementById('friendsList');
+      const count = document.getElementById('friendsCount');
+      list.innerHTML = '<p class="text-muted">Carregando...</p>';
+      try {
+        const r = await makeAuthenticatedRequest('/amizades/listar');
+        if (!r.ok) throw new Error(`Erro: ${r.status}`);
+        const { amigos } = await r.json();
+        list.innerHTML = '';
+        if (amigos && amigos.length > 0) {
+          amigos.forEach(a => {
+            const el = document.createElement('div');
+            el.className = 'friend-item';
+            el.innerHTML = `
+              <div class="friend-info">
+                <p class="friend-name">${a.nome}</p>
+                <p class="friend-email">${a.email}</p>
+              </div>
+              <div class="friend-actions">
+                <button class="btn-sm btn-sm-danger remove-friend" data-id="${a.id_amizade}">Remover</button>
+              </div>`;
+            list.appendChild(el);
+          });
+          count.textContent = `${amigos.length} amigo${amigos.length !== 1 ? 's' : ''}`;
+        } else {
+          list.innerHTML = '<p class="text-muted">Você ainda não tem amigos adicionados.</p>';
+          count.textContent = '0 amigos';
         }
+        document.querySelectorAll('.remove-friend').forEach(b => b.addEventListener('click', e => removerAmizade(e.target.dataset.id)));
+      } catch (e) {
+        list.innerHTML = `<p style="color:#DC2626;">Erro: ${e.message}</p>`;
+      }
     }
 
     async function removerAmizade(id) {
-        try {
-            const r = await makeAuthenticatedRequest(`/amizades/${id}`, { method: 'DELETE' });
-            const d = await r.json();
-            if (d.success) { showFeedback('Amizade removida!', false); await carregarAmigos(); }
-            else showFeedback(d.message || 'Erro.', true);
-        } catch (e) { showFeedback('Erro: ' + e.message, true); }
+      try {
+        const r = await makeAuthenticatedRequest(`/amizades/${id}`, { method: 'DELETE' });
+        const d = await r.json();
+        if (d.success) { showFeedback('Amizade removida!', false); await carregarAmigos(); }
+        else showFeedback(d.message || 'Erro.', true);
+      } catch (e) { showFeedback('Erro: ' + e.message, true); }
     }
 
-    /* ── SOLICITAÇÕES ── */
     async function carregarSolicitacoes() {
-        const recv = document.getElementById('receivedRequestsList');
-        const sent = document.getElementById('sentRequestsList');
-        recv.innerHTML = '<p class="text-muted">Carregando...</p>';
-        sent.innerHTML = '<p class="text-muted">Carregando...</p>';
-        try {
-            const r = await makeAuthenticatedRequest('/amizades/listar');
-            if (!r.ok) throw new Error(`Erro: ${r.status}`);
-            const { pedidosPendentes, solicitacoesEnviadas } = await r.json();
-            recv.innerHTML = '';
-            sent.innerHTML = '';
-            if (pedidosPendentes && pedidosPendentes.length > 0) {
-                pedidosPendentes.forEach(p => {
-                    const el = document.createElement('div');
-                    el.className = 'friend-item';
-                    el.innerHTML = `
-                        <div class="friend-info"><p class="friend-name">${p.nome}</p><p class="friend-email">${p.email}</p></div>
-                        <div class="friend-actions">
-                            <button class="btn-sm btn-sm-success accept-friend" data-id="${p.id_amizade}">Aceitar</button>
-                            <button class="btn-sm btn-sm-danger reject-friend" data-id="${p.id_amizade}">Recusar</button>
-                        </div>`;
-                    recv.appendChild(el);
-                });
-            } else {
-                recv.innerHTML = '<p class="text-muted">Nenhuma solicitação recebida.</p>';
-            }
-            if (solicitacoesEnviadas && solicitacoesEnviadas.length > 0) {
-                solicitacoesEnviadas.forEach(s => {
-                    const el = document.createElement('div');
-                    el.className = 'friend-item';
-                    el.innerHTML = `
-                        <div class="friend-info"><p class="friend-name">${s.nome}</p><p class="friend-email">${s.email}</p></div>
-                        <div class="friend-actions">
-                            <button class="btn-sm btn-sm-danger cancel-request" data-id="${s.id_amizade}">Cancelar</button>
-                        </div>`;
-                    sent.appendChild(el);
-                });
-            } else {
-                sent.innerHTML = '<p class="text-muted">Nenhuma solicitação enviada.</p>';
-            }
-            document.querySelectorAll('.accept-friend').forEach(b => b.addEventListener('click', e => atualizarAmizade(e.target.dataset.id, 'aceito')));
-            document.querySelectorAll('.reject-friend').forEach(b => b.addEventListener('click', e => atualizarAmizade(e.target.dataset.id, 'recusado')));
-            document.querySelectorAll('.cancel-request').forEach(b => b.addEventListener('click', e => cancelarSolicitacao(e.target.dataset.id)));
-        } catch (e) {
-            recv.innerHTML = `<p style="color:#DC2626;">Erro: ${e.message}</p>`;
+      const recv = document.getElementById('receivedRequestsList');
+      const sent = document.getElementById('sentRequestsList');
+      recv.innerHTML = '<p class="text-muted">Carregando...</p>';
+      sent.innerHTML = '<p class="text-muted">Carregando...</p>';
+      try {
+        const r = await makeAuthenticatedRequest('/amizades/listar');
+        if (!r.ok) throw new Error(`Erro: ${r.status}`);
+        const { pedidosPendentes, solicitacoesEnviadas } = await r.json();
+        recv.innerHTML = '';
+        sent.innerHTML = '';
+        if (pedidosPendentes && pedidosPendentes.length > 0) {
+          pedidosPendentes.forEach(p => {
+            const el = document.createElement('div');
+            el.className = 'friend-item';
+            el.innerHTML = `
+              <div class="friend-info"><p class="friend-name">${p.nome}</p><p class="friend-email">${p.email}</p></div>
+              <div class="friend-actions">
+                <button class="btn-sm btn-sm-success accept-friend" data-id="${p.id_amizade}">Aceitar</button>
+                <button class="btn-sm btn-sm-danger reject-friend" data-id="${p.id_amizade}">Recusar</button>
+              </div>`;
+            recv.appendChild(el);
+          });
+        } else {
+          recv.innerHTML = '<p class="text-muted">Nenhuma solicitação recebida.</p>';
         }
+        if (solicitacoesEnviadas && solicitacoesEnviadas.length > 0) {
+          solicitacoesEnviadas.forEach(s => {
+            const el = document.createElement('div');
+            el.className = 'friend-item';
+            el.innerHTML = `
+              <div class="friend-info"><p class="friend-name">${s.nome}</p><p class="friend-email">${s.email}</p></div>
+              <div class="friend-actions">
+                <button class="btn-sm btn-sm-danger cancel-request" data-id="${s.id_amizade}">Cancelar</button>
+              </div>`;
+            sent.appendChild(el);
+          });
+        } else {
+          sent.innerHTML = '<p class="text-muted">Nenhuma solicitação enviada.</p>';
+        }
+        document.querySelectorAll('.accept-friend').forEach(b => b.addEventListener('click', e => atualizarAmizade(e.target.dataset.id, 'aceito')));
+        document.querySelectorAll('.reject-friend').forEach(b => b.addEventListener('click', e => atualizarAmizade(e.target.dataset.id, 'recusado')));
+        document.querySelectorAll('.cancel-request').forEach(b => b.addEventListener('click', e => cancelarSolicitacao(e.target.dataset.id)));
+      } catch (e) {
+        recv.innerHTML = `<p style="color:#DC2626;">Erro: ${e.message}</p>`;
+      }
     }
 
     async function atualizarAmizade(id, status) {
-        try {
-            const r = await makeAuthenticatedRequest(`/amizades/${id}/atualizar`, { method: 'PATCH', body: JSON.stringify({ status }) });
-            const d = await r.json();
-            if (d.success) { showFeedback(`Amizade ${status === 'aceito' ? 'aceita' : 'recusada'}!`, false); await carregarSolicitacoes(); }
-            else showFeedback(d.message || 'Erro.', true);
-        } catch (e) { showFeedback('Erro: ' + e.message, true); }
+      try {
+        const r = await makeAuthenticatedRequest(`/amizades/${id}/atualizar`, { method: 'PATCH', body: JSON.stringify({ status }) });
+        const d = await r.json();
+        if (d.success) { showFeedback(`Amizade ${status === 'aceito' ? 'aceita' : 'recusada'}!`, false); await carregarSolicitacoes(); await carregarAmigos(); }
+        else showFeedback(d.message || 'Erro.', true);
+      } catch (e) { showFeedback('Erro: ' + e.message, true); }
     }
 
     async function cancelarSolicitacao(id) {
-        try {
-            const r = await makeAuthenticatedRequest(`/amizades/${id}`, { method: 'DELETE' });
-            const d = await r.json();
-            if (d.success) { showFeedback('Solicitação cancelada!', false); await carregarSolicitacoes(); }
-            else showFeedback(d.message || 'Erro.', true);
-        } catch (e) { showFeedback('Erro: ' + e.message, true); }
+      try {
+        const r = await makeAuthenticatedRequest(`/amizades/${id}`, { method: 'DELETE' });
+        const d = await r.json();
+        if (d.success) { showFeedback('Solicitação cancelada!', false); await carregarSolicitacoes(); }
+        else showFeedback(d.message || 'Erro.', true);
+      } catch (e) { showFeedback('Erro: ' + e.message, true); }
     }
 
-    /* ── PESQUISA ── */
-    document.getElementById('searchInput').addEventListener('input', async () => {
-        const termo = document.getElementById('searchInput').value.trim();
+    // Pesquisar
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', async () => {
+        const termo = searchInput.value.trim();
         const results = document.getElementById('searchResults');
         if (!termo) { results.innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>'; return; }
         try {
-            const r = await makeAuthenticatedRequest(`/amizades/pesquisar?termo=${encodeURIComponent(termo)}`);
-            if (!r.ok) throw new Error(`Erro: ${r.status}`);
-            const { usuarios } = await r.json();
-            results.innerHTML = '';
-            if (usuarios && usuarios.length > 0) {
-                usuarios.forEach(u => {
-                    if (u.id_usuario == currentUserId) return;
-                    const el = document.createElement('div');
-                    el.className = 'friend-item';
-                    el.innerHTML = `
-                        <div class="friend-info"><p class="friend-name">${u.nome}</p><p class="friend-email">${u.email}</p></div>
-                        <div class="friend-actions">
-                            <button class="btn-sm btn-sm-primary add-friend" data-id="${u.id_usuario}">Adicionar</button>
-                        </div>`;
-                    results.appendChild(el);
-                });
-                document.querySelectorAll('.add-friend').forEach(b => b.addEventListener('click', e => enviarPedidoAmizade(e.target.dataset.id)));
-            } else {
-                results.innerHTML = '<p class="text-muted">Nenhum usuário encontrado.</p>';
-            }
+          const r = await makeAuthenticatedRequest(`/amizades/pesquisar?termo=${encodeURIComponent(termo)}`);
+          if (!r.ok) throw new Error(`Erro: ${r.status}`);
+          const { usuarios } = await r.json();
+          results.innerHTML = '';
+          if (usuarios && usuarios.length > 0) {
+            usuarios.forEach(u => {
+              if (u.id_usuario == currentUserId) return;
+              const el = document.createElement('div');
+              el.className = 'friend-item';
+              el.innerHTML = `
+                <div class="friend-info"><p class="friend-name">${u.nome}</p><p class="friend-email">${u.email}</p></div>
+                <div class="friend-actions">
+                  <button class="btn-sm btn-sm-primary add-friend" data-id="${u.id_usuario}">Adicionar</button>
+                </div>`;
+              results.appendChild(el);
+            });
+            document.querySelectorAll('.add-friend').forEach(b => b.addEventListener('click', e => enviarPedidoAmizade(e.target.dataset.id)));
+          } else {
+            results.innerHTML = '<p class="text-muted">Nenhum usuário encontrado.</p>';
+          }
         } catch (e) {
-            results.innerHTML = `<p style="color:#DC2626;">Erro: ${e.message}</p>`;
+          results.innerHTML = `<p style="color:#DC2626;">Erro: ${e.message}</p>`;
         }
-    });
-
-    async function enviarPedidoAmizade(idUsuario2) {
-        try {
-            const r = await makeAuthenticatedRequest('/amizades/criar', { method: 'POST', body: JSON.stringify({ id_usuario2: idUsuario2 }) });
-            const d = await r.json();
-            if (d.success) {
-                showFeedback('Pedido enviado!', false);
-                document.getElementById('searchInput').value = '';
-                document.getElementById('searchResults').innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
-            } else showFeedback(d.message || 'Erro.', true);
-        } catch (e) { showFeedback('Erro: ' + e.message, true); }
+      });
     }
 
-    /* ── MODAL EDITAR ── */
-    const editModal     = document.getElementById('editModal');
-    const editForm      = document.getElementById('editProfileForm');
+    async function enviarPedidoAmizade(idUsuario2) {
+      try {
+        const r = await makeAuthenticatedRequest('/amizades/criar', { method: 'POST', body: JSON.stringify({ id_usuario2: idUsuario2 }) });
+        const d = await r.json();
+        if (d.success) {
+          showFeedback('Pedido enviado!', false);
+          if (searchInput) searchInput.value = '';
+          document.getElementById('searchResults').innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
+        } else showFeedback(d.message || 'Erro.', true);
+      } catch (e) { showFeedback('Erro: ' + e.message, true); }
+    }
 
-    function closeModal() { editModal.classList.add('hidden'); }
+    // Modal Editar
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editProfileForm');
 
-    document.getElementById('editProfileBtn').addEventListener('click', () => {
-        document.getElementById('editName').value  = document.getElementById('fullName').textContent;
+    function closeModal() { if (editModal) editModal.classList.add('hidden'); }
+
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    if (editProfileBtn) {
+      editProfileBtn.addEventListener('click', () => {
+        document.getElementById('editName').value = document.getElementById('fullName').textContent;
         document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
         document.getElementById('editPassword').value = '';
-        ['editNameError','editEmailError','editPasswordError'].forEach(id => document.getElementById(id).classList.add('hidden'));
-        editModal.classList.remove('hidden');
-    });
+        ['editNameError','editEmailError','editPasswordError'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('hidden');
+        });
+        if (editModal) editModal.classList.remove('hidden');
+      });
+    }
 
-    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-    document.getElementById('cancelEditBtn').addEventListener('click', closeModal);
-    editModal.addEventListener('click', e => { if (e.target === editModal) closeModal(); });
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+    
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeModal);
+    
+    if (editModal) {
+      editModal.addEventListener('click', e => { if (e.target === editModal) closeModal(); });
+    }
 
-    editForm.addEventListener('submit', async e => {
+    if (editForm) {
+      editForm.addEventListener('submit', async e => {
         e.preventDefault();
-        const nome  = document.getElementById('editName').value.trim();
+        const nome = document.getElementById('editName').value.trim();
         const email = document.getElementById('editEmail').value.trim();
         const senha = document.getElementById('editPassword').value.trim();
         let valid = true;
-        ['editNameError','editEmailError','editPasswordError'].forEach(id => document.getElementById(id).classList.add('hidden'));
-        if (!nome) { document.getElementById('editNameError').classList.remove('hidden'); valid = false; }
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('editEmailError').classList.remove('hidden'); valid = false; }
-        if (senha && senha.length < 6) { document.getElementById('editPasswordError').classList.remove('hidden'); valid = false; }
-        const curName  = document.getElementById('fullName').textContent;
+        
+        ['editNameError','editEmailError','editPasswordError'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('hidden');
+        });
+        
+        if (!nome) { 
+          const err = document.getElementById('editNameError');
+          if (err) err.classList.remove('hidden');
+          valid = false; 
+        }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { 
+          const err = document.getElementById('editEmailError');
+          if (err) err.classList.remove('hidden');
+          valid = false; 
+        }
+        if (senha && senha.length < 6) { 
+          const err = document.getElementById('editPasswordError');
+          if (err) err.classList.remove('hidden');
+          valid = false; 
+        }
+        
+        const curName = document.getElementById('fullName').textContent;
         const curEmail = document.getElementById('emailInfo').textContent;
-        if (nome === curName && (!email || email === curEmail) && !senha) { showFeedback('Nenhuma alteração feita.', true); return; }
+        if (nome === curName && (!email || email === curEmail) && !senha) {
+          showFeedback('Nenhuma alteração feita.', true);
+          return;
+        }
         if (!valid) return;
+        
         const body = { nome };
         if (email && email !== curEmail) body.email = email;
         if (senha) body.senha = senha;
+        
         try {
-            const r = await makeAuthenticatedRequest('/usuarios/atualizar', { method: 'PUT', body: JSON.stringify(body) });
-            const d = await r.json();
-            if (d.success) {
-                document.getElementById('userName').textContent  = nome;
-                document.getElementById('fullName').textContent  = nome;
-                if (email && email !== curEmail) {
-                    document.getElementById('userEmail').textContent = email;
-                    document.getElementById('emailInfo').textContent = email;
-                }
-                showFeedback('Perfil atualizado!', false);
-                closeModal();
-                const auth = await checkAuthentication();
-                if (auth.auth) populateUser(auth.user);
-            } else showFeedback(d.message || 'Erro ao atualizar.', true);
+          const r = await makeAuthenticatedRequest('/usuarios/atualizar', { method: 'PUT', body: JSON.stringify(body) });
+          const d = await r.json();
+          if (d.success) {
+            document.getElementById('userName').textContent = nome;
+            document.getElementById('fullName').textContent = nome;
+            if (email && email !== curEmail) {
+              document.getElementById('userEmail').textContent = email;
+              document.getElementById('emailInfo').textContent = email;
+            }
+            showFeedback('Perfil atualizado!', false);
+            closeModal();
+          } else showFeedback(d.message || 'Erro ao atualizar.', true);
         } catch (e) { showFeedback('Erro: ' + e.message, true); }
-    });
-
-    /* ── POPULATE USER ── */
-    function populateUser(user) {
-        document.getElementById('userName').textContent   = user.nome || 'Usuário';
-        document.getElementById('userName').dataset.id   = user.id_usuario;
-        document.getElementById('userEmail').textContent  = user.email || 'Sem email';
-        document.getElementById('fullName').textContent   = user.nome || 'Usuário';
-        document.getElementById('emailInfo').textContent  = user.email || 'Sem email';
-        document.getElementById('xpTotal').textContent    = user.xp_total ?? 0;
-        document.getElementById('accountType').textContent = user.tipo === 'admin' ? 'Administrador' : 'Usuário';
-        let date = 'Data não disponível';
-        if (user.criado_em) {
-            const d = new Date(user.criado_em);
-            if (!isNaN(d)) date = d.toLocaleDateString('pt-BR');
-        }
-        document.getElementById('registerDate').textContent = date;
-        document.getElementById('userJoined').textContent   = `Membro desde: ${date}`;
+      });
     }
 
-    /* ── LOGOUT ── */
-    document.getElementById('logoutButton').addEventListener('click', logout);
+    function populateUser(user) {
+      const userNameEl = document.getElementById('userName');
+      const userEmailEl = document.getElementById('userEmail');
+      const fullNameEl = document.getElementById('fullName');
+      const emailInfoEl = document.getElementById('emailInfo');
+      const xpTotalEl = document.getElementById('xpTotal');
+      const accountTypeEl = document.getElementById('accountType');
+      const registerDateEl = document.getElementById('registerDate');
+      const userJoinedEl = document.getElementById('userJoined');
+      
+      if (userNameEl) userNameEl.textContent = user.nome || 'Usuário';
+      if (userEmailEl) userEmailEl.textContent = user.email || 'Sem email';
+      if (fullNameEl) fullNameEl.textContent = user.nome || 'Usuário';
+      if (emailInfoEl) emailInfoEl.textContent = user.email || 'Sem email';
+      if (xpTotalEl) xpTotalEl.textContent = user.xp_total ?? 0;
+      if (accountTypeEl) accountTypeEl.textContent = user.tipo === 'admin' ? 'Administrador' : 'Usuário';
+      
+      let date = 'Data não disponível';
+      if (user.criado_em) {
+        const d = new Date(user.criado_em);
+        if (!isNaN(d)) date = d.toLocaleDateString('pt-BR');
+      }
+      if (registerDateEl) registerDateEl.textContent = date;
+      if (userJoinedEl) userJoinedEl.textContent = `Membro desde: ${date}`;
+    }
 
-    /* ── INIT ── */
+    // Logout
+    const logoutBtn = document.getElementById('logoutButton');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+    // Init
     async function init() {
-        const auth = await checkAuthentication();
-        if (!auth.auth) { window.location.href = '/'; return; }
-        currentUserId = auth.user?.id_usuario;
-        populateUser(auth.user);
-        if (auth.user.tipo === 'admin') {
-            document.getElementById('adminDropdown').classList.remove('hidden');
-            setupAdminDropdown();
-        }
-        setupTabs();
-        await carregarProgressoDetalhado();
-        await carregarProgressoNiveis();
+      const auth = await checkAuthentication();
+      if (!auth.auth) { window.location.href = '/'; return; }
+      currentUserId = auth.user?.id_usuario;
+      populateUser(auth.user);
+      setupTabs();
+      await carregarProgressoDetalhado();
+      await carregarProgressoNiveis();
     }
 
     init();
+  })();
 </script>
-</body>
-</html>
