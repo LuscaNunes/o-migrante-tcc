@@ -1,0 +1,131 @@
+<!-- admin/telas/CaPerguntas.ejs -->
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-6">Cadastrar Perguntas por Nível</h1>
+    
+    <!-- Seletor de Nível -->
+    <div class="mb-6">
+        <label for="nivelSelect" class="block text-sm font-medium text-gray-700 mb-2">
+            Selecione o Nível
+        </label>
+        <select id="nivelSelect" class="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Carregando níveis...</option>
+        </select>
+    </div>
+
+    <!-- Formulário de Pergunta -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Nova Pergunta</h2>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Texto da Pergunta</label>
+            <textarea id="textoPergunta" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Opções</label>
+            <div id="opcoesContainer">
+                <div class="flex gap-2 mb-2">
+                    <input type="text" placeholder="Opção A" class="flex-1 px-3 py-2 border rounded-lg">
+                    <input type="radio" name="correta" value="0"> Correta
+                </div>
+                <!-- Mais opções... -->
+            </div>
+            <button type="button" onclick="adicionarOpcao()" class="mt-2 text-blue-600 hover:text-blue-800">
+                + Adicionar Opção
+            </button>
+        </div>
+
+        <button onclick="salvarPergunta()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+            Salvar Pergunta
+        </button>
+    </div>
+
+    <!-- Lista de Perguntas -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">Perguntas Cadastradas</h2>
+        <div id="listaPerguntas" class="space-y-4">
+            <!-- Perguntas serão carregadas aqui -->
+        </div>
+    </div>
+</div>
+
+<script>
+    let nivelAtual = null;
+
+    // Carregar níveis disponíveis
+    async function carregarNiveis() {
+        try {
+            const response = await fetch('/niveis', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const niveis = await response.json();
+            const select = document.getElementById('nivelSelect');
+            select.innerHTML = '<option value="">Selecione um nível</option>';
+            niveis.forEach(nivel => {
+                select.innerHTML += `<option value="${nivel.id}">${nivel.nome}</option>`;
+            });
+        } catch (error) {
+            console.error('Erro ao carregar níveis:', error);
+        }
+    }
+
+    // Carregar perguntas do nível selecionado
+    async function carregarPerguntas(nivelId) {
+        try {
+            const response = await fetch(`/perguntas/nivel/${nivelId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const perguntas = await response.json();
+            // Renderizar perguntas...
+        } catch (error) {
+            console.error('Erro ao carregar perguntas:', error);
+        }
+    }
+
+    // Salvar pergunta
+    async function salvarPergunta() {
+        if (!nivelAtual) {
+            alert('Selecione um nível primeiro!');
+            return;
+        }
+
+        const pergunta = {
+            nivel_id: nivelAtual,
+            texto: document.getElementById('textoPergunta').value,
+            opcoes: [] // Coletar opções do formulário
+        };
+
+        try {
+            const response = await fetch('/perguntas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(pergunta)
+            });
+
+            if (response.ok) {
+                alert('Pergunta salva com sucesso!');
+                carregarPerguntas(nivelAtual);
+            }
+        } catch (error) {
+            console.error('Erro ao salvar pergunta:', error);
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('nivelSelect').addEventListener('change', (e) => {
+        nivelAtual = e.target.value;
+        if (nivelAtual) {
+            carregarPerguntas(nivelAtual);
+        }
+    });
+
+    // Inicializar
+    carregarNiveis();
+</script>
