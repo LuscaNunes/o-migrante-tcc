@@ -110,9 +110,6 @@
 </style>
 
 <script>
-// URL base da API
-const API_URL = window.location.origin || 'http://localhost:3000';
-
 // Função para exibir mensagens de feedback
 function showFeedback(message, isError = true) {
     const feedbackDiv = document.createElement('div');
@@ -130,7 +127,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Verifica autenticação e tipo de usuário
+// Inicialização simplificada (sem verificação extra de token)
 document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem('token');
     console.log('Token on load:', token ? 'Presente' : 'Ausente');
@@ -143,39 +140,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // Verificar token e permissões
-    fetch(`${API_URL}/verifyToken`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${token}` }
-    })
-    .then(res => {
-        console.log('Verify token response:', res.status);
-        if (!res.ok) {
-            throw new Error('Token inválido');
-        }
-        return res.json();
-    })
-    .then(data => {
-        console.log('Verify token data:', data);
-        if (!data.auth || data.user.tipo !== 'admin') {
-            localStorage.removeItem('token');
-            showFeedback("Acesso restrito a administradores.");
-            setTimeout(() => {
-                window.location.href = "/";
-            }, 1500);
-        } else {
-            // Carrega fases
-            fetchFases();
-        }
-    })
-    .catch(error => {
-        console.error("Erro ao verificar token:", error);
-        showFeedback("Erro ao verificar autenticação.");
-        localStorage.removeItem('token');
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 1500);
-    });
+    // Carrega fases diretamente (a rota já está protegida pelo middleware)
+    fetchFases();
 });
 
 // Função para buscar as fases do backend
@@ -183,7 +149,7 @@ async function fetchFases() {
     try {
         const token = localStorage.getItem('token');
         console.log('Buscando fases...');
-        const response = await fetch(`${API_URL}/fases`, {
+        const response = await fetch('/fases', {
             headers: { "Authorization": `Bearer ${token}` }
         });
         console.log('Resposta do backend:', response.status, response.statusText);
@@ -191,7 +157,10 @@ async function fetchFases() {
         if (!response.ok) {
             if (response.status === 401) {
                 localStorage.removeItem('token');
-                window.location.href = "/";
+                showFeedback("Sessão expirada. Faça login novamente.");
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 1500);
                 return;
             }
             const errorData = await response.json().catch(() => ({}));
@@ -271,7 +240,7 @@ async function showStatusModal(faseId, titulo, ativo) {
     try {
         const token = localStorage.getItem('token');
         console.log('Buscando dados da fase:', faseId);
-        const response = await fetch(`${API_URL}/fases/${faseId}`, {
+        const response = await fetch(`/fases/${faseId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         console.log('Resposta da fase:', response.status, response.statusText);
@@ -309,7 +278,7 @@ async function showStatusModal(faseId, titulo, ativo) {
                 if (confirm(`Tem certeza que deseja desativar a fase "${data.titulo || data.nome}"?`)) {
                     try {
                         console.log('Desativando fase:', faseId);
-                        const response = await fetch(`${API_URL}/fases/${faseId}/ativar`, {
+                        const response = await fetch(`/fases/${faseId}/ativar`, {
                             method: "PUT",
                             headers: { 
                                 "Content-Type": "application/json", 
@@ -344,7 +313,7 @@ async function showStatusModal(faseId, titulo, ativo) {
             
             try {
                 console.log('Ativando fase:', faseId, 'com posição:', novaPosicao);
-                const response = await fetch(`${API_URL}/fases/${faseId}/ativar`, {
+                const response = await fetch(`/fases/${faseId}/ativar`, {
                     method: "PUT",
                     headers: { 
                         "Content-Type": "application/json", 
