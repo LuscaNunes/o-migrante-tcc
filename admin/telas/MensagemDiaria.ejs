@@ -68,7 +68,6 @@
 </div>
 
 <style>
-    body { font-family: 'Inter', sans-serif; }
     .versiculo-card { 
         transition: all 0.2s ease; 
         cursor: pointer;
@@ -103,7 +102,7 @@
 <script>
 let bibleData = null;
 let currentVersion = '';
-const API_URL = window.location.origin || 'http://localhost:3000';
+const API_URL = '';
 
 function showFeedback(message, isError = true) {
     const feedbackDiv = document.createElement('div');
@@ -258,7 +257,7 @@ async function saveMensagem() {
     
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/mensagens`, {
+        const response = await fetch('/mensagens', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -285,62 +284,37 @@ async function saveMensagem() {
     }
 }
 
-// Inicialização
+// Inicialização simplificada (sem verificação extra de token)
 document.addEventListener("DOMContentLoaded", () => {
+    // Verificar se token existe
     const token = localStorage.getItem('token');
     if (!token) {
-        showFeedback("Você precisa estar logado para acessar esta página.");
+        showFeedback("Você não está autenticado. Redirecionando...", true);
         setTimeout(() => {
             window.location.href = "/";
         }, 1500);
         return;
     }
     
-    fetch(`${API_URL}/verifyToken`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${token}` }
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('Token inválido');
-        return res.json();
-    })
-    .then(data => {
-        if (!data.auth || data.user.tipo !== 'admin') {
-            localStorage.removeItem('token');
-            showFeedback("Acesso restrito a administradores.");
-            setTimeout(() => {
-                window.location.href = "/";
-            }, 1500);
+    // Configurar event listeners
+    document.getElementById('versao').addEventListener('change', (e) => {
+        if (e.target.value) {
+            loadBibleXML(e.target.value);
         } else {
-            // Configurar event listeners
-            document.getElementById('versao').addEventListener('change', (e) => {
-                if (e.target.value) {
-                    loadBibleXML(e.target.value);
-                } else {
-                    document.getElementById('livro').innerHTML = '<option value="">Selecione um livro</option>';
-                    document.getElementById('livro').disabled = true;
-                    document.getElementById('capitulo').innerHTML = '<option value="">Selecione um capítulo</option>';
-                    document.getElementById('capitulo').disabled = true;
-                    document.getElementById('versiculos-container').innerHTML = '';
-                    document.getElementById('versiculos-titulo').textContent = 'Selecione uma versão, livro e capítulo';
-                }
-            });
-            
-            document.getElementById('livro').addEventListener('change', populateChapters);
-            document.getElementById('capitulo').addEventListener('change', showVerses);
-            document.getElementById('salvar-mensagem').addEventListener('click', saveMensagem);
-            document.getElementById('titulo-mensagem').addEventListener('input', updateSaveButton);
-            document.getElementById('texto-mensagem').addEventListener('input', updateSaveButton);
+            document.getElementById('livro').innerHTML = '<option value="">Selecione um livro</option>';
+            document.getElementById('livro').disabled = true;
+            document.getElementById('capitulo').innerHTML = '<option value="">Selecione um capítulo</option>';
+            document.getElementById('capitulo').disabled = true;
+            document.getElementById('versiculos-container').innerHTML = '';
+            document.getElementById('versiculos-titulo').textContent = 'Selecione uma versão, livro e capítulo';
         }
-    })
-    .catch(error => {
-        console.error("Erro ao verificar token:", error);
-        showFeedback("Erro ao verificar autenticação.");
-        localStorage.removeItem('token');
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 1500);
     });
+    
+    document.getElementById('livro').addEventListener('change', populateChapters);
+    document.getElementById('capitulo').addEventListener('change', showVerses);
+    document.getElementById('salvar-mensagem').addEventListener('click', saveMensagem);
+    document.getElementById('titulo-mensagem').addEventListener('input', updateSaveButton);
+    document.getElementById('texto-mensagem').addEventListener('input', updateSaveButton);
     
     // Logout
     document.getElementById('logoutButton').addEventListener('click', () => {
