@@ -1,10 +1,10 @@
-const db = require('../config/database');
+const db = require('../config/database'); // JÁ É um pool com Promise
 
 /**
  * Cadastra uma nova pergunta
  * @param {number} usuario_id - ID do usuário
  * @param {Object} dados - Dados da pergunta (nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3)
- * @returns {Promise<void>}
+ * @returns {Promise<number>} ID da pergunta cadastrada
  */
 async function cadastrarPergunta(usuario_id, { nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3 }) {
   if (!nivel_id || !texto || !resposta_correta || !opcao1 || !opcao2 || !opcao3) {
@@ -12,15 +12,16 @@ async function cadastrarPergunta(usuario_id, { nivel_id, texto, resposta_correta
   }
 
   try {
-    const [results] = await db.promise().query('SELECT MAX(ordem) as max_ordem FROM perguntas WHERE nivel_id = ?', [nivel_id]);
-    const ordem = results[0].max_ordem + 1 || 1;
+    const [results] = await db.query('SELECT MAX(ordem) as max_ordem FROM perguntas WHERE nivel_id = ?', [nivel_id]);
+    const ordem = (results[0].max_ordem || 0) + 1;
 
     const sqlInsert = `
       INSERT INTO perguntas 
       (nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3, ordem, usuario_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    await db.promise().query(sqlInsert, [nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3, ordem, usuario_id]);
+    const [result] = await db.query(sqlInsert, [nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3, ordem, usuario_id]);
+    return result.insertId;
   } catch (err) {
     throw new Error('Erro ao cadastrar pergunta: ' + err.message);
   }
@@ -33,10 +34,13 @@ async function cadastrarPergunta(usuario_id, { nivel_id, texto, resposta_correta
  * @returns {Promise<Object>} Objeto com perguntas e xp_total do nível
  */
 async function buscarPerguntasAleatorias(nivel_id, quantidade) {
-  if (!nivel_id || isNaN(nivel_id) || nivel_id <= 0) {
+  const nivelIdParam = parseInt(nivel_id);
+  const quantidadeParam = parseInt(quantidade);
+  
+  if (!nivelIdParam || isNaN(nivelIdParam) || nivelIdParam <= 0) {
     throw new Error('O parâmetro "nivel_id" deve ser um número positivo');
   }
-  if (!quantidade || isNaN(quantidade) || quantidade <= 0) {
+  if (!quantidadeParam || isNaN(quantidadeParam) || quantidadeParam <= 0) {
     throw new Error('O parâmetro "quantidade" deve ser um número positivo');
   }
 
@@ -48,7 +52,8 @@ async function buscarPerguntasAleatorias(nivel_id, quantidade) {
       WHERE n.id = ?
       GROUP BY n.id
     `;
-    const [results] = await db.promise().query(checkSql, [nivel_id]);
+    const [results] = await db.query(checkSql, [nivelIdParam]);
+    
     if (results.length === 0 || results[0].total === 0) {
       throw new Error('Não há perguntas cadastradas para este nível');
     }
@@ -60,7 +65,7 @@ async function buscarPerguntasAleatorias(nivel_id, quantidade) {
       ORDER BY RAND() 
       LIMIT ?
     `;
-    const [perguntas] = await db.promise().query(sql, [nivel_id, quantidade]);
+    const [perguntas] = await db.query(sql, [nivelIdParam, quantidadeParam]);
 
     if (perguntas.length === 0) {
       throw new Error('Não há perguntas suficientes para este nível');
@@ -83,7 +88,7 @@ async function buscarPerguntasPorNivel(nivel_id) {
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM perguntas WHERE nivel_id = ?', [nivel_id]);
+    const [results] = await db.query('SELECT * FROM perguntas WHERE nivel_id = ? ORDER BY ordem ASC', [nivel_id]);
     return results;
   } catch (err) {
     throw new Error('Erro ao buscar perguntas: ' + err.message);
@@ -97,7 +102,7 @@ async function buscarPerguntasPorNivel(nivel_id) {
  */
 async function buscarPerguntaPorId(id) {
   try {
-    const [result] = await db.promise().query('SELECT * FROM perguntas WHERE id = ?', [id]);
+    const [result] = await db.query('SELECT * FROM perguntas WHERE id = ?', [id]);
     if (result.length === 0) {
       throw new Error('Pergunta não encontrada');
     }
@@ -119,7 +124,7 @@ async function atualizarPergunta(id, { texto, resposta_correta, opcao1, opcao2, 
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM perguntas WHERE id = ?', [id]);
+    const [results] = await db.query('SELECT * FROM perguntas WHERE id = ?', [id]);
     if (results.length === 0) {
       throw new Error('Pergunta não encontrada');
     }
@@ -129,7 +134,7 @@ async function atualizarPergunta(id, { texto, resposta_correta, opcao1, opcao2, 
       SET texto = ?, resposta_correta = ?, opcao1 = ?, opcao2 = ?, opcao3 = ?
       WHERE id = ?
     `;
-    await db.promise().query(sql, [texto, resposta_correta, opcao1, opcao2, opcao3, id]);
+    await db.query(sql, [texto, resposta_correta, opcao1, opcao2, opcao3, id]);
   } catch (err) {
     throw new Error('Erro ao editar pergunta: ' + err.message);
   }
@@ -142,7 +147,7 @@ async function atualizarPergunta(id, { texto, resposta_correta, opcao1, opcao2, 
  */
 async function excluirPergunta(id) {
   try {
-    const [result] = await db.promise().query('DELETE FROM perguntas WHERE id = ?', [id]);
+    const [result] = await db.query('DELETE FROM perguntas WHERE id = ?', [id]);
     if (result.affectedRows === 0) {
       throw new Error('Pergunta não encontrada');
     }

@@ -1,19 +1,19 @@
-const db = require('../config/database');
+const db = require('../config/database'); // JÁ É um pool com Promise
 
 /**
  * Cadastra um novo nível
  * @param {number} usuario_id - ID do usuário
- * @param {Object} dados - Dados do nível (titulo, descricao, xp_total)
+ * @param {Object} dados - Dados do nível (titulo, descricao, xp_total, posicao, requisito_xp)
  * @returns {Promise<number>} ID do nível cadastrado
  */
-async function cadastrarNivel(usuario_id, { titulo, descricao, xp_total }) {
+async function cadastrarNivel(usuario_id, { titulo, descricao, xp_total, posicao, requisito_xp, ativo }) {
   if (!titulo || !descricao || !xp_total) {
     throw new Error('Preencha todos os campos');
   }
 
   try {
-    const sql = 'INSERT INTO niveis (titulo, descricao, xp_total, usuario_id) VALUES (?, ?, ?, ?)';
-    const [result] = await db.promise().query(sql, [titulo, descricao, xp_total, usuario_id]);
+    const sql = 'INSERT INTO niveis (titulo, descricao, xp_total, posicao, requisito_xp, ativo, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const [result] = await db.query(sql, [titulo, descricao, xp_total, posicao || null, requisito_xp || 0, ativo !== undefined ? ativo : 1, usuario_id]);
     return result.insertId;
   } catch (err) {
     throw new Error('Erro ao cadastrar nível: ' + err.message);
@@ -32,15 +32,17 @@ async function buscarNiveis(busca) {
   if (busca) {
     if (!isNaN(busca)) {
       sql += ' AND id = ?';
-      params.push(busca);
+      params.push(parseInt(busca));
     } else {
       sql += ' AND (LOWER(titulo) LIKE LOWER(?) OR LOWER(descricao) LIKE LOWER(?))';
       params.push(`%${busca}%`, `%${busca}%`);
     }
   }
 
+  sql += ' ORDER BY posicao ASC, id ASC';
+
   try {
-    const [results] = await db.promise().query(sql, params);
+    const [results] = await db.query(sql, params);
     return results;
   } catch (err) {
     throw new Error('Erro ao buscar níveis: ' + err.message);
@@ -53,12 +55,13 @@ async function buscarNiveis(busca) {
  * @returns {Promise<Object>} Dados do nível
  */
 async function buscarNivelPorId(id) {
-  if (!id || isNaN(id)) {
+  const nivelId = parseInt(id);
+  if (!nivelId || isNaN(nivelId)) {
     throw new Error('ID do nível inválido');
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE id = ?', [id]);
+    const [results] = await db.query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
     if (results.length === 0) {
       throw new Error('Nível não encontrado');
     }
@@ -71,26 +74,28 @@ async function buscarNivelPorId(id) {
 /**
  * Atualiza um nível
  * @param {number} id - ID do nível
- * @param {Object} dados - Dados a atualizar (titulo, descricao, xp_total)
+ * @param {Object} dados - Dados a atualizar (titulo, descricao, xp_total, posicao, requisito_xp, ativo)
  * @returns {Promise<void>}
  */
-async function atualizarNivel(id, { titulo, descricao, xp_total }) {
+async function atualizarNivel(id, { titulo, descricao, xp_total, posicao, requisito_xp, ativo }) {
+  const nivelId = parseInt(id);
+  
   if (!titulo || !descricao || !xp_total) {
     throw new Error('Preencha todos os campos');
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE id = ?', [id]);
+    const [results] = await db.query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
     if (results.length === 0) {
       throw new Error('Nível não encontrado');
     }
 
     const updateNivelSql = `
       UPDATE niveis 
-      SET titulo = ?, descricao = ?, xp_total = ?
+      SET titulo = ?, descricao = ?, xp_total = ?, posicao = ?, requisito_xp = ?, ativo = ?
       WHERE id = ?
     `;
-    await db.promise().query(updateNivelSql, [titulo, descricao, xp_total, id]);
+    await db.query(updateNivelSql, [titulo, descricao, xp_total, posicao || null, requisito_xp || 0, ativo !== undefined ? ativo : 1, nivelId]);
   } catch (err) {
     throw new Error('Erro ao editar nível: ' + err.message);
   }
@@ -104,50 +109,48 @@ async function atualizarNivel(id, { titulo, descricao, xp_total }) {
  * @returns {Promise<void>}
  */
 async function ativarNivel(id, ativo, posicao) {
+  const nivelId = parseInt(id);
+  
   if (ativo === undefined) {
     throw new Error('O campo "ativo" é obrigatório');
   }
 
-  try {
-    await new Promise((resolve, reject) => {
-      db.beginTransaction(err => (err ? reject(err) : resolve()));
-    });
+  // Obter conexão para transação
+  const connection = await db.getConnection();
+  await connection.beginTransaction();
 
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE id = ?', [id]);
+  try {
+    const [results] = await connection.query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
     if (results.length === 0) {
-      await new Promise((resolve) => db.rollback(() => resolve()));
       throw new Error('Nível não encontrado');
     }
 
     const nivel = results[0];
 
     if (!ativo) {
-      const desativarSql = 'UPDATE niveis SET ativo = false, posicao = NULL WHERE id = ?';
-      await db.promise().query(desativarSql, [id]);
-      const reordenarSql = 'UPDATE niveis SET posicao = posicao - 1 WHERE posicao > ?';
-      await db.promise().query(reordenarSql, [nivel.posicao]);
+      // Desativar nível
+      await connection.query('UPDATE niveis SET ativo = false, posicao = NULL WHERE id = ?', [nivelId]);
+      if (nivel.posicao) {
+        await connection.query('UPDATE niveis SET posicao = posicao - 1 WHERE posicao > ? AND ativo = true', [nivel.posicao]);
+      }
     } else {
       if (!posicao || posicao <= 0) {
-        await new Promise((resolve) => db.rollback(() => resolve()));
         throw new Error('Informe uma posição válida');
       }
 
-      const [posicaoResults] = await db.promise().query('SELECT * FROM niveis WHERE posicao = ?', [posicao]);
-      if (posicaoResults.length > 0) {
-        const deslocarSql = 'UPDATE niveis SET posicao = posicao + 1 WHERE posicao >= ?';
-        await db.promise().query(deslocarSql, [posicao]);
-      }
-
-      const ativarSql = 'UPDATE niveis SET ativo = true, posicao = ? WHERE id = ?';
-      await db.promise().query(ativarSql, [posicao, id]);
+      // Deslocar níveis para abrir espaço
+      await connection.query('UPDATE niveis SET posicao = posicao + 1 WHERE posicao >= ? AND ativo = true', [posicao]);
+      
+      // Ativar nível na nova posição
+      await connection.query('UPDATE niveis SET ativo = true, posicao = ? WHERE id = ?', [posicao, nivelId]);
     }
 
-    await new Promise((resolve, reject) => {
-      db.commit(err => (err ? reject(err) : resolve()));
-    });
+    await connection.commit();
   } catch (err) {
-    await new Promise((resolve) => db.rollback(() => resolve()));
+    await connection.rollback();
     throw new Error('Erro ao processar solicitação: ' + err.message);
+  } finally {
+    connection.release();
   }
 }
 
@@ -157,7 +160,7 @@ async function ativarNivel(id, ativo, posicao) {
  */
 async function buscarNiveisAtivos() {
   try {
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE ativo = true ORDER BY posicao ASC');
+    const [results] = await db.query('SELECT * FROM niveis WHERE ativo = true ORDER BY posicao ASC');
     return results;
   } catch (err) {
     throw new Error('Erro ao buscar níveis ativos: ' + err.message);
@@ -170,12 +173,17 @@ async function buscarNiveisAtivos() {
  * @returns {Promise<void>}
  */
 async function excluirNivel(id) {
+  const nivelId = parseInt(id);
+  
   try {
-    const [result] = await db.promise().query('DELETE FROM niveis WHERE id = ?', [id]);
+    // Primeiro excluir perguntas relacionadas
+    await db.query('DELETE FROM perguntas WHERE nivel_id = ?', [nivelId]);
+    // Depois excluir o nível
+    const [result] = await db.query('DELETE FROM niveis WHERE id = ?', [nivelId]);
+    
     if (result.affectedRows === 0) {
       throw new Error('Nível não encontrado');
     }
-    await db.promise().query('DELETE FROM perguntas WHERE nivel_id = ?', [id]);
   } catch (err) {
     throw new Error('Erro ao excluir nível: ' + err.message);
   }
