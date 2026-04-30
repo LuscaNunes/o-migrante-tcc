@@ -104,8 +104,8 @@
 </style>
 
 <script>
-// CORRIGIDO: URL base fixa para o frontend
-const API_URL = 'http://localhost:3000';
+// Variável global para armazenar a URL base da API
+const API_URL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000';
 
 // Função para exibir mensagens de feedback
 function showFeedback(message, isError = true) {
@@ -136,9 +136,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .then(res => {
         console.log('Verify token response:', res.status);
-        if (!res.ok) {
-            throw new Error('Token inválido');
-        }
         return res.json();
     })
     .then(data => {
@@ -186,9 +183,7 @@ async function fetchNiveis() {
         
         const data = await response.json();
         console.log('Níveis recebidos:', data);
-        // Verifica se data é um array ou tem a propriedade niveis
-        const niveisArray = Array.isArray(data) ? data : (data.niveis || []);
-        renderNiveis(niveisArray);
+        renderNiveis(data.niveis || data);
     } catch (error) {
         console.error("Erro ao buscar níveis:", error);
         showFeedback("Erro ao buscar níveis: " + error.message);
@@ -209,7 +204,7 @@ function renderNiveis(niveis) {
         <li class="nivel-item bg-gray-100 p-4 rounded-lg shadow-md cursor-default" data-id="${nivel.id}">
             <div class="flex justify-between items-center flex-wrap gap-2">
                 <div class="flex-1">
-                    <span class="font-bold text-lg">${escapeHtml(nivel.titulo || nivel.nome || 'Sem título')}</span>
+                    <span class="font-bold text-lg">${nivel.titulo || nivel.nome}</span>
                     ${nivel.posicao ? `<span class="text-sm text-gray-500 ml-2">(Posição: ${nivel.posicao})</span>` : ''}
                     <span class="text-sm ml-2 px-2 py-1 rounded ${nivel.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                         ${nivel.ativo ? 'Ativo' : 'Inativo'}
@@ -222,13 +217,13 @@ function renderNiveis(niveis) {
                     <button class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition text-sm" onclick="showQuestions(${nivel.id})">
                         <i class="fas fa-question-circle mr-1"></i>Perguntas
                     </button>
-                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm" onclick="showStatusModal(${nivel.id}, '${escapeHtml(nivel.titulo || nivel.nome || 'Sem título')}', ${nivel.ativo})">
+                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm" onclick="showStatusModal(${nivel.id}, '${nivel.titulo || nivel.nome}', ${nivel.ativo})">
                         <i class="fas fa-toggle-${nivel.ativo ? 'on' : 'off'} mr-1"></i>Situação
                     </button>
                 </div>
             </div>
             <div id="details${nivel.id}" class="mt-4 hidden fade-in">
-                <p class="text-gray-600"><strong>Descrição:</strong> ${escapeHtml(nivel.descricao || 'Sem descrição')}</p>
+                <p class="text-gray-600"><strong>Descrição:</strong> ${nivel.descricao || 'Sem descrição'}</p>
                 <p class="text-gray-600"><strong>XP Total:</strong> ${nivel.xp_total || 0}</p>
                 ${nivel.requisito_xp ? `<p class="text-gray-600"><strong>XP Necessário:</strong> ${nivel.requisito_xp}</p>` : ''}
             </div>
@@ -237,14 +232,6 @@ function renderNiveis(niveis) {
             </div>
         </li>
     `).join('');
-}
-
-// Função auxiliar para escapar HTML e evitar XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 // Função para exibir o modal de situação
@@ -281,7 +268,7 @@ async function showStatusModal(nivelId, titulo, ativo) {
 
         // Atualizar o conteúdo do modal
         statusContent.innerHTML = `
-            <p class="text-gray-600 mb-2"><strong>Nível:</strong> ${escapeHtml(data.titulo || data.nome)}</p>
+            <p class="text-gray-600 mb-2"><strong>Nível:</strong> ${data.titulo || data.nome}</p>
             <p class="text-gray-600 mb-2"><strong>Situação Atual:</strong> <span class="font-bold ${data.ativo ? 'text-green-600' : 'text-red-600'}">${data.ativo ? 'Ativo' : 'Inativo'}</span></p>
             ${data.ativo && data.posicao ? `<p class="text-gray-600"><strong>Posição Atual:</strong> ${data.posicao}</p>` : ''}
         `;
@@ -370,12 +357,9 @@ async function showStatusModal(nivelId, titulo, ativo) {
     }
 
     // Fechar modal ao clicar no X
-    const closeBtn = document.querySelector('.close');
-    if (closeBtn) {
-        closeBtn.onclick = () => {
-            modal.style.display = "none";
-        };
-    }
+    document.querySelector('.close').onclick = () => {
+        modal.style.display = "none";
+    };
 
     // Fechar modal ao clicar fora do conteúdo
     window.onclick = (event) => {
@@ -388,21 +372,17 @@ async function showStatusModal(nivelId, titulo, ativo) {
 // Função para buscar e exibir os detalhes de um nível
 async function showDetails(nivelId) {
     const details = document.getElementById(`details${nivelId}`);
-    if (details) {
-        details.classList.toggle('hidden');
-        if (!details.classList.contains('hidden')) {
-            details.classList.add('fade-in');
-            // Rolar para os detalhes
-            details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+    details.classList.toggle('hidden');
+    if (!details.classList.contains('hidden')) {
+        details.classList.add('fade-in');
+        // Rolar para os detalhes
+        details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
 // Função para buscar e exibir as perguntas de um nível
 async function showQuestions(nivelId) {
     const questionsDiv = document.getElementById(`questions${nivelId}`);
-    if (!questionsDiv) return;
-    
     questionsDiv.classList.toggle('hidden');
     
     if (!questionsDiv.classList.contains('hidden')) {
@@ -422,8 +402,7 @@ async function showQuestions(nivelId) {
             
             const data = await response.json();
             console.log('Perguntas recebidas:', data);
-            const perguntasArray = Array.isArray(data) ? data : (data.perguntas || []);
-            renderQuestions(nivelId, perguntasArray);
+            renderQuestions(nivelId, data.perguntas || data);
             
             // Rolar para as perguntas
             questionsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -438,7 +417,6 @@ async function showQuestions(nivelId) {
 // Função para renderizar as perguntas de um nível
 function renderQuestions(nivelId, perguntas) {
     const questionsDiv = document.getElementById(`questions${nivelId}`);
-    if (!questionsDiv) return;
     
     if (!perguntas || perguntas.length === 0) {
         questionsDiv.innerHTML = `
@@ -460,17 +438,17 @@ function renderQuestions(nivelId, perguntas) {
                     <div class="border-b border-gray-200 pb-3 last:border-0">
                         <p class="font-medium text-gray-800">
                             <span class="text-blue-500 font-bold">${index + 1}.</span> 
-                            ${escapeHtml(pergunta.texto)}
+                            ${pergunta.texto}
                         </p>
                         <div class="mt-2 pl-4 space-y-1">
                             <p class="text-sm text-gray-600">
                                 <span class="font-medium">Opções:</span> 
-                                ${escapeHtml(pergunta.opcao1 || 'N/A')}, ${escapeHtml(pergunta.opcao2 || 'N/A')}, ${escapeHtml(pergunta.opcao3 || 'N/A')}
-                                ${pergunta.opcao4 ? `, ${escapeHtml(pergunta.opcao4)}` : ''}
+                                ${pergunta.opcao1 || 'N/A'}, ${pergunta.opcao2 || 'N/A'}, ${pergunta.opcao3 || 'N/A'}
+                                ${pergunta.opcao4 ? `, ${pergunta.opcao4}` : ''}
                             </p>
                             <p class="text-sm text-green-600">
                                 <i class="fas fa-check-circle mr-1"></i>
-                                <span class="font-medium">Resposta Correta:</span> ${escapeHtml(pergunta.resposta_correta || pergunta.correta)}
+                                <span class="font-medium">Resposta Correta:</span> ${pergunta.resposta_correta || pergunta.correta}
                             </p>
                         </div>
                     </div>
@@ -481,14 +459,11 @@ function renderQuestions(nivelId, perguntas) {
 }
 
 // Logout
-const logoutBtn = document.getElementById('logoutButton');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        console.log('Efetuando logout...');
-        if (confirm('Tem certeza que deseja sair?')) {
-            localStorage.removeItem('token');
-            window.location.href = "/";
-        }
-    });
-}
+document.getElementById('logoutButton')?.addEventListener('click', () => {
+    console.log('Efetuando logout...');
+    if (confirm('Tem certeza que deseja sair?')) {
+        localStorage.removeItem('token');
+        window.location.href = "/";
+    }
+});
 </script>
