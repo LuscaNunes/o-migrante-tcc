@@ -1,633 +1,670 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<%
+  // Esta página será injetada no layout.ejs como 'body'
+  // O objeto 'user' já vem do server.js
+  title = "Admin - Busca e Edição de Usuários - O Migrante";
+%>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Busca e Edição de Usuários</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-    <!-- Usando Inter font para alinhamento com o Tailwind padrão -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+<style>
+  /* Estilos específicos para a página de busca de usuários */
+  .spinner {
+    border-top-color: #3b82f6;
+    border-left-color: #3b82f6;
+    animation: spin 1s linear infinite;
+  }
 
-        /* Classes para a barra lateral responsiva, como no seu EJS */
-        .sidebar-desktop {
-            transform: translateX(0);
-        }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 
-        .sidebar-mobile {
-            transform: translateX(-100%);
-        }
+  /* Ajustes para tabela responsiva */
+  .table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+  }
 
-        @media (min-width: 768px) {
-            .sidebar-mobile {
-                transform: translateX(0);
-            }
-        }
+  .user-table {
+    min-width: 100%;
+    background: white;
+    border-collapse: collapse;
+  }
 
-        /* Adiciona transição para o ícone de dropdown */
-        .rotate-180 {
-            transform: rotate(180deg);
-        }
+  .user-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #4B5563;
+    background-color: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+  }
 
-        /* Estilo para o Spinner de Carregamento */
-        .spinner {
-            border-top-color: #3b82f6;
-            border-left-color: #3b82f6;
-            animation: spin 1s linear infinite;
-        }
+  .user-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    color: #1F2937;
+    border-bottom: 1px solid #F3F4F6;
+  }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
-</head>
+  .user-table tr:hover {
+    background-color: #F9FAFB;
+  }
 
-<body class="bg-gray-100">
-    <!-- Modal de Confirmação (Deleção) -->
-    <div id="confirmationModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-2xl p-6 m-4 max-w-sm w-full">
-            <h3 class="text-xl font-bold mb-4 text-red-600">Confirmar Deleção</h3>
-            <p id="confirmationMessage" class="mb-6 text-gray-700">Tem certeza que deseja deletar este usuário?</p>
-            <div class="flex justify-end gap-3">
-                <button id="cancelDeleteButton" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition duration-150 shadow-md">Cancelar</button>
-                <button id="confirmDeleteButton" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-150 shadow-md">Deletar</button>
-            </div>
-        </div>
+  /* Botões de ação */
+  .btn-edit {
+    background-color: #3B82F6;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 0.5rem;
+    transition: all 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-edit:hover {
+    background-color: #2563EB;
+    transform: translateY(-1px);
+  }
+
+  .btn-delete {
+    background-color: #DC2626;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 0.5rem;
+    transition: all 0.15s;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.5rem;
+  }
+
+  .btn-delete:hover {
+    background-color: #B91C1C;
+    transform: translateY(-1px);
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .modal-overlay.hidden {
+    display: none;
+  }
+
+  .modal-box {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 28rem;
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .loading-overlay.hidden {
+    display: none;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1rem;
+    padding: 0.875rem 1.25rem;
+    border-radius: 0.75rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    z-index: 1100;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(2rem);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Cards */
+  .admin-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07), 0 4px 16px rgba(37, 99, 235, 0.06);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Formulários */
+  .form-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.625rem;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.18s;
+  }
+
+  .form-input:focus {
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .form-label {
+    display: block;
+    color: #374151;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .btn-primary {
+    background-color: #2563EB;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background-color: #1D4ED8;
+    transform: translateY(-1px);
+  }
+
+  .btn-success {
+    background-color: #10B981;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-success:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background-color: #6B7280;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover {
+    background-color: #4B5563;
+    transform: translateY(-1px);
+  }
+
+  /* Grid */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="spinner w-12 h-12 border-4 border-dashed rounded-full"></div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div id="confirmationModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3 class="text-xl font-bold mb-4 text-red-600">Confirmar Deleção</h3>
+    <p id="confirmationMessage" class="mb-6 text-gray-700">Tem certeza que deseja deletar este usuário?</p>
+    <div class="flex justify-end gap-3">
+      <button id="cancelDeleteButton" class="btn-secondary">Cancelar</button>
+      <button id="confirmDeleteButton" class="btn-primary" style="background-color:#DC2626;">Deletar</button>
     </div>
+  </div>
+</div>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="hidden fixed inset-0 z-40 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-        <div class="spinner w-12 h-12 border-4 border-dashed rounded-full"></div>
+<div>
+  <!-- Título da Página -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+      <i class="fas fa-users-cog text-blue-600 mr-3"></i>
+      Busca e Edição de Usuários
+    </h1>
+  </div>
+
+  <!-- Formulário de Busca -->
+  <div class="admin-card">
+    <h2 class="text-xl font-bold mb-4 text-blue-600">Buscar Usuário</h2>
+    <form id="buscaUsuarioForm">
+      <div class="mb-4">
+        <label for="buscaUsuario" class="form-label">ID, Nome ou E-mail:</label>
+        <input type="text" id="buscaUsuario" class="form-input" placeholder="Digite o ID, nome ou email do usuário" required>
+      </div>
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-search mr-2"></i> Buscar
+      </button>
+    </form>
+  </div>
+
+  <!-- Tabela de Usuários -->
+  <div id="usuariosTable" class="admin-card hidden">
+    <h2 class="text-xl font-bold mb-4 text-blue-600">Resultados</h2>
+    <div class="table-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Tipo</th>
+            <th>XP Total</th>
+            <th>Fase Atual</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="usuariosTableBody">
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <div class="min-h-screen flex">
-        <!-- Sidebar (Duplicada da sua sidebar.ejs, para este arquivo standalone) -->
-        <div class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col items-start justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto" id="sidebar">
-            <h2 class="text-2xl font-bold mb-6 select-none text-[#2563eb] flex items-center space-x-2">
-                <img alt="Logo O Migrante" class="w-8 h-8 rounded-full" height="32" loading="lazy"
-                    src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" width="32" />
-                <span>O Migrante</span>
-            </h2>
-            <ul class="flex flex-col gap-2 w-full justify-start">
-                <!-- Links de Navegação -->
-                <li>
-                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                        href="/app/painel"><i class="fas fa-home mr-3"></i>Início</a>
-                </li>
-                <li>
-                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                        href="DadoUsuario.html"><i class="fas fa-user mr-3"></i>Perfil</a>
-                </li>
-                <li>
-                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                        href="Fases.html"><i class="fas fa-tasks mr-3"></i>Missão</a>
-                </li>
-                <li>
-                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                        href="../Biblioteca/paginaBiblioteca.html"><i class="fas fa-book mr-3"></i>Biblioteca</a>
-                </li>
-                <li>
-                    <a class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] w-full justify-start"
-                        href="../telas/telas testes/testestestes.html"><i class="fas fa-book mr-3"></i>The Good Friends</a>
-                </li>
+  <!-- Formulário de Edição -->
+  <form id="editaUsuarioForm" class="admin-card hidden">
+    <h2 class="text-xl font-bold mb-4 text-green-600">
+      <i class="fas fa-edit mr-2"></i> Editar Usuário Selecionado
+    </h2>
+    <input type="hidden" id="editaUsuarioId">
+    
+    <div class="form-grid">
+      <div>
+        <label for="editaUsuarioNome" class="form-label">Nome Completo:</label>
+        <input type="text" id="editaUsuarioNome" class="form-input" required>
+      </div>
+      <div>
+        <label for="editaUsuarioEmail" class="form-label">Email:</label>
+        <input type="email" id="editaUsuarioEmail" class="form-input" required>
+      </div>
+      <div>
+        <label for="editaUsuarioTipo" class="form-label">Tipo de Conta:</label>
+        <select id="editaUsuarioTipo" class="form-input" required>
+          <option value="user">Usuário Comum</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div>
+        <label for="editaUsuarioXpTotal" class="form-label">XP Total:</label>
+        <input type="number" id="editaUsuarioXpTotal" class="form-input" required>
+      </div>
+      <div>
+        <label for="editaUsuarioFaseAtual" class="form-label">Fase Atual:</label>
+        <input type="number" id="editaUsuarioFaseAtual" class="form-input" required>
+      </div>
+    </div>
+    
+    <div class="mt-6 flex gap-3">
+      <button type="submit" class="btn-success">
+        <i class="fas fa-save mr-2"></i> Salvar Alterações
+      </button>
+      <button type="reset" class="btn-secondary">
+        <i class="fas fa-times mr-2"></i> Cancelar
+      </button>
+    </div>
+  </form>
+</div>
 
-                <!-- LÓGICA DE ADMINISTRAÇÃO USANDO JS/HTML -->
-                <li class="mb-4 w-full hidden" id="adminDropdown">
-                    <div class="relative w-full">
-                        <button aria-controls="adminMenuItems" aria-expanded="false"
-                            class="sidebar-link flex items-center text-[#111827] py-2 px-3 rounded-lg w-full transition-colors duration-200 hover:bg-[#dbeafe] hover:text-[#2563eb] justify-between"
-                            id="adminMenuButton">
-                            <span>
-                                <i class="fas fa-cog mr-3"></i>Administração
-                            </span>
-                            <i class="fas fa-chevron-down ml-2 transition-transform duration-200"></i>
-                        </button>
-                        <ul aria-label="Submenu Administração"
-                            class="hidden absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg z-40"
-                            id="adminMenuItems" role="menu">
-                            <li role="none">
-                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                    href="BuscaEdicaoUsuario.html" role="menuitem">Usuários</a>
-                            </li>
-                            <li role="none">
-                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                    href="CaPerguntas.html" role="menuitem">Cadastrar Níveis e Perguntas</a>
-                            </li>
-                            <li role="none">
-                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                    href="DadosFases.html" role="menuitem">Dados das Fases</a>
-                            </li>
-                            <li role="none">
-                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                    href="DadosNiveis.html" role="menuitem">Editar Níveis e Perguntas</a>
-                            </li>
-                            <li role="none">
-                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                    href="MensagemDiaria.html" role="menuitem">Cadastrar Mensagem do dia</a>
-                            </li>
-                            <li role="none">
-                                <a class="block px-4 py-2 hover:bg-blue-100 text-[#111827]"
-                                    href="../telas/telas testes/testestestes.html" role="menuitem">Tela de Teste</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-        </div>
-        <!-- Main Content -->
-        <div class="flex-1 p-8 md:ml-64">
-            <!-- Botão para mobile menu (adicionado para consistência) -->
-            <button id="mobileMenuButton" class="md:hidden p-2 rounded-lg bg-white shadow mb-4">
-                <i class="fas fa-bars text-[#2563eb]"></i>
+<script>
+  (function() {
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? `http://${window.location.hostname}:${window.location.port || 3000}`
+      : 'https://o-migrante.onrender.com';
+    
+    const API_USER_PATH = '/usuarios';
+    
+    let lastSearchedUsers = [];
+    let userIdToDelete = null;
+
+    function showFeedback(message, isError = true) {
+      const existingFeedback = document.querySelector('.toast');
+      if (existingFeedback) existingFeedback.remove();
+
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.background = isError ? '#DC2626' : '#10B981';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function toggleLoading(isLoading) {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.classList.toggle('hidden', !isLoading);
+      }
+    }
+
+    async function makeAuthenticatedRequest(url, options = {}) {
+      const opts = {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+        ...options
+      };
+      const response = await fetch(`${API_BASE_URL}${url}`, opts);
+      return response;
+    }
+
+    function renderUsuarios(usuarios) {
+      const tbody = document.getElementById('usuariosTableBody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      lastSearchedUsers = usuarios;
+
+      if (!usuarios || usuarios.length === 0) {
+        showFeedback("Nenhum usuário encontrado.", true);
+        const table = document.getElementById('usuariosTable');
+        if (table) table.classList.add('hidden');
+        return;
+      }
+
+      usuarios.forEach(usuario => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${usuario.id_usuario || '-'}</td>
+          <td>${escapeHtml(usuario.nome || '-')}</td>
+          <td>${escapeHtml(usuario.email || '-')}</td>
+          <td class="capitalize">${usuario.tipo || 'user'}</td>
+          <td>${usuario.xp_total || 0}</td>
+          <td>${usuario.fase_atual || 1}</td>
+          <td class="whitespace-nowrap">
+            <button class="btn-edit" data-user-id="${usuario.id_usuario}">
+              <i class="fas fa-edit mr-1"></i> Editar
             </button>
+            <button class="btn-delete" data-user-id="${usuario.id_usuario}">
+              <i class="fas fa-trash mr-1"></i> Deletar
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
 
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Busca e Edição de Usuários</h2>
-                <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600 transition duration-150 shadow-md">Sair</button>
-            </div>
+      const table = document.getElementById('usuariosTable');
+      if (table) table.classList.remove('hidden');
+    }
 
-            <!-- Formulário de Busca -->
-            <form id="buscaUsuarioForm" class="bg-white p-6 rounded-xl shadow-lg mb-8">
-                <h3 class="text-xl font-bold mb-4">Buscar Usuário</h3>
-                <div class="mb-4">
-                    <label for="buscaUsuario" class="block text-gray-700 font-bold mb-2">ID, Nome ou E-mail:</label>
-                    <input type="text" id="buscaUsuario" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                </div>
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition duration-150 shadow-md">Buscar</button>
-            </form>
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
 
-            <!-- Tabela de Usuários -->
-            <div id="usuariosTable" class="bg-white p-6 rounded-xl shadow-lg hidden">
-                <h3 class="text-xl font-bold mb-4">Resultados</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b">
-                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">ID</th>
-                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Nome</th>
-                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Email</th>
-                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Tipo</th>
-                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">XP Total</th>
-                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Fase Atual</th>
-                                <th class="py-3 px-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usuariosTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    async function editarUsuario(id) {
+      const usuario = lastSearchedUsers.find(u => String(u.id_usuario) === String(id));
+      
+      if (!usuario) {
+        showFeedback("Erro ao carregar dados do usuário.", true);
+        return;
+      }
 
-            <!-- Formulário de Edição -->
-            <form id="editaUsuarioForm" class="bg-white p-6 rounded-xl shadow-lg hidden mt-8">
-                <h3 class="text-xl font-bold mb-4 text-blue-600">Editar Usuário Selecionado</h3>
-                <input type="hidden" id="editaUsuarioId">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label for="editaUsuarioNome" class="block text-gray-700 font-bold mb-2">Nome:</label>
-                        <input type="text" id="editaUsuarioNome" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="editaUsuarioEmail" class="block text-gray-700 font-bold mb-2">Email:</label>
-                        <input type="email" id="editaUsuarioEmail" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="editaUsuarioTipo" class="block text-gray-700 font-bold mb-2">Tipo:</label>
-                        <select id="editaUsuarioTipo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label for="editaUsuarioXpTotal" class="block text-gray-700 font-bold mb-2">XP Total:</label>
-                        <input type="number" id="editaUsuarioXpTotal" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="editaUsuarioFaseAtual" class="block text-gray-700 font-bold mb-2">Fase Atual:</label>
-                        <input type="number" id="editaUsuarioFaseAtual" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                    </div>
-                </div>
-                
-                <div class="mt-4 flex gap-2">
-                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-xl hover:bg-green-700 transition duration-150 shadow-md">Salvar Alterações</button>
-                    <button type="reset" class="bg-gray-500 text-white px-6 py-2 rounded-xl hover:bg-gray-600 transition duration-150 shadow-md">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
+      const editId = document.getElementById('editaUsuarioId');
+      const editNome = document.getElementById('editaUsuarioNome');
+      const editEmail = document.getElementById('editaUsuarioEmail');
+      const editTipo = document.getElementById('editaUsuarioTipo');
+      const editXpTotal = document.getElementById('editaUsuarioXpTotal');
+      const editFaseAtual = document.getElementById('editaUsuarioFaseAtual');
+      const editForm = document.getElementById('editaUsuarioForm');
 
-    <script>
-        // Detecta automaticamente o ambiente (local ou produção)
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? `http://${window.location.hostname}:${window.location.port || 3000}` 
-            : 'https://o-migrante.onrender.com'; // OURL de produção original
-        const API_USER_PATH = '/usuarios';
-        
-        console.log('🌐 API Base URL:', API_BASE_URL);
-        
-        // Variável global para armazenar os usuários buscados
-        let lastSearchedUsers = [];
-        let userIdToDelete = null;
+      if (editId) editId.value = usuario.id_usuario || '';
+      if (editNome) editNome.value = usuario.nome || '';
+      if (editEmail) editEmail.value = usuario.email || '';
+      if (editTipo) editTipo.value = usuario.tipo || 'user';
+      if (editXpTotal) editXpTotal.value = usuario.xp_total || 0;
+      if (editFaseAtual) editFaseAtual.value = usuario.fase_atual || 1;
+      if (editForm) editForm.classList.remove('hidden');
+      
+      const table = document.getElementById('usuariosTable');
+      if (table) table.classList.add('hidden');
+    }
 
-        // Função para controlar o estado de carregamento global
-        function toggleLoading(isLoading) {
-            document.getElementById('loadingOverlay').classList.toggle('hidden', !isLoading);
-        }
+    function showConfirmationModal(id) {
+      const usuario = lastSearchedUsers.find(u => String(u.id_usuario) === String(id));
+      if (!usuario) {
+        showFeedback("Erro: Não foi possível encontrar o usuário.", true);
+        return;
+      }
 
-        // Função para exibir mensagens de feedback
-        function showFeedback(message, isError = true) {
-            const existingFeedback = document.querySelector('.feedback-message');
-            if (existingFeedback) existingFeedback.remove();
+      userIdToDelete = id;
+      const messageEl = document.getElementById('confirmationMessage');
+      if (messageEl) {
+        messageEl.textContent = `Tem certeza que deseja deletar o usuário "${usuario.nome}" (ID: ${id})? Esta ação é irreversível.`;
+      }
+      const modal = document.getElementById('confirmationModal');
+      if (modal) modal.classList.remove('hidden');
+    }
 
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = `feedback-message fixed bottom-4 right-4 p-4 rounded-xl shadow-2xl ${isError ? 'bg-red-600' : 'bg-green-600'} text-white z-50 transition-opacity duration-300`;
-            feedbackDiv.textContent = message;
-            document.body.appendChild(feedbackDiv);
-            setTimeout(() => {
-                feedbackDiv.style.opacity = '0';
-                setTimeout(() => feedbackDiv.remove(), 300);
-            }, 3000);
-        }
-
-        // Função para abrir o modal de confirmação de deleção
-        function showConfirmationModal(id) {
-            const usuario = lastSearchedUsers.find(u => String(u.id_usuario) === String(id));
-            if (!usuario) {
-                showFeedback("Erro: Não foi possível encontrar o usuário para deleção.", true);
-                return;
-            }
-
-            userIdToDelete = id;
-            document.getElementById('confirmationMessage').textContent = `Tem certeza que deseja deletar o usuário "${usuario.nome}" (ID: ${id})? Esta ação é irreversível.`;
-            document.getElementById('confirmationModal').classList.remove('hidden');
-        }
-
-        // Função para deletar o usuário de fato
-        async function deleteUsuario(id) {
-            console.log('Tentando deletar usuário:', id);
-            toggleLoading(true);
-
-            try {
-                const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
-                    method: "DELETE",
-                    credentials: 'include',
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || `Erro ao deletar (Status: ${response.status})`);
-                }
-
-                // Não precisa ler o JSON no DELETE, mas a chamada foi bem-sucedida
-                showFeedback("Usuário deletado com sucesso!", false);
-                
-                // Re-executa a busca para atualizar a tabela
-                const buscaValorAtual = document.getElementById('buscaUsuario').value.trim();
-                if (buscaValorAtual) {
-                    document.getElementById('buscaUsuarioForm').dispatchEvent(new Event('submit', { bubbles: true }));
-                } else {
-                    document.getElementById('usuariosTable').classList.add('hidden');
-                    document.getElementById('usuariosTableBody').innerHTML = '';
-                    lastSearchedUsers = [];
-                }
-
-            } catch (error) {
-                console.error("Erro ao deletar usuário:", error);
-                showFeedback("Erro ao deletar usuário: " + error.message, true);
-            } finally {
-                toggleLoading(false);
-            }
-        }
-
-
-        /**
-         * Função para carregar dados do usuário para edição.
-         * @param {string} id - O ID do usuário (pode ser string ou número).
-         */
-        async function editarUsuario(id) {
-            console.log('Botão Editar Clicado. Tentando carregar usuário:', id);
-            
-            // Tenta encontrar o usuário na lista já buscada
-            const usuario = lastSearchedUsers.find(u => String(u.id_usuario) === String(id));
-            
-            if (!usuario) {
-                showFeedback("Dados do usuário não encontrados localmente. Tentando buscar na API.");
-                toggleLoading(true);
-                // Se não encontrar, tenta buscar diretamente na API (fallback)
-                try {
-                    const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
-                        credentials: 'include',
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.message || "Erro ao buscar usuário na API");
-                    }
-                    const data = await response.json();
-                    
-                    document.getElementById('editaUsuarioId').value = data.id_usuario || '';
-                    document.getElementById('editaUsuarioNome').value = data.nome || '';
-                    document.getElementById('editaUsuarioEmail').value = data.email || '';
-                    document.getElementById('editaUsuarioTipo').value = data.tipo || 'user';
-                    document.getElementById('editaUsuarioXpTotal').value = data.xp_total || 0;
-                    document.getElementById('editaUsuarioFaseAtual').value = data.fase_atual || 1;
-                    document.getElementById('editaUsuarioForm').classList.remove('hidden');
-
-                } catch (error) {
-                    console.error("Erro ao carregar dados do usuário:", error);
-                    showFeedback("Erro ao carregar dados do usuário: " + error.message);
-                    return;
-                } finally {
-                    toggleLoading(false);
-                }
-            } else {
-                // Usa os dados do objeto encontrado
-                document.getElementById('editaUsuarioId').value = usuario.id_usuario || '';
-                document.getElementById('editaUsuarioNome').value = usuario.nome || '';
-                document.getElementById('editaUsuarioEmail').value = usuario.email || '';
-                document.getElementById('editaUsuarioTipo').value = usuario.tipo || 'user';
-                document.getElementById('editaUsuarioXpTotal').value = usuario.xp_total || 0;
-                document.getElementById('editaUsuarioFaseAtual').value = usuario.fase_atual || 1;
-                document.getElementById('editaUsuarioForm').classList.remove('hidden');
-            }
-
-            // Oculta a tabela de resultados para focar na edição
-            document.getElementById('usuariosTable').classList.add('hidden');
-        }
-        
-        // Função para renderizar usuários na tabela
-        function renderUsuarios(usuarios) {
-            const tbody = document.getElementById('usuariosTableBody');
-            tbody.innerHTML = '';
-            lastSearchedUsers = usuarios; // Armazena os usuários buscados
-
-            if (!usuarios || usuarios.length === 0) {
-                showFeedback("Nenhum usuário encontrado.", true);
-                document.getElementById('usuariosTable').classList.add('hidden');
-                return;
-            }
-
-            usuarios.forEach(usuario => {
-                const idString = usuario.id_usuario ? String(usuario.id_usuario) : '';
-                
-                const row = `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="py-3 px-4 border-b text-left text-xs text-gray-600">${idString}</td>
-                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.nome || '-'}</td>
-                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.email || '-'}</td>
-                    <td class="py-3 px-4 border-b text-left capitalize text-gray-800">${usuario.tipo || 'user'}</td>
-                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.xp_total || 0}</td>
-                    <td class="py-3 px-4 border-b text-left text-gray-800">${usuario.fase_atual || 1}</td>
-                    <td class="py-3 px-4 border-b text-left whitespace-nowrap">
-                        <button 
-                            class="edit-button bg-blue-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-blue-600 transition duration-150 shadow-sm"
-                            data-user-id="${idString}" 
-                        >
-                            <i class="fas fa-edit mr-1"></i> Editar
-                        </button>
-                        <button 
-                            class="delete-button bg-red-600 text-white px-3 py-1 text-sm rounded-lg hover:bg-red-700 transition duration-150 shadow-sm ml-2"
-                            data-user-id="${idString}" 
-                        >
-                            <i class="fas fa-trash mr-1"></i> Deletar
-                        </button>
-                    </td>
-                </tr>
-            `;
-                tbody.innerHTML += row;
-            });
-
-            document.getElementById('usuariosTable').classList.remove('hidden');
-        }
-        
-        // --- Setup Inicial e Verificação de Autenticação ---
-        document.addEventListener("DOMContentLoaded", async () => {
-            const sidebar = document.getElementById('sidebar');
-            const mobileMenuButton = document.getElementById('mobileMenuButton');
-            
-            // Toggle do menu mobile
-            mobileMenuButton.addEventListener('click', () => {
-                sidebar.classList.toggle('-translate-x-full');
-            });
-
-            toggleLoading(true); // Inicia com o loader
-            
-            try {
-                console.log('Verificando autenticação via Cookie...');
-                const response = await fetch("/auth/verifyToken", {
-                    method: "GET",
-                    credentials: 'include',
-                });
-
-                if (response.status === 401 || response.status === 403 || !response.ok) {
-                    showFeedback("Sessão expirada ou acesso restrito a administradores.", true);
-                    setTimeout(() => window.location.href = "/", 3000); 
-                    return;
-                }
-                const data = await response.json();
-                
-                if (!data.auth || data.user.tipo !== 'admin') {
-                    showFeedback("Acesso restrito a administradores. Redirecionando...", true);
-                    // Garante que o logout é feito antes do redirecionamento
-                    fetch('/auth/logout', { method: 'POST' }).finally(() => {
-                        setTimeout(() => window.location.href = "/", 3000);
-                    });
-                } else {
-                    // Configura menu admin
-                    const adminDropdown = document.getElementById('adminDropdown');
-                    adminDropdown.classList.remove('hidden');
-
-                    const adminMenuButton = document.getElementById('adminMenuButton');
-                    const adminMenuItems = document.getElementById('adminMenuItems');
-
-                    // Lógica de dropdown
-                    adminMenuButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        adminMenuItems.classList.toggle('hidden');
-                        adminMenuButton.querySelector('.fa-chevron-down').classList.toggle('rotate-180');
-                    });
-
-                    document.addEventListener('click', (e) => {
-                        if (adminDropdown && !adminDropdown.contains(e.target)) {
-                            adminMenuItems.classList.add('hidden');
-                            adminMenuButton.querySelector('.fa-chevron-down').classList.remove('rotate-180');
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error("Erro ao verificar token:", error);
-                showFeedback("Erro ao verificar autenticação: " + error.message, true);
-                setTimeout(() => window.location.href = "/", 3000);
-            } finally {
-                toggleLoading(false);
-            }
+    async function deleteUsuario(id) {
+      toggleLoading(true);
+      try {
+        const response = await makeAuthenticatedRequest(`${API_USER_PATH}/${id}`, {
+          method: "DELETE"
         });
 
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Erro ao deletar (Status: ${response.status})`);
+        }
 
-        // --- Event Delegation: Trata cliques no botão de edição e deleção ---
-        document.getElementById('usuariosTableBody').addEventListener('click', (e) => {
-            const editButton = e.target.closest('button.edit-button[data-user-id]');
-            const deleteButton = e.target.closest('button.delete-button[data-user-id]');
-            
-            if (editButton) {
-                const userId = editButton.getAttribute('data-user-id');
-                editarUsuario(userId); 
-            } else if (deleteButton) {
-                const userId = deleteButton.getAttribute('data-user-id');
-                showConfirmationModal(userId);
+        showFeedback("Usuário deletado com sucesso!", false);
+        
+        const buscaInput = document.getElementById('buscaUsuario');
+        if (buscaInput && buscaInput.value.trim()) {
+          document.getElementById('buscaUsuarioForm').dispatchEvent(new Event('submit', { bubbles: true }));
+        } else {
+          const table = document.getElementById('usuariosTable');
+          if (table) table.classList.add('hidden');
+          const tbody = document.getElementById('usuariosTableBody');
+          if (tbody) tbody.innerHTML = '';
+          lastSearchedUsers = [];
+        }
+      } catch (error) {
+        console.error("Erro ao deletar usuário:", error);
+        showFeedback("Erro ao deletar usuário: " + error.message, true);
+      } finally {
+        toggleLoading(false);
+      }
+    }
+
+    // Event Listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      // Busca de usuários
+      const buscaForm = document.getElementById('buscaUsuarioForm');
+      if (buscaForm) {
+        buscaForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const busca = document.getElementById('buscaUsuario')?.value.trim();
+          
+          const editForm = document.getElementById('editaUsuarioForm');
+          if (editForm) editForm.classList.add('hidden');
+          
+          const tbody = document.getElementById('usuariosTableBody');
+          if (tbody) tbody.innerHTML = '';
+
+          if (!busca) {
+            showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.", true);
+            return;
+          }
+
+          toggleLoading(true);
+          try {
+            const urlBusca = `${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
+            const response = await makeAuthenticatedRequest(urlBusca);
+
+            if (!response.ok) {
+              throw new Error(`Erro ao buscar usuários (${response.status})`);
             }
-        });
 
-        // --- Event Listeners do Modal de Confirmação ---
-        document.getElementById('cancelDeleteButton').addEventListener('click', () => {
-            document.getElementById('confirmationModal').classList.add('hidden');
+            const data = await response.json();
+            renderUsuarios(data.usuarios || []);
+          } catch (error) {
+            console.error("Erro ao buscar usuários:", error);
+            showFeedback("Erro ao buscar usuários: " + error.message, true);
+          } finally {
+            toggleLoading(false);
+          }
+        });
+      }
+
+      // Delegation para botões de editar/deletar
+      const tableBody = document.getElementById('usuariosTableBody');
+      if (tableBody) {
+        tableBody.addEventListener('click', (e) => {
+          const editBtn = e.target.closest('.btn-edit');
+          const deleteBtn = e.target.closest('.btn-delete');
+          
+          if (editBtn) {
+            const userId = editBtn.getAttribute('data-user-id');
+            if (userId) editarUsuario(userId);
+          } else if (deleteBtn) {
+            const userId = deleteBtn.getAttribute('data-user-id');
+            if (userId) showConfirmationModal(userId);
+          }
+        });
+      }
+
+      // Modal de confirmação
+      const cancelBtn = document.getElementById('cancelDeleteButton');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          const modal = document.getElementById('confirmationModal');
+          if (modal) modal.classList.add('hidden');
+          userIdToDelete = null;
+        });
+      }
+
+      const confirmBtn = document.getElementById('confirmDeleteButton');
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+          const modal = document.getElementById('confirmationModal');
+          if (modal) modal.classList.add('hidden');
+          if (userIdToDelete) {
+            deleteUsuario(userIdToDelete);
             userIdToDelete = null;
+          }
         });
+      }
 
-        document.getElementById('confirmDeleteButton').addEventListener('click', () => {
-            document.getElementById('confirmationModal').classList.add('hidden');
-            if (userIdToDelete) {
-                deleteUsuario(userIdToDelete);
-                userIdToDelete = null;
-            }
-        });
+      // Formulário de edição
+      const editForm = document.getElementById('editaUsuarioForm');
+      if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const id = document.getElementById('editaUsuarioId')?.value;
+          const nome = document.getElementById('editaUsuarioNome')?.value.trim();
+          const email = document.getElementById('editaUsuarioEmail')?.value.trim();
+          const tipo = document.getElementById('editaUsuarioTipo')?.value;
+          const xp_total = document.getElementById('editaUsuarioXpTotal')?.value;
+          const fase_atual = document.getElementById('editaUsuarioFaseAtual')?.value;
 
+          if (!id || !nome || !email || !tipo || !xp_total || !fase_atual) {
+            showFeedback("Por favor, preencha todos os campos.", true);
+            return;
+          }
 
-        // --- Event Listener: Busca de usuário ---
-        document.getElementById('buscaUsuarioForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const busca = document.getElementById('buscaUsuario').value.trim();
+          const xpTotalNum = parseInt(xp_total);
+          const faseAtualNum = parseInt(fase_atual);
+          
+          if (isNaN(xpTotalNum) || isNaN(faseAtualNum)) {
+            showFeedback("XP Total e Fase Atual devem ser números válidos.", true);
+            return;
+          }
+          
+          toggleLoading(true);
+          try {
+            const payload = { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum };
+            
+            const response = await makeAuthenticatedRequest(`${API_USER_PATH}/${id}`, {
+              method: "PUT",
+              body: JSON.stringify(payload)
+            });
 
-            document.getElementById('editaUsuarioForm').classList.add('hidden'); // Oculta o form de edição
-            document.getElementById('usuariosTableBody').innerHTML = ''; // Limpa resultados anteriores
-
-            if (!busca) {
-                showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.", true);
-                return;
-            }
-
-            toggleLoading(true);
-            try {
-                const urlBusca = `${API_BASE_URL}${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
-                console.log('URL de Busca Final:', urlBusca);
-
-                const response = await fetch(urlBusca, {
-                    credentials: 'include',
-                });
-
-                if (!response.ok) {
-                    let errorMessage = "Erro ao buscar usuários";
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.error || errorData.message || errorMessage;
-                    } catch (jsonError) {
-                        // Fallback para erros de rede ou servidor sem JSON
-                        errorMessage = `Erro de Servidor (${response.status} ${response.statusText})`;
-                    }
-                    throw new Error(errorMessage);
-                }
-
-                const data = await response.json();
-                console.log('Usuários encontrados:', data);
-                renderUsuarios(data.usuarios || []); // Garante que é um array
-            } catch (error) {
-                console.error("Erro ao buscar usuários:", error);
-                showFeedback("Erro ao buscar usuários: " + error.message, true);
-            } finally {
-                toggleLoading(false);
-            }
-        });
-
-
-        // --- Event Listener: Salvamento da edição do usuário ---
-        document.getElementById('editaUsuarioForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('editaUsuarioId').value;
-            const nome = document.getElementById('editaUsuarioNome').value.trim();
-            const email = document.getElementById('editaUsuarioEmail').value.trim();
-            const tipo = document.getElementById('editaUsuarioTipo').value;
-            const xp_total = document.getElementById('editaUsuarioXpTotal').value;
-            const fase_atual = document.getElementById('editaUsuarioFaseAtual').value;
-
-            if (!id || !nome || !email || !tipo || !xp_total || !fase_atual) {
-                showFeedback("Por favor, preencha todos os campos do formulário de edição.", true);
-                return;
-            }
-
-            const xpTotalNum = parseInt(xp_total);
-            const faseAtualNum = parseInt(fase_atual);
-            if (isNaN(xpTotalNum) || isNaN(faseAtualNum)) {
-                showFeedback("XP Total e Fase Atual devem ser números válidos.", true);
-                return;
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.message || `Erro ao salvar edição (Status: ${response.status})`);
             }
             
-            toggleLoading(true);
-
-            try {
-                const payload = { nome, email, tipo, xp_total: xpTotalNum, fase_atual: faseAtualNum };
-                console.log('Salvando edição do usuário:', id, payload);
-
-                const response = await fetch(`${API_BASE_URL}${API_USER_PATH}/${id}`, {
-                    method: "PUT",
-                    credentials: 'include',
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || `Erro ao salvar edição (Status: ${response.status})`);
-                }
-                const data = await response.json();
-                showFeedback(data.message || "Usuário atualizado com sucesso!", false);
-
-                document.getElementById('editaUsuarioForm').reset();
-                document.getElementById('editaUsuarioForm').classList.add('hidden');
-                document.getElementById('usuariosTable').classList.remove('hidden');
-
-
-                // Re-executa a busca para atualizar a tabela com os dados editados
-                const buscaValorAtual = document.getElementById('buscaUsuario').value.trim();
-                if (buscaValorAtual) {
-                    // Simula o submit do formulário de busca
-                    document.getElementById('buscaUsuarioForm').dispatchEvent(new Event('submit', { bubbles: true }));
-                }
-
-            } catch (error) {
-                console.error("Erro ao salvar edição:", error);
-                showFeedback("Erro ao salvar edição: " + error.message, true);
-            } finally {
-                toggleLoading(false);
+            showFeedback("Usuário atualizado com sucesso!", false);
+            
+            editForm.reset();
+            editForm.classList.add('hidden');
+            
+            const buscaInput = document.getElementById('buscaUsuario');
+            if (buscaInput && buscaInput.value.trim()) {
+              buscaForm.dispatchEvent(new Event('submit', { bubbles: true }));
+            } else {
+              const table = document.getElementById('usuariosTable');
+              if (table) table.classList.remove('hidden');
             }
+          } catch (error) {
+            console.error("Erro ao salvar edição:", error);
+            showFeedback("Erro ao salvar edição: " + error.message, true);
+          } finally {
+            toggleLoading(false);
+          }
         });
 
-        // --- Event Listener: Fechar o formulário de edição ---
-        document.getElementById('editaUsuarioForm').addEventListener('reset', () => {
-            document.getElementById('editaUsuarioForm').classList.add('hidden');
-            // Volta a exibir a tabela de resultados após cancelar
-            document.getElementById('usuariosTable').classList.remove('hidden');
+        editForm.addEventListener('reset', () => {
+          editForm.classList.add('hidden');
+          const table = document.getElementById('usuariosTable');
+          if (table) table.classList.remove('hidden');
         });
-
-        // --- Event Listener: Logout ---
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            console.log('Efetuando logout...');
-            fetch('/auth/logout', { method: 'POST' })
-                .finally(() => {
-                    showFeedback("Logout realizado com sucesso!", false);
-                    setTimeout(() => window.location.href = "/", 2000); 
-                });
-        });
-    </script>
-</body>
-
-
-</html>
+      }
+    });
+  })();
+</script>
