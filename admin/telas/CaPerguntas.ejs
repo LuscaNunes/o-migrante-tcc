@@ -181,6 +181,8 @@ async function cadastrarNivel(event) {
         xp_total: parseInt(document.getElementById('nivelXpTotal').value)
     };
     
+    // Removido: posicao, requisito_xp, ativo - esses campos não existem na tabela
+    
     if (!dados.titulo || !dados.descricao || !dados.xp_total) {
         showFeedback('feedbackNivel', 'Preencha todos os campos do nível!', false);
         return;
@@ -216,7 +218,6 @@ async function cadastrarNivel(event) {
         showFeedback('feedbackNivel', error.message, false);
     }
 }
-
 // ============================================
 // CADASTRO DE PERGUNTA
 // ============================================

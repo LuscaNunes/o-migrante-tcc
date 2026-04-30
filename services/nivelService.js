@@ -3,17 +3,17 @@ const db = require('../config/database'); // JÁ É um pool com Promise
 /**
  * Cadastra um novo nível
  * @param {number} usuario_id - ID do usuário
- * @param {Object} dados - Dados do nível (titulo, descricao, xp_total, posicao, requisito_xp)
+ * @param {Object} dados - Dados do nível (titulo, descricao, xp_total)
  * @returns {Promise<number>} ID do nível cadastrado
  */
-async function cadastrarNivel(usuario_id, { titulo, descricao, xp_total, posicao, requisito_xp, ativo }) {
+async function cadastrarNivel(usuario_id, { titulo, descricao, xp_total }) {
   if (!titulo || !descricao || !xp_total) {
     throw new Error('Preencha todos os campos');
   }
 
   try {
-    const sql = 'INSERT INTO niveis (titulo, descricao, xp_total, posicao, requisito_xp, ativo, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    const [result] = await db.query(sql, [titulo, descricao, xp_total, posicao || null, requisito_xp || 0, ativo !== undefined ? ativo : 1, usuario_id]);
+    const sql = 'INSERT INTO niveis (titulo, descricao, xp_total, usuario_id) VALUES (?, ?, ?, ?)';
+    const [result] = await db.query(sql, [titulo, descricao, xp_total, usuario_id]);
     return result.insertId;
   } catch (err) {
     throw new Error('Erro ao cadastrar nível: ' + err.message);
@@ -74,10 +74,10 @@ async function buscarNivelPorId(id) {
 /**
  * Atualiza um nível
  * @param {number} id - ID do nível
- * @param {Object} dados - Dados a atualizar (titulo, descricao, xp_total, posicao, requisito_xp, ativo)
+ * @param {Object} dados - Dados a atualizar (titulo, descricao, xp_total)
  * @returns {Promise<void>}
  */
-async function atualizarNivel(id, { titulo, descricao, xp_total, posicao, requisito_xp, ativo }) {
+async function atualizarNivel(id, { titulo, descricao, xp_total }) {
   const nivelId = parseInt(id);
   
   if (!titulo || !descricao || !xp_total) {
@@ -92,10 +92,10 @@ async function atualizarNivel(id, { titulo, descricao, xp_total, posicao, requis
 
     const updateNivelSql = `
       UPDATE niveis 
-      SET titulo = ?, descricao = ?, xp_total = ?, posicao = ?, requisito_xp = ?, ativo = ?
+      SET titulo = ?, descricao = ?, xp_total = ?
       WHERE id = ?
     `;
-    await db.query(updateNivelSql, [titulo, descricao, xp_total, posicao || null, requisito_xp || 0, ativo !== undefined ? ativo : 1, nivelId]);
+    await db.query(updateNivelSql, [titulo, descricao, xp_total, nivelId]);
   } catch (err) {
     throw new Error('Erro ao editar nível: ' + err.message);
   }
@@ -138,8 +138,12 @@ async function ativarNivel(id, ativo, posicao) {
         throw new Error('Informe uma posição válida');
       }
 
-      // Deslocar níveis para abrir espaço
-      await connection.query('UPDATE niveis SET posicao = posicao + 1 WHERE posicao >= ? AND ativo = true', [posicao]);
+      // Verificar se já existe nível na posição
+      const [posicaoResults] = await connection.query('SELECT id FROM niveis WHERE posicao = ? AND ativo = true', [posicao]);
+      if (posicaoResults.length > 0) {
+        // Deslocar níveis para abrir espaço
+        await connection.query('UPDATE niveis SET posicao = posicao + 1 WHERE posicao >= ? AND ativo = true', [posicao]);
+      }
       
       // Ativar nível na nova posição
       await connection.query('UPDATE niveis SET ativo = true, posicao = ? WHERE id = ?', [posicao, nivelId]);

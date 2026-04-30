@@ -7,7 +7,10 @@ const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const usuario_id = req.user.id;
-    const id = await nivelService.cadastrarNivel(usuario_id, req.body);
+    // Apenas campos que existem no banco
+    const { titulo, descricao, xp_total } = req.body;
+    
+    const id = await nivelService.cadastrarNivel(usuario_id, { titulo, descricao, xp_total });
     res.json({ success: true, message: 'Nível cadastrado com sucesso!', id });
   } catch (err) {
     console.error('Erro ao cadastrar nível:', err);
@@ -52,7 +55,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // PUT /niveis/:id - Atualizar nível
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    await nivelService.atualizarNivel(req.params.id, req.body);
+    const { titulo, descricao, xp_total } = req.body;
+    await nivelService.atualizarNivel(req.params.id, { titulo, descricao, xp_total });
     res.json({ success: true, message: 'Nível atualizado com sucesso!' });
   } catch (err) {
     console.error('Erro ao editar nível:', err);
