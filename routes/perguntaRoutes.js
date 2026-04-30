@@ -17,15 +17,15 @@ router.post('/', authenticateToken, checkAdmin, async (req, res) => {
   }
 
   try {
-    const [results] = await db.promise().query('SELECT MAX(ordem) as max_ordem FROM perguntas WHERE nivel_id = ?', [nivel_id]);
-    const ordem = results[0].max_ordem + 1 || 1;
+    const [results] = await db.query('SELECT MAX(ordem) as max_ordem FROM perguntas WHERE nivel_id = ?', [nivel_id]);
+    const ordem = (results[0].max_ordem || 0) + 1;
 
     const sqlInsert = `
       INSERT INTO perguntas 
       (nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3, ordem, usuario_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    await db.promise().query(sqlInsert, [nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3, ordem, usuario_id]);
+    await db.query(sqlInsert, [nivel_id, texto, resposta_correta, opcao1, opcao2, opcao3, ordem, usuario_id]);
     res.json({ success: true, message: 'Pergunta cadastrada com sucesso!' });
   } catch (err) {
     console.error('Erro ao cadastrar pergunta:', err);
@@ -46,7 +46,6 @@ router.get('/aleatorias', authenticateToken, async (req, res) => {
   console.log('quantidade:', quantidade, 'tipo:', typeof quantidade);
 
   if (!nivel_id || !quantidade) {
-    console.log('Parâmetros inválidos');
     return res.status(400).json({ error: 'Parâmetros "nivel_id" e "quantidade" são obrigatórios.' });
   }
 
@@ -54,12 +53,10 @@ router.get('/aleatorias', authenticateToken, async (req, res) => {
   const quantidadeParam = parseInt(quantidade);
 
   if (isNaN(nivelIdParam) || nivelIdParam <= 0) {
-    console.log('nivel_id inválido');
     return res.status(400).json({ error: 'O parâmetro "nivel_id" deve ser um número positivo.' });
   }
 
   if (isNaN(quantidadeParam) || quantidadeParam <= 0) {
-    console.log('quantidade inválida');
     return res.status(400).json({ error: 'O parâmetro "quantidade" deve ser um número positivo.' });
   }
 
@@ -71,9 +68,9 @@ router.get('/aleatorias', authenticateToken, async (req, res) => {
       WHERE n.id = ?
       GROUP BY n.id
     `;
-    const [results] = await db.promise().query(checkSql, [nivelIdParam]);
+    const [results] = await db.query(checkSql, [nivelIdParam]);
+    
     if (results.length === 0 || results[0].total === 0) {
-      console.error('Nenhuma pergunta encontrada para nivel_id:', nivelIdParam);
       return res.status(404).json({ error: 'Não há perguntas cadastradas para este nível.' });
     }
 
@@ -84,14 +81,9 @@ router.get('/aleatorias', authenticateToken, async (req, res) => {
       ORDER BY RAND() 
       LIMIT ?
     `;
-    console.log('Executando consulta SQL:', sql);
-    console.log('Parâmetros:', [nivelIdParam, quantidadeParam]);
-
-    const [perguntas] = await db.promise().query(sql, [nivelIdParam, quantidadeParam]);
-    console.log('Resultados da consulta:', perguntas);
+    const [perguntas] = await db.query(sql, [nivelIdParam, quantidadeParam]);
 
     if (perguntas.length === 0) {
-      console.error('Nenhuma pergunta encontrada para nivel_id:', nivelIdParam);
       return res.status(404).json({ error: 'Não há perguntas suficientes para este nível.' });
     }
 
@@ -115,7 +107,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM perguntas WHERE nivel_id = ?', [nivelId]);
+    const [results] = await db.query('SELECT * FROM perguntas WHERE nivel_id = ? ORDER BY ordem ASC', [nivelId]);
     res.json({ perguntas: results });
   } catch (err) {
     console.error('Erro ao buscar perguntas:', err);
@@ -132,7 +124,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
   const perguntaId = req.params.id;
 
   try {
-    const [result] = await db.promise().query('SELECT * FROM perguntas WHERE id = ?', [perguntaId]);
+    const [result] = await db.query('SELECT * FROM perguntas WHERE id = ?', [perguntaId]);
     if (result.length === 0) {
       return res.status(404).json({ message: 'Pergunta não encontrada.' });
     }
@@ -157,9 +149,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM perguntas WHERE id = ?', [perguntaId]);
+    const [results] = await db.query('SELECT * FROM perguntas WHERE id = ?', [perguntaId]);
     if (results.length === 0) {
-      console.error('Pergunta não encontrada para id:', perguntaId);
       return res.status(404).json({ error: 'A pergunta com o ID fornecido não foi encontrada.' });
     }
 
@@ -168,7 +159,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       SET texto = ?, resposta_correta = ?, opcao1 = ?, opcao2 = ?, opcao3 = ?
       WHERE id = ?
     `;
-    await db.promise().query(sql, [texto, resposta_correta, opcao1, opcao2, opcao3, perguntaId]);
+    await db.query(sql, [texto, resposta_correta, opcao1, opcao2, opcao3, perguntaId]);
     res.json({ success: true, message: 'Pergunta atualizada com sucesso!' });
   } catch (err) {
     console.error('Erro ao editar pergunta:', err);
@@ -185,7 +176,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   const perguntaId = req.params.id;
 
   try {
-    const [result] = await db.promise().query('DELETE FROM perguntas WHERE id = ?', [perguntaId]);
+    const [result] = await db.query('DELETE FROM perguntas WHERE id = ?', [perguntaId]);
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Pergunta não encontrada.' });
     }

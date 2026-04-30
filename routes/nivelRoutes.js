@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateToken, checkAdmin } = require('../middleware/auth');
-const db = require('../config/database');
+const db = require('../config/database'); // JÁ É um pool com Promise
 const router = express.Router();
 
 /**
@@ -9,20 +9,20 @@ const router = express.Router();
  * Requer autenticação
  */
 router.post('/', authenticateToken, async (req, res) => {
-  const { titulo, descricao, xp_total } = req.body;
+  const { titulo, descricao, xp_total, posicao, requisito_xp, ativo } = req.body;
   const usuario_id = req.user.id;
 
   if (!titulo || !descricao || !xp_total) {
-    return res.status(400).send('Preencha todos os campos.');
+    return res.status(400).json({ success: false, message: 'Preencha todos os campos obrigatórios.' });
   }
 
   try {
-    const sql = 'INSERT INTO niveis (titulo, descricao, xp_total, usuario_id) VALUES (?, ?, ?, ?)';
-    const [result] = await db.promise().query(sql, [titulo, descricao, xp_total, usuario_id]);
-    res.send({ message: 'Nível cadastrado com sucesso!', id: result.insertId });
+    const sql = 'INSERT INTO niveis (titulo, descricao, xp_total, posicao, requisito_xp, ativo, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const [result] = await db.query(sql, [titulo, descricao, xp_total, posicao || null, requisito_xp || 0, ativo !== undefined ? ativo : 1, usuario_id]);
+    res.json({ success: true, message: 'Nível cadastrado com sucesso!', id: result.insertId });
   } catch (err) {
     console.error('Erro ao cadastrar nível:', err);
-    res.status(500).send('Erro ao cadastrar nível.');
+    res.status(500).json({ success: false, message: 'Erro ao cadastrar nível.' });
   }
 });
 
@@ -39,15 +39,17 @@ router.get('/', authenticateToken, async (req, res) => {
   if (busca) {
     if (!isNaN(busca)) {
       sql += ' AND id = ?';
-      params.push(busca);
+      params.push(parseInt(busca));
     } else {
       sql += ' AND (LOWER(titulo) LIKE LOWER(?) OR LOWER(descricao) LIKE LOWER(?))';
       params.push(`%${busca}%`, `%${busca}%`);
     }
   }
 
+  sql += ' ORDER BY posicao ASC, id ASC';
+
   try {
-    const [results] = await db.promise().query(sql, params);
+    const [results] = await db.query(sql, params);
     res.json({ niveis: results });
   } catch (err) {
     console.error('Erro ao buscar níveis:', err);
@@ -61,7 +63,7 @@ router.get('/', authenticateToken, async (req, res) => {
  * Requer autenticação
  */
 router.get('/:id', authenticateToken, async (req, res) => {
-  const nivelId = req.params.id;
+  const nivelId = parseInt(req.params.id);
   console.log('Buscando nível com ID:', nivelId);
 
   if (!nivelId || isNaN(nivelId)) {
@@ -70,7 +72,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
+    const [results] = await db.query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
     if (results.length === 0) {
       console.error('Nível não encontrado para ID:', nivelId);
       return res.status(404).json({ error: 'Nível não encontrado.' });
@@ -89,25 +91,25 @@ router.get('/:id', authenticateToken, async (req, res) => {
  * Requer autenticação
  */
 router.put('/:id', authenticateToken, async (req, res) => {
-  const nivelId = req.params.id;
-  const { titulo, descricao, xp_total } = req.body;
+  const nivelId = parseInt(req.params.id);
+  const { titulo, descricao, xp_total, posicao, requisito_xp, ativo } = req.body;
 
   if (!titulo || !descricao || !xp_total) {
     return res.status(400).json({ success: false, message: 'Preencha todos os campos.' });
   }
 
   try {
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
+    const [results] = await db.query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
     if (results.length === 0) {
       return res.status(404).json({ success: false, message: 'Nível não encontrado.' });
     }
 
     const updateNivelSql = `
       UPDATE niveis 
-      SET titulo = ?, descricao = ?, xp_total = ?
+      SET titulo = ?, descricao = ?, xp_total = ?, posicao = ?, requisito_xp = ?, ativo = ?
       WHERE id = ?
     `;
-    await db.promise().query(updateNivelSql, [titulo, descricao, xp_total, nivelId]);
+    await db.query(updateNivelSql, [titulo, descricao, xp_total, posicao || null, requisito_xp || 0, ativo !== undefined ? ativo : 1, nivelId]);
     res.json({ success: true, message: 'Nível atualizado com sucesso!' });
   } catch (err) {
     console.error('Erro ao editar nível:', err);
@@ -121,56 +123,57 @@ router.put('/:id', authenticateToken, async (req, res) => {
  * Requer autenticação
  */
 router.put('/:id/ativar', authenticateToken, async (req, res) => {
-  const nivelId = req.params.id;
+  const nivelId = parseInt(req.params.id);
   const { ativo, posicao } = req.body;
 
   if (ativo === undefined) {
     return res.status(400).json({ error: 'O campo "ativo" é obrigatório.' });
   }
 
-  try {
-    await new Promise((resolve, reject) => {
-      db.beginTransaction(err => (err ? reject(err) : resolve()));
-    });
+  // Iniciar transação
+  const connection = await db.getConnection();
+  await connection.beginTransaction();
 
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
+  try {
+    const [results] = await connection.query('SELECT * FROM niveis WHERE id = ?', [nivelId]);
     if (results.length === 0) {
-      await new Promise((resolve) => db.rollback(() => resolve()));
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ error: 'Nível não encontrado.' });
     }
 
     const nivel = results[0];
 
     if (!ativo) {
-      const desativarSql = 'UPDATE niveis SET ativo = false, posicao = NULL WHERE id = ?';
-      await db.promise().query(desativarSql, [nivelId]);
-      const reordenarSql = 'UPDATE niveis SET posicao = posicao - 1 WHERE posicao > ?';
-      await db.promise().query(reordenarSql, [nivel.posicao]);
-      await new Promise((resolve, reject) => {
-        db.commit(err => (err ? reject(err) : resolve()));
-      });
-      res.json({ success: true, message: 'Nível desativado com sucesso! Os níveis subsequentes foram reordenados.' });
+      // Desativar nível
+      await connection.query('UPDATE niveis SET ativo = false, posicao = NULL WHERE id = ?', [nivelId]);
+      if (nivel.posicao) {
+        await connection.query('UPDATE niveis SET posicao = posicao - 1 WHERE posicao > ?', [nivel.posicao]);
+      }
+      await connection.commit();
+      connection.release();
+      res.json({ success: true, message: 'Nível desativado com sucesso!' });
     } else {
+      // Ativar nível
       if (!posicao || posicao <= 0) {
-        await new Promise((resolve) => db.rollback(() => resolve()));
+        await connection.rollback();
+        connection.release();
         return res.status(400).json({ error: 'Informe uma posição válida.' });
       }
 
-      const [posicaoResults] = await db.promise().query('SELECT * FROM niveis WHERE posicao = ?', [posicao]);
-      if (posicaoResults.length > 0) {
-        const deslocarSql = 'UPDATE niveis SET posicao = posicao + 1 WHERE posicao >= ?';
-        await db.promise().query(deslocarSql, [posicao]);
-      }
-
-      const ativarSql = 'UPDATE niveis SET ativo = true, posicao = ? WHERE id = ?';
-      await db.promise().query(ativarSql, [posicao, nivelId]);
-      await new Promise((resolve, reject) => {
-        db.commit(err => (err ? reject(err) : resolve()));
-      });
+      // Deslocar níveis para abrir espaço
+      await connection.query('UPDATE niveis SET posicao = posicao + 1 WHERE posicao >= ? AND ativo = true', [posicao]);
+      
+      // Ativar nível na nova posição
+      await connection.query('UPDATE niveis SET ativo = true, posicao = ? WHERE id = ?', [posicao, nivelId]);
+      
+      await connection.commit();
+      connection.release();
       res.json({ success: true, message: `Nível ativado com sucesso na posição ${posicao}!` });
     }
   } catch (err) {
-    await new Promise((resolve) => db.rollback(() => resolve()));
+    await connection.rollback();
+    connection.release();
     console.error('Erro ao processar solicitação:', err);
     res.status(500).json({ error: 'Erro ao processar solicitação.' });
   }
@@ -183,7 +186,7 @@ router.put('/:id/ativar', authenticateToken, async (req, res) => {
  */
 router.get('/ativos', async (req, res) => {
   try {
-    const [results] = await db.promise().query('SELECT * FROM niveis WHERE ativo = true ORDER BY posicao ASC');
+    const [results] = await db.query('SELECT * FROM niveis WHERE ativo = true ORDER BY posicao ASC');
     res.json({ niveis: results });
   } catch (err) {
     console.error('Erro ao buscar níveis ativos:', err);
@@ -197,19 +200,22 @@ router.get('/ativos', async (req, res) => {
  * Requer autenticação
  */
 router.delete('/:id', authenticateToken, async (req, res) => {
-  const nivelId = req.params.id;
+  const nivelId = parseInt(req.params.id);
 
   try {
-    const [result] = await db.promise().query('DELETE FROM niveis WHERE id = ?', [nivelId]);
+    // Primeiro excluir perguntas relacionadas
+    await db.query('DELETE FROM perguntas WHERE nivel_id = ?', [nivelId]);
+    // Depois excluir o nível
+    const [result] = await db.query('DELETE FROM niveis WHERE id = ?', [nivelId]);
+    
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Nível não encontrado.' });
+      return res.status(404).json({ success: false, message: 'Nível não encontrado.' });
     }
 
-    await db.promise().query('DELETE FROM perguntas WHERE nivel_id = ?', [nivelId]);
-    res.json({ message: 'Nível e perguntas excluídos com sucesso.' });
+    res.json({ success: true, message: 'Nível excluído com sucesso.' });
   } catch (err) {
     console.error('Erro ao excluir nível:', err);
-    res.status(500).json({ message: 'Erro ao excluir nível.' });
+    res.status(500).json({ success: false, message: 'Erro ao excluir nível.' });
   }
 });
 
