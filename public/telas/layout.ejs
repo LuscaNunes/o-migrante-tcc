@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title><%= title %></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
@@ -16,31 +16,102 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            overflow: hidden; /* Impede scroll duplicado */
+            overflow-x: hidden;
         }
         
-        /* Sidebar fixa com scroll próprio se necessário */
+        /* Sidebar - escondida por padrão no mobile */
         #sidebar {
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-        
-        /* Container principal com scroll */
-        .main-content {
-            margin-left: 16rem; /* w-64 = 16rem */
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
             height: 100vh;
+            background: white;
+            z-index: 1000;
+            transition: left 0.3s ease-in-out;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             overflow-y: auto;
-            overflow-x: hidden;
         }
         
-        /* Para dispositivos móveis */
-        @media (max-width: 768px) {
+        /* Sidebar aberta */
+        #sidebar.open {
+            left: 0;
+        }
+        
+        /* Overlay quando menu está aberto */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .sidebar-overlay.active {
+            display: block;
+        }
+        
+        /* Main content */
+        .main-content {
+            min-height: 100vh;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        
+        /* Botão hamburguer */
+        .menu-toggle {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 1001;
+            background: #2563eb;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        
+        .menu-toggle:hover {
+            background: #1d4ed8;
+        }
+        
+        /* Desktop - sidebar sempre visível */
+        @media (min-width: 768px) {
+            #sidebar {
+                left: 0;
+                width: 256px;
+            }
+            
+            .menu-toggle {
+                display: none;
+            }
+            
             .main-content {
-                margin-left: 0;
+                margin-left: 256px;
             }
         }
         
-        /* Scrollbar personalizada (opcional) */
+        /* Mobile - ajustes */
+        @media (max-width: 767px) {
+            .main-content {
+                margin-left: 0;
+                padding-top: 70px;
+            }
+            
+            .menu-toggle {
+                display: flex;
+            }
+        }
+        
+        /* Scrollbars personalizadas */
         .main-content::-webkit-scrollbar {
             width: 8px;
         }
@@ -54,11 +125,6 @@
             border-radius: 4px;
         }
         
-        .main-content::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-        
-        /* Sidebar scrollbar */
         #sidebar::-webkit-scrollbar {
             width: 6px;
         }
@@ -68,11 +134,10 @@
         }
         
         #sidebar::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
+            background: #cbd5e1;
             border-radius: 3px;
         }
         
-        /* Animações */
         .fade-in {
             animation: fadeIn 0.3s ease-in;
         }
@@ -83,20 +148,68 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Sidebar será injetada via EJS include -->
+<body>
+    <!-- Botão Hamburguer (mobile) -->
+    <div class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars text-xl"></i>
+    </div>
+    
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Sidebar -->
     <%- include('sidebar') %>
     
-    <!-- Main Content - COM SCROLL -->
+    <!-- Main Content -->
     <main class="main-content">
         <div class="p-4 sm:p-6 md:p-8">
-            <!-- Conteúdo dinâmico -->
             <%- body %>
         </div>
     </main>
 
-    <!-- Scripts globais -->
     <script>
+        // Controle do menu mobile
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        if (menuToggle) {
+            menuToggle.addEventListener('click', openSidebar);
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebar);
+        }
+        
+        // Fechar sidebar ao clicar em um link (mobile)
+        const sidebarLinks = document.querySelectorAll('#sidebar a, #sidebar button');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    setTimeout(closeSidebar, 150);
+                }
+            });
+        });
+        
+        // Fechar com tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+        });
+        
         // Toggle do menu admin na sidebar
         document.addEventListener('DOMContentLoaded', function() {
             const adminToggle = document.getElementById('adminToggle');
@@ -106,6 +219,7 @@
             if (adminToggle) {
                 adminToggle.addEventListener('click', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     adminMenu.classList.toggle('hidden');
                     if (chevron) {
                         chevron.style.transform = adminMenu.classList.contains('hidden') 
@@ -114,18 +228,6 @@
                     }
                 });
             }
-            
-            // Fechar menu admin ao clicar fora (opcional)
-            document.addEventListener('click', function(event) {
-                if (adminToggle && adminMenu && !adminToggle.contains(event.target)) {
-                    if (!adminMenu.classList.contains('hidden')) {
-                        adminMenu.classList.add('hidden');
-                        if (chevron) {
-                            chevron.style.transform = 'rotate(0deg)';
-                        }
-                    }
-                }
-            });
         });
     </script>
 </body>
