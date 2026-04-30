@@ -215,6 +215,24 @@ app.get('/admin/mensagem-diaria', authenticateToken, checkAdmin, async (req, res
         res.status(500).send('Erro interno ao carregar a página.');
     }
 });
+
+// Rota para Editar Perguntas (Admin)
+app.get('/admin/editar-perguntas', authenticateToken, checkAdmin, async (req, res) => {
+    try {
+        const bodyContent = await renderViewToString(req.app, 'EditarPerguntas', { 
+            user: req.user 
+        });
+        
+        res.render('layout', { 
+            title: 'Admin - Editar Perguntas | O Migrante',
+            body: bodyContent,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Erro ao renderizar Editar Perguntas:', error);
+        res.status(500).send('Erro interno ao carregar a página.');
+    }
+});
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================

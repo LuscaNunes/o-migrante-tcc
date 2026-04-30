@@ -1,131 +1,441 @@
-<!-- admin/telas/CaPerguntas.ejs -->
 <div class="container mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-6">Cadastrar Perguntas por Nível</h1>
+    <h1 class="text-2xl font-bold mb-6">Cadastro de Níveis e Perguntas</h1>
     
-    <!-- Seletor de Nível -->
-    <div class="mb-6">
-        <label for="nivelSelect" class="block text-sm font-medium text-gray-700 mb-2">
-            Selecione o Nível
-        </label>
-        <select id="nivelSelect" class="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">Carregando níveis...</option>
-        </select>
-    </div>
-
-    <!-- Formulário de Pergunta -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Nova Pergunta</h2>
+    <!-- ============================================ -->
+    <!-- SEÇÃO 1: CADASTRO DE NÍVEIS -->
+    <!-- ============================================ -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-blue-600">
+            <i class="fas fa-layer-group mr-2"></i>Cadastrar Novo Nível
+        </h2>
         
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Texto da Pergunta</label>
-            <textarea id="textoPergunta" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-        </div>
-
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Opções</label>
-            <div id="opcoesContainer">
-                <div class="flex gap-2 mb-2">
-                    <input type="text" placeholder="Opção A" class="flex-1 px-3 py-2 border rounded-lg">
-                    <input type="radio" name="correta" value="0"> Correta
+        <form id="formCadastroNivel" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Título do Nível *</label>
+                    <input type="text" id="nivelTitulo" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Ex: Iniciante, Intermediário, Avançado">
                 </div>
-                <!-- Mais opções... -->
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">XP Total *</label>
+                    <input type="number" id="nivelXpTotal" required value="100"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Pontos de experiência">
+                </div>
             </div>
-            <button type="button" onclick="adicionarOpcao()" class="mt-2 text-blue-600 hover:text-blue-800">
-                + Adicionar Opção
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Descrição *</label>
+                <textarea id="nivelDescricao" rows="3" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Descreva o que será aprendido neste nível..."></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" 
+                        class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                    <i class="fas fa-save"></i> Salvar Nível
+                </button>
+                <button type="button" id="btnLimparNivel"
+                        class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition flex items-center gap-2">
+                    <i class="fas fa-eraser"></i> Limpar
+                </button>
+            </div>
+        </form>
+        
+        <!-- Mensagem de feedback para cadastro de nível -->
+        <div id="feedbackNivel" class="mt-4 hidden"></div>
+    </div>
+    
+    <!-- ============================================ -->
+    <!-- SEÇÃO 2: CADASTRO DE PERGUNTAS -->
+    <!-- ============================================ -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4 text-blue-600">
+            <i class="fas fa-question-circle mr-2"></i>Cadastrar Nova Pergunta
+        </h2>
+        
+        <!-- Seletor de Nível -->
+        <div class="mb-6">
+            <label for="nivelSelect" class="block text-sm font-medium text-gray-700 mb-2">
+                Selecione o Nível *
+            </label>
+            <select id="nivelSelect" required
+                    class="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Carregando níveis...</option>
+            </select>
+        </div>
+        
+        <form id="formCadastroPergunta" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Texto da Pergunta *</label>
+                <textarea id="textoPergunta" rows="3" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Digite a pergunta..."></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Resposta Correta *</label>
+                    <input type="text" id="respostaCorreta" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-green-50"
+                           placeholder="Opção correta">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Opção 1 (Errada) *</label>
+                    <input type="text" id="opcao1" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-red-50"
+                           placeholder="Opção errada 1">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Opção 2 (Errada) *</label>
+                    <input type="text" id="opcao2" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-red-50"
+                           placeholder="Opção errada 2">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Opção 3 (Errada) *</label>
+                    <input type="text" id="opcao3" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-red-50"
+                           placeholder="Opção errada 3">
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                    <i class="fas fa-save"></i> Salvar Pergunta
+                </button>
+                <button type="button" id="btnLimparPergunta"
+                        class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition flex items-center gap-2">
+                    <i class="fas fa-eraser"></i> Limpar
+                </button>
+            </div>
+        </form>
+        
+        <!-- Mensagem de feedback para cadastro de pergunta -->
+        <div id="feedbackPergunta" class="mt-4 hidden"></div>
+    </div>
+    
+    <!-- ============================================ -->
+    <!-- SEÇÃO 3: LISTA DE PERGUNTAS DO NÍVEL -->
+    <!-- ============================================ -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-blue-600">
+                <i class="fas fa-list mr-2"></i>Perguntas do Nível
+            </h2>
+            <button id="btnAtualizarPerguntas" 
+                    class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition text-sm flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i> Atualizar
             </button>
         </div>
-
-        <button onclick="salvarPergunta()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-            Salvar Pergunta
-        </button>
-    </div>
-
-    <!-- Lista de Perguntas -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold mb-4">Perguntas Cadastradas</h2>
+        
         <div id="listaPerguntas" class="space-y-4">
-            <!-- Perguntas serão carregadas aqui -->
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-info-circle mr-2"></i> Selecione um nível para ver as perguntas
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    let nivelAtual = null;
+let niveis = [];
+let nivelSelecionado = null;
 
-    // Carregar níveis disponíveis
-    async function carregarNiveis() {
-        try {
-            const response = await fetch('/niveis', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            const niveis = await response.json();
-            const select = document.getElementById('nivelSelect');
-            select.innerHTML = '<option value="">Selecione um nível</option>';
-            niveis.forEach(nivel => {
-                select.innerHTML += `<option value="${nivel.id}">${nivel.nome}</option>`;
-            });
-        } catch (error) {
-            console.error('Erro ao carregar níveis:', error);
-        }
+// Função para mostrar feedback
+function showFeedback(elementId, message, isSuccess = true) {
+    const element = document.getElementById(elementId);
+    element.textContent = message;
+    element.className = `mt-4 p-3 rounded-lg ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+    element.classList.remove('hidden');
+    
+    setTimeout(() => {
+        element.classList.add('hidden');
+    }, 3000);
+}
+
+// Função para escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================
+// CADASTRO DE NÍVEL
+// ============================================
+async function cadastrarNivel(event) {
+    event.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    const dados = {
+        titulo: document.getElementById('nivelTitulo').value.trim(),
+        descricao: document.getElementById('nivelDescricao').value.trim(),
+        xp_total: parseInt(document.getElementById('nivelXpTotal').value)
+    };
+    
+    if (!dados.titulo || !dados.descricao || !dados.xp_total) {
+        showFeedback('feedbackNivel', 'Preencha todos os campos do nível!', false);
+        return;
     }
-
-    // Carregar perguntas do nível selecionado
-    async function carregarPerguntas(nivelId) {
-        try {
-            const response = await fetch(`/perguntas/nivel/${nivelId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            const perguntas = await response.json();
-            // Renderizar perguntas...
-        } catch (error) {
-            console.error('Erro ao carregar perguntas:', error);
+    
+    try {
+        const response = await fetch('/niveis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.message || 'Erro ao cadastrar nível');
         }
+        
+        showFeedback('feedbackNivel', result.message || 'Nível cadastrado com sucesso!', true);
+        
+        // Limpar formulário
+        document.getElementById('formCadastroNivel').reset();
+        document.getElementById('nivelXpTotal').value = '100';
+        
+        // Recarregar lista de níveis
+        await carregarNiveis();
+        
+    } catch (error) {
+        console.error('Erro ao cadastrar nível:', error);
+        showFeedback('feedbackNivel', error.message, false);
     }
+}
 
-    // Salvar pergunta
-    async function salvarPergunta() {
-        if (!nivelAtual) {
-            alert('Selecione um nível primeiro!');
+// ============================================
+// CADASTRO DE PERGUNTA
+// ============================================
+async function cadastrarPergunta(event) {
+    event.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    
+    if (!nivelSelecionado) {
+        showFeedback('feedbackPergunta', 'Selecione um nível primeiro!', false);
+        return;
+    }
+    
+    const dados = {
+        nivel_id: parseInt(nivelSelecionado),
+        texto: document.getElementById('textoPergunta').value.trim(),
+        resposta_correta: document.getElementById('respostaCorreta').value.trim(),
+        opcao1: document.getElementById('opcao1').value.trim(),
+        opcao2: document.getElementById('opcao2').value.trim(),
+        opcao3: document.getElementById('opcao3').value.trim()
+    };
+    
+    if (!dados.texto || !dados.resposta_correta || !dados.opcao1 || !dados.opcao2 || !dados.opcao3) {
+        showFeedback('feedbackPergunta', 'Preencha todos os campos da pergunta!', false);
+        return;
+    }
+    
+    try {
+        const response = await fetch('/perguntas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.message || 'Erro ao cadastrar pergunta');
+        }
+        
+        showFeedback('feedbackPergunta', result.message || 'Pergunta cadastrada com sucesso!', true);
+        
+        // Limpar formulário
+        document.getElementById('formCadastroPergunta').reset();
+        
+        // Recarregar perguntas do nível atual
+        if (nivelSelecionado) {
+            await carregarPerguntas(nivelSelecionado);
+        }
+        
+    } catch (error) {
+        console.error('Erro ao cadastrar pergunta:', error);
+        showFeedback('feedbackPergunta', error.message, false);
+    }
+}
+
+// ============================================
+// CARREGAR NÍVEIS
+// ============================================
+async function carregarNiveis() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/niveis', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar níveis');
+        
+        const data = await response.json();
+        niveis = Array.isArray(data) ? data : (data.niveis || []);
+        
+        const select = document.getElementById('nivelSelect');
+        select.innerHTML = '<option value="">Selecione um nível</option>';
+        
+        niveis.forEach(nivel => {
+            select.innerHTML += `<option value="${nivel.id}">${escapeHtml(nivel.titulo)} (ID: ${nivel.id})</option>`;
+        });
+        
+    } catch (error) {
+        console.error('Erro ao carregar níveis:', error);
+        const select = document.getElementById('nivelSelect');
+        select.innerHTML = '<option value="">Erro ao carregar níveis</option>';
+    }
+}
+
+// ============================================
+// CARREGAR PERGUNTAS DO NÍVEL
+// ============================================
+async function carregarPerguntas(nivelId) {
+    if (!nivelId) return;
+    
+    const container = document.getElementById('listaPerguntas');
+    container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando perguntas...</div>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/perguntas?nivel_id=${nivelId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar perguntas');
+        
+        const data = await response.json();
+        const perguntas = Array.isArray(data) ? data : (data.perguntas || []);
+        
+        if (perguntas.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-info-circle mr-2"></i> 
+                    Nenhuma pergunta cadastrada para este nível.
+                </div>
+            `;
             return;
         }
-
-        const pergunta = {
-            nivel_id: nivelAtual,
-            texto: document.getElementById('textoPergunta').value,
-            opcoes: [] // Coletar opções do formulário
-        };
-
-        try {
-            const response = await fetch('/perguntas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(pergunta)
-            });
-
-            if (response.ok) {
-                alert('Pergunta salva com sucesso!');
-                carregarPerguntas(nivelAtual);
-            }
-        } catch (error) {
-            console.error('Erro ao salvar pergunta:', error);
-        }
+        
+        container.innerHTML = perguntas.map(pergunta => `
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800 mb-2">
+                            <i class="fas fa-question-circle text-blue-500 mr-2"></i>
+                            ${escapeHtml(pergunta.texto)}
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 text-sm">
+                            <div class="flex items-center">
+                                <span class="w-24 text-gray-600">Correta:</span>
+                                <span class="text-green-600 font-medium">✓ ${escapeHtml(pergunta.resposta_correta)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24 text-gray-600">Opção 1:</span>
+                                <span class="text-gray-700">${escapeHtml(pergunta.opcao1)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24 text-gray-600">Opção 2:</span>
+                                <span class="text-gray-700">${escapeHtml(pergunta.opcao2)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-24 text-gray-600">Opção 3:</span>
+                                <span class="text-gray-700">${escapeHtml(pergunta.opcao3)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-400 ml-4">
+                        ID: ${pergunta.id}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar perguntas:', error);
+        container.innerHTML = `
+            <div class="text-center text-red-500 py-8">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Erro ao carregar perguntas. Tente novamente.
+            </div>
+        `;
     }
+}
 
-    // Event Listeners
+// ============================================
+// EVENT LISTENERS
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Verificar token
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Você precisa estar logado!');
+        window.location.href = '/';
+        return;
+    }
+    
+    // Carregar níveis
+    carregarNiveis();
+    
+    // Evento: Selecionar nível
     document.getElementById('nivelSelect').addEventListener('change', (e) => {
-        nivelAtual = e.target.value;
-        if (nivelAtual) {
-            carregarPerguntas(nivelAtual);
+        nivelSelecionado = e.target.value;
+        if (nivelSelecionado) {
+            carregarPerguntas(nivelSelecionado);
+        } else {
+            document.getElementById('listaPerguntas').innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-info-circle mr-2"></i> Selecione um nível para ver as perguntas
+                </div>
+            `;
         }
     });
-
-    // Inicializar
-    carregarNiveis();
+    
+    // Evento: Cadastrar nível
+    document.getElementById('formCadastroNivel').addEventListener('submit', cadastrarNivel);
+    
+    // Evento: Cadastrar pergunta
+    document.getElementById('formCadastroPergunta').addEventListener('submit', cadastrarPergunta);
+    
+    // Evento: Limpar formulário de nível
+    document.getElementById('btnLimparNivel').addEventListener('click', () => {
+        document.getElementById('formCadastroNivel').reset();
+        document.getElementById('nivelXpTotal').value = '100';
+    });
+    
+    // Evento: Limpar formulário de pergunta
+    document.getElementById('btnLimparPergunta').addEventListener('click', () => {
+        document.getElementById('formCadastroPergunta').reset();
+    });
+    
+    // Evento: Atualizar perguntas
+    document.getElementById('btnAtualizarPerguntas').addEventListener('click', () => {
+        if (nivelSelecionado) {
+            carregarPerguntas(nivelSelecionado);
+            showFeedback('feedbackPergunta', 'Perguntas atualizadas!', true);
+        }
+    });
+});
 </script>

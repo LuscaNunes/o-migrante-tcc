@@ -1,0 +1,412 @@
+<div class="flex-1 p-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Busca e Edição de Perguntas</h2>
+        <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Sair</button>
+    </div>
+
+    <!-- Formulário de Busca -->
+    <form id="buscaNivelForm" class="bg-white p-6 rounded-lg shadow-lg mb-8">
+        <h3 class="text-xl font-bold mb-4">Buscar Pergunta para Edição</h3>
+        <div class="mb-4">
+            <label for="buscaNivel" class="block text-gray-700 font-bold mb-2">Digite o ID ou Título do Nível:</label>
+            <input type="text" id="buscaNivel" class="w-full p-2 border rounded-lg" required>
+        </div>
+        <div class="flex gap-4">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                Buscar
+            </button>
+            <button type="button" id="listarTodosButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+                Listar Todas as Perguntas
+            </button>
+            <button type="button" id="voltarNiveisButton" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                Voltar para Níveis
+            </button>
+        </div>
+    </form>
+
+    <!-- Tabela de Perguntas -->
+    <div id="perguntasTable" class="bg-white p-6 rounded-lg shadow-lg hidden">
+        <h3 class="text-xl font-bold mb-4">Perguntas do Nível</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="py-2 px-4 border-b text-left">ID</th>
+                        <th class="py-2 px-4 border-b text-left">Texto</th>
+                        <th class="py-2 px-4 border-b text-left">Resposta Correta</th>
+                        <th class="py-2 px-4 border-b text-left">Opção 1</th>
+                        <th class="py-2 px-4 border-b text-left">Opção 2</th>
+                        <th class="py-2 px-4 border-b text-left">Opção 3</th>
+                        <th class="py-2 px-4 border-b text-left">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="perguntasTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Formulário de Edição de Pergunta -->
+    <form id="editaPerguntaForm" class="bg-white p-6 rounded-lg shadow-lg hidden mt-8">
+        <h3 class="text-xl font-bold mb-4">Editar Pergunta</h3>
+        <input type="hidden" id="editaNivelId">
+        <input type="hidden" id="editaPerguntaId">
+        
+        <div class="mb-4">
+            <label for="editaPerguntaTexto" class="block text-gray-700 font-bold mb-2">Texto da Pergunta:</label>
+            <textarea id="editaPerguntaTexto" rows="3" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label for="editaPerguntaRespostaCorreta" class="block text-gray-700 font-bold mb-2">Resposta Correta:</label>
+                <input type="text" id="editaPerguntaRespostaCorreta" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div class="mb-4">
+                <label for="editaPerguntaOpcao1" class="block text-gray-700 font-bold mb-2">Opção 1:</label>
+                <input type="text" id="editaPerguntaOpcao1" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div class="mb-4">
+                <label for="editaPerguntaOpcao2" class="block text-gray-700 font-bold mb-2">Opção 2:</label>
+                <input type="text" id="editaPerguntaOpcao2" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div class="mb-4">
+                <label for="editaPerguntaOpcao3" class="block text-gray-700 font-bold mb-2">Opção 3:</label>
+                <input type="text" id="editaPerguntaOpcao3" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+        </div>
+        
+        <div class="flex gap-4">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                <i class="fas fa-save mr-2"></i>Salvar
+            </button>
+            <button type="button" id="fecharEdicaoPerguntaButton" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                <i class="fas fa-times mr-2"></i>Fechar
+            </button>
+            <button type="button" id="excluirPerguntaButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+                <i class="fas fa-trash mr-2"></i>Excluir Pergunta
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .btn-primary {
+        transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 12px 16px;
+        text-align: left;
+    }
+    tr:hover {
+        background-color: #f9fafb;
+    }
+</style>
+
+<script>
+// Função para exibir mensagens de feedback
+function showFeedback(message, isError = true) {
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 transition-opacity duration-300`;
+    feedbackDiv.textContent = message;
+    document.body.appendChild(feedbackDiv);
+    setTimeout(() => feedbackDiv.remove(), 3000);
+}
+
+// Função auxiliar para escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Verifica autenticação (simplificada)
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem('token');
+    console.log('Token on load:', token ? 'Presente' : 'Ausente');
+
+    if (!token) {
+        showFeedback("Você precisa estar logado para acessar esta página.");
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 1500);
+        return;
+    }
+    
+    // Configurar event listeners
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Busca de nível por ID ou título
+    document.getElementById('buscaNivelForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const busca = document.getElementById('buscaNivel').value.trim();
+        const token = localStorage.getItem('token');
+
+        document.getElementById('editaPerguntaForm').classList.add('hidden');
+
+        if (!busca) {
+            showFeedback("Por favor, insira um ID ou título para buscar.");
+            return;
+        }
+
+        try {
+            console.log('Buscando nível:', busca);
+            const response = await fetch(`/niveis?busca=${encodeURIComponent(busca)}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                throw new Error("Erro ao buscar níveis");
+            }
+            
+            const data = await response.json();
+            console.log('Níveis encontrados:', data);
+            
+            const niveis = Array.isArray(data) ? data : (data.niveis || []);
+            if (niveis.length === 0) {
+                showFeedback("Nenhum nível encontrado.");
+                return;
+            }
+            
+            const nivelId = niveis[0].id;
+            document.getElementById('editaNivelId').value = nivelId;
+            await buscarPerguntasDoNivel(nivelId);
+        } catch (error) {
+            console.error("Erro ao buscar níveis:", error);
+            showFeedback("Erro ao buscar níveis: " + error.message);
+        }
+    });
+
+    // Listar todas as perguntas
+    document.getElementById('listarTodosButton').addEventListener('click', async () => {
+        const token = localStorage.getItem('token');
+        try {
+            console.log('Listando todas as perguntas...');
+            const response = await fetch("/perguntas", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                throw new Error("Erro ao buscar perguntas");
+            }
+            
+            const data = await response.json();
+            console.log('Perguntas recebidas:', data);
+            const perguntas = Array.isArray(data) ? data : (data.perguntas || []);
+            renderPerguntas(perguntas);
+            document.getElementById('editaNivelId').value = '';
+        } catch (error) {
+            console.error("Erro ao buscar perguntas:", error);
+            showFeedback("Erro ao buscar perguntas: " + error.message);
+        }
+    });
+
+    // Voltar para níveis
+    document.getElementById('voltarNiveisButton').addEventListener('click', () => {
+        window.location.href = "/admin/niveis";
+    });
+
+    // Fechar formulário de edição
+    document.getElementById('fecharEdicaoPerguntaButton').addEventListener('click', () => {
+        document.getElementById('editaPerguntaForm').classList.add('hidden');
+    });
+
+    // Excluir pergunta
+    document.getElementById('excluirPerguntaButton').addEventListener('click', async () => {
+        const id = document.getElementById('editaPerguntaId').value;
+        const nivelId = document.getElementById('editaNivelId').value;
+        const token = localStorage.getItem('token');
+
+        if (!id) {
+            showFeedback("Nenhuma pergunta selecionada para exclusão.");
+            return;
+        }
+
+        if (!confirm("Tem certeza que deseja excluir esta pergunta? Esta ação não pode ser desfeita.")) {
+            return;
+        }
+
+        try {
+            console.log('Excluindo pergunta:', id);
+            const response = await fetch(`/perguntas/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                throw new Error("Erro ao excluir pergunta");
+            }
+            
+            const data = await response.json();
+            showFeedback(data.message || "Pergunta excluída com sucesso!", false);
+            document.getElementById('editaPerguntaForm').classList.add('hidden');
+            if (nivelId) {
+                await buscarPerguntasDoNivel(nivelId);
+            } else {
+                document.getElementById('perguntasTable').classList.add('hidden');
+            }
+        } catch (error) {
+            console.error("Erro ao excluir pergunta:", error);
+            showFeedback("Erro ao excluir pergunta: " + error.message);
+        }
+    });
+
+    // Salvar edição da pergunta
+    document.getElementById('editaPerguntaForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editaPerguntaId').value;
+        const nivelId = document.getElementById('editaNivelId').value;
+        const texto = document.getElementById('editaPerguntaTexto').value.trim();
+        const resposta_correta = document.getElementById('editaPerguntaRespostaCorreta').value.trim();
+        const opcao1 = document.getElementById('editaPerguntaOpcao1').value.trim();
+        const opcao2 = document.getElementById('editaPerguntaOpcao2').value.trim();
+        const opcao3 = document.getElementById('editaPerguntaOpcao3').value.trim();
+        const token = localStorage.getItem('token');
+
+        if (!texto || !resposta_correta || !opcao1 || !opcao2 || !opcao3) {
+            showFeedback("Por favor, preencha todos os campos.");
+            return;
+        }
+
+        try {
+            console.log('Salvando edição da pergunta:', id);
+            const response = await fetch(`/perguntas/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ texto, resposta_correta, opcao1, opcao2, opcao3 })
+            });
+            
+            if (!response.ok) {
+                throw new Error("Erro ao salvar edição");
+            }
+            
+            const data = await response.json();
+            showFeedback(data.message || "Pergunta atualizada com sucesso!", false);
+            document.getElementById('editaPerguntaForm').reset();
+            document.getElementById('editaPerguntaForm').classList.add('hidden');
+            await buscarPerguntasDoNivel(nivelId);
+        } catch (error) {
+            console.error("Erro ao salvar edição:", error);
+            showFeedback("Erro ao salvar edição: " + error.message);
+        }
+    });
+}
+
+// Função para buscar perguntas de um nível
+async function buscarPerguntasDoNivel(nivelId) {
+    const token = localStorage.getItem('token');
+    try {
+        console.log('Buscando perguntas para o nível:', nivelId);
+        const response = await fetch(`/perguntas?nivel_id=${nivelId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error("Erro ao buscar perguntas");
+        }
+        
+        const data = await response.json();
+        console.log('Perguntas encontradas:', data);
+        const perguntas = Array.isArray(data) ? data : (data.perguntas || []);
+        renderPerguntas(perguntas);
+    } catch (error) {
+        console.error("Erro ao buscar perguntas:", error);
+        showFeedback("Erro ao buscar perguntas: " + error.message);
+    }
+}
+
+// Função para renderizar perguntas na tabela
+function renderPerguntas(perguntas) {
+    const tbody = document.getElementById('perguntasTableBody');
+    tbody.innerHTML = '';
+
+    if (!perguntas || perguntas.length === 0) {
+        showFeedback("Nenhuma pergunta encontrada.");
+        document.getElementById('perguntasTable').classList.add('hidden');
+        return;
+    }
+
+    perguntas.forEach(pergunta => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="py-2 px-4 border-b">${pergunta.id}</td>
+            <td class="py-2 px-4 border-b">${escapeHtml(pergunta.texto)}</td>
+            <td class="py-2 px-4 border-b">${escapeHtml(pergunta.resposta_correta)}</td>
+            <td class="py-2 px-4 border-b">${escapeHtml(pergunta.opcao1 || '')}</td>
+            <td class="py-2 px-4 border-b">${escapeHtml(pergunta.opcao2 || '')}</td>
+            <td class="py-2 px-4 border-b">${escapeHtml(pergunta.opcao3 || '')}</td>
+            <td class="py-2 px-4 border-b">
+                <button class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition text-sm" onclick="editarPergunta(${pergunta.id})">
+                    <i class="fas fa-edit mr-1"></i>Editar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    document.getElementById('perguntasTable').classList.remove('hidden');
+}
+
+// Função para carregar dados da pergunta para edição
+async function editarPergunta(perguntaId) {
+    const token = localStorage.getItem('token');
+    if (!perguntaId || isNaN(perguntaId)) {
+        showFeedback("ID da pergunta inválido.");
+        return;
+    }
+
+    try {
+        console.log('Carregando pergunta para edição:', perguntaId);
+        const response = await fetch(`/perguntas/${perguntaId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error("Erro ao buscar pergunta");
+        }
+        
+        const data = await response.json();
+        console.log('Dados da pergunta:', data);
+
+        document.getElementById('editaPerguntaId').value = data.id;
+        document.getElementById('editaPerguntaTexto').value = data.texto;
+        document.getElementById('editaPerguntaRespostaCorreta').value = data.resposta_correta;
+        document.getElementById('editaPerguntaOpcao1').value = data.opcao1 || '';
+        document.getElementById('editaPerguntaOpcao2').value = data.opcao2 || '';
+        document.getElementById('editaPerguntaOpcao3').value = data.opcao3 || '';
+        document.getElementById('editaPerguntaForm').classList.remove('hidden');
+        
+        // Scroll para o formulário
+        document.getElementById('editaPerguntaForm').scrollIntoView({ behavior: 'smooth' });
+    } catch (error) {
+        console.error("Erro ao carregar dados da pergunta:", error);
+        showFeedback("Erro ao carregar dados da pergunta: " + error.message);
+    }
+}
+
+// Logout
+const logoutBtn = document.getElementById('logoutButton');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        console.log('Efetuando logout...');
+        if (confirm('Tem certeza que deseja sair?')) {
+            localStorage.removeItem('token');
+            window.location.href = "/";
+        }
+    });
+}
+</script>
