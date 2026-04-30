@@ -1,0 +1,416 @@
+<div class="flex-1 p-8 slide-in">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Gerenciamento de Fases</h2>
+        <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Sair</button>
+    </div>
+
+    <!-- Lista de Fases -->
+    <div id="fasesContainer" class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-bold mb-4">Fases Cadastradas</h3>
+        <ul id="fasesList" class="space-y-4">
+            <!-- Fases serão carregadas dinamicamente aqui -->
+        </ul>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="statusModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 class="text-xl font-bold mb-4">Situação da Fase</h2>
+        <div id="statusContent">
+            <!-- Conteúdo da situação será carregado aqui -->
+        </div>
+        <div id="positionInput" class="hidden">
+            <label for="posicao" class="block text-gray-700 font-bold mb-2">Posição:</label>
+            <input type="number" id="posicao" class="w-full p-2 border rounded" placeholder="Informe a posição" />
+        </div>
+        <button id="toggleStatusButton" class="bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition">
+            Desativar
+        </button>
+        <button id="saveChangesButton" class="hidden bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 transition">
+            Salvar Alterações
+        </button>
+    </div>
+</div>
+
+<style>
+    .fase-item {
+        transition: all 0.3s ease;
+    }
+    .fase-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .slide-in {
+        animation: slide-in 0.5s forwards;
+    }
+    @keyframes slide-in {
+        from {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 50;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 8px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .btn-primary {
+        transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+    }
+</style>
+
+<script>
+// URL base da API
+const API_URL = window.location.origin || 'http://localhost:3000';
+
+// Função para exibir mensagens de feedback
+function showFeedback(message, isError = true) {
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 transition-opacity duration-300`;
+    feedbackDiv.textContent = message;
+    document.body.appendChild(feedbackDiv);
+    setTimeout(() => feedbackDiv.remove(), 3000);
+}
+
+// Função auxiliar para escapar HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Verifica autenticação e tipo de usuário
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem('token');
+    console.log('Token on load:', token ? 'Presente' : 'Ausente');
+
+    if (!token) {
+        showFeedback("Você precisa estar logado para acessar esta página.");
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 1500);
+        return;
+    }
+
+    // Verificar token e permissões
+    fetch(`${API_URL}/verifyToken`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => {
+        console.log('Verify token response:', res.status);
+        if (!res.ok) {
+            throw new Error('Token inválido');
+        }
+        return res.json();
+    })
+    .then(data => {
+        console.log('Verify token data:', data);
+        if (!data.auth || data.user.tipo !== 'admin') {
+            localStorage.removeItem('token');
+            showFeedback("Acesso restrito a administradores.");
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 1500);
+        } else {
+            // Carrega fases
+            fetchFases();
+        }
+    })
+    .catch(error => {
+        console.error("Erro ao verificar token:", error);
+        showFeedback("Erro ao verificar autenticação.");
+        localStorage.removeItem('token');
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 1500);
+    });
+});
+
+// Função para buscar as fases do backend
+async function fetchFases() {
+    try {
+        const token = localStorage.getItem('token');
+        console.log('Buscando fases...');
+        const response = await fetch(`${API_URL}/fases`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        console.log('Resposta do backend:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = "/";
+                return;
+            }
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || "Erro ao buscar fases");
+        }
+        
+        const data = await response.json();
+        console.log('Fases recebidas:', data);
+        // Verifica se data é um array ou tem a propriedade fases
+        const fasesArray = Array.isArray(data) ? data : (data.fases || []);
+        renderFases(fasesArray);
+    } catch (error) {
+        console.error("Erro ao buscar fases:", error);
+        showFeedback("Erro ao buscar fases: " + error.message);
+    }
+}
+
+// Função para renderizar as fases na página
+function renderFases(fases) {
+    console.log("Fases carregadas:", fases);
+    const fasesList = document.getElementById('fasesList');
+    
+    if (!fases || fases.length === 0) {
+        fasesList.innerHTML = '<li class="text-center text-gray-500 p-4">Nenhuma fase cadastrada.</li>';
+        return;
+    }
+    
+    fasesList.innerHTML = fases.map(fase => `
+        <li class="fase-item bg-gray-100 p-4 rounded-lg shadow-md cursor-default" data-id="${fase.id}">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+                <div class="flex-1">
+                    <span class="font-bold text-lg">${escapeHtml(fase.titulo || fase.nome || 'Sem título')}</span>
+                    ${fase.posicao ? `<span class="text-sm text-gray-500 ml-2">(Posição: ${fase.posicao})</span>` : ''}
+                    <span class="text-sm ml-2 px-2 py-1 rounded ${fase.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${fase.ativo ? 'Ativa' : 'Inativa'}
+                    </span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm btn-primary" onclick="showDetails(${fase.id})">
+                        <i class="fas fa-info-circle mr-1"></i>Detalhes
+                    </button>
+                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm btn-primary" onclick="showStatusModal(${fase.id}, '${escapeHtml(fase.titulo || fase.nome || 'Sem título')}', ${fase.ativo})">
+                        <i class="fas fa-toggle-${fase.ativo ? 'on' : 'off'} mr-1"></i>Situação
+                    </button>
+                </div>
+            </div>
+            <div id="details${fase.id}" class="mt-4 hidden fade-in">
+                <p class="text-gray-600"><strong>Descrição:</strong> ${escapeHtml(fase.descricao || 'Sem descrição')}</p>
+                <p class="text-gray-600"><strong>Ordem:</strong> ${fase.ordem || fase.posicao || 'Não definida'}</p>
+                ${fase.nivel_requisito ? `<p class="text-gray-600"><strong>Nível Necessário:</strong> ${fase.nivel_requisito}</p>` : ''}
+                ${fase.xp_necessario ? `<p class="text-gray-600"><strong>XP Necessário:</strong> ${fase.xp_necessario}</p>` : ''}
+            </div>
+        </li>
+    `).join('');
+}
+
+// Função para exibir o modal de situação
+let currentFaseId = null;
+
+async function showStatusModal(faseId, titulo, ativo) {
+    console.log("Modal aberto para a fase:", faseId, titulo, ativo);
+    currentFaseId = faseId;
+
+    const modal = document.getElementById('statusModal');
+    const statusContent = document.getElementById('statusContent');
+    const positionInput = document.getElementById('positionInput');
+    const posicaoInput = document.getElementById('posicao');
+    const toggleStatusButton = document.getElementById('toggleStatusButton');
+    const saveChangesButton = document.getElementById('saveChangesButton');
+
+    // Reset do modal
+    positionInput.classList.add('hidden');
+    toggleStatusButton.classList.remove('hidden');
+    saveChangesButton.classList.add('hidden');
+    modal.style.display = "block";
+
+    try {
+        const token = localStorage.getItem('token');
+        console.log('Buscando dados da fase:', faseId);
+        const response = await fetch(`${API_URL}/fases/${faseId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        console.log('Resposta da fase:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error("Erro ao buscar dados da fase");
+        }
+        
+        const data = await response.json();
+        console.log("Dados da fase carregados:", data);
+
+        // Atualizar o conteúdo do modal
+        statusContent.innerHTML = `
+            <p class="text-gray-600 mb-2"><strong>Fase:</strong> ${escapeHtml(data.titulo || data.nome)}</p>
+            <p class="text-gray-600 mb-2"><strong>Situação Atual:</strong> <span class="font-bold ${data.ativo ? 'text-green-600' : 'text-red-600'}">${data.ativo ? 'Ativa' : 'Inativa'}</span></p>
+            ${data.ativo && data.posicao ? `<p class="text-gray-600"><strong>Posição Atual:</strong> ${data.posicao}</p>` : ''}
+        `;
+
+        // Configurar botão de alternância
+        toggleStatusButton.textContent = data.ativo ? 'Desativar Fase' : 'Ativar Fase';
+        toggleStatusButton.className = data.ativo ? 
+            'bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition' : 
+            'bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600 transition';
+        
+        toggleStatusButton.onclick = async () => {
+            if (!data.ativo) {
+                // Se estiver inativo, mostrar campo de posição
+                positionInput.classList.remove('hidden');
+                toggleStatusButton.classList.add('hidden');
+                saveChangesButton.classList.remove('hidden');
+                posicaoInput.value = "";
+                posicaoInput.focus();
+            } else {
+                // Se estiver ativo, desativar diretamente
+                if (confirm(`Tem certeza que deseja desativar a fase "${data.titulo || data.nome}"?`)) {
+                    try {
+                        console.log('Desativando fase:', faseId);
+                        const response = await fetch(`${API_URL}/fases/${faseId}/ativar`, {
+                            method: "PUT",
+                            headers: { 
+                                "Content-Type": "application/json", 
+                                "Authorization": `Bearer ${token}` 
+                            },
+                            body: JSON.stringify({ ativo: false, posicao: null })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error("Erro ao desativar fase");
+                        }
+                        
+                        const result = await response.json();
+                        showFeedback(result.message || "Fase desativada com sucesso!", false);
+                        modal.style.display = "none";
+                        fetchFases();
+                    } catch (error) {
+                        console.error("Erro ao desativar fase:", error);
+                        showFeedback("Erro ao desativar fase: " + error.message);
+                    }
+                }
+            }
+        };
+
+        // Configurar botão de salvar alterações
+        saveChangesButton.onclick = async () => {
+            const novaPosicao = parseInt(posicaoInput.value);
+            if (!novaPosicao || novaPosicao <= 0) {
+                showFeedback("Informe uma posição válida (número positivo).");
+                return;
+            }
+            
+            try {
+                console.log('Ativando fase:', faseId, 'com posição:', novaPosicao);
+                const response = await fetch(`${API_URL}/fases/${faseId}/ativar`, {
+                    method: "PUT",
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Authorization": `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ ativo: true, posicao: novaPosicao })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || "Erro ao ativar fase");
+                }
+                
+                const result = await response.json();
+                showFeedback(result.message || "Fase ativada com sucesso!", false);
+                modal.style.display = "none";
+                fetchFases();
+            } catch (error) {
+                console.error("Erro ao ativar fase:", error);
+                showFeedback("Erro ao ativar fase: " + error.message);
+            }
+        };
+    } catch (error) {
+        console.error("Erro ao buscar fase:", error);
+        statusContent.innerHTML = "<p class='text-red-500'>Erro ao carregar detalhes da fase.</p>";
+        showFeedback("Erro ao carregar detalhes da fase: " + error.message);
+    }
+
+    // Fechar modal ao clicar no X
+    const closeBtn = document.querySelector('.close');
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            modal.style.display = "none";
+        };
+    }
+
+    // Fechar modal ao clicar fora do conteúdo
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+}
+
+// Função para buscar e exibir os detalhes de uma fase
+async function showDetails(faseId) {
+    const details = document.getElementById(`details${faseId}`);
+    if (details) {
+        details.classList.toggle('hidden');
+        if (!details.classList.contains('hidden')) {
+            details.classList.add('fade-in');
+            // Rolar para os detalhes
+            details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+}
+
+// Logout
+const logoutBtn = document.getElementById('logoutButton');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        console.log('Efetuando logout...');
+        if (confirm('Tem certeza que deseja sair?')) {
+            localStorage.removeItem('token');
+            window.location.href = "/";
+        }
+    });
+}
+</script>
