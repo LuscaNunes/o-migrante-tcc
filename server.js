@@ -164,6 +164,23 @@ app.get('/admin/cadastrar-perguntas', authenticateToken, checkAdmin, async (req,
         res.status(500).send('Erro interno ao carregar a página.');
     }
 });
+// Rota para Gerenciamento de Níveis (Admin)
+app.get('/admin/niveis', authenticateToken, checkAdmin, async (req, res) => {
+    try {
+        const bodyContent = await renderViewToString(req.app, 'DadosNiveis', { 
+            user: req.user 
+        });
+        
+        res.render('layout', { 
+            title: 'Admin - Gerenciamento de Níveis | O Migrante',
+            body: bodyContent,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Erro ao renderizar Gerenciamento de Níveis:', error);
+        res.status(500).send('Erro interno ao carregar a página.');
+    }
+});
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================

@@ -1,0 +1,469 @@
+<div class="flex-1 p-8 slide-in">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Gerenciamento de Níveis</h2>
+        <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Sair</button>
+    </div>
+
+    <!-- Lista de Níveis -->
+    <div id="niveisContainer" class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-bold mb-4">Níveis Cadastrados</h3>
+        <ul id="niveisList" class="space-y-4">
+            <!-- Níveis serão carregados dinamicamente aqui -->
+        </ul>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="statusModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 class="text-xl font-bold mb-4">Situação do Nível</h2>
+        <div id="statusContent">
+            <!-- Conteúdo da situação será carregado aqui -->
+        </div>
+        <div id="positionInput" class="hidden">
+            <label for="posicao" class="block text-gray-700 font-bold mb-2">Posição:</label>
+            <input type="number" id="posicao" class="w-full p-2 border rounded" placeholder="Informe a posição" />
+        </div>
+        <button id="toggleStatusButton" class="bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition">
+            Desativar
+        </button>
+        <button id="saveChangesButton" class="hidden bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 transition">
+            Salvar Alterações
+        </button>
+    </div>
+</div>
+
+<style>
+    .nivel-item {
+        transition: all 0.3s ease;
+    }
+    .nivel-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .slide-in {
+        animation: slide-in 0.5s forwards;
+    }
+    @keyframes slide-in {
+        from {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 50;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 8px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+// Variável global para armazenar a URL base da API
+const API_URL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000';
+
+// Função para exibir mensagens de feedback
+function showFeedback(message, isError = true) {
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 transition-opacity duration-300`;
+    feedbackDiv.textContent = message;
+    document.body.appendChild(feedbackDiv);
+    setTimeout(() => feedbackDiv.remove(), 3000);
+}
+
+// Verifica autenticação e tipo de usuário
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem('token');
+    console.log('Token on load:', token ? 'Presente' : 'Ausente');
+
+    if (!token) {
+        showFeedback("Você precisa estar logado para acessar esta página.");
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 1500);
+        return;
+    }
+
+    // Verificar token e permissões
+    fetch(`${API_URL}/verifyToken`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => {
+        console.log('Verify token response:', res.status);
+        return res.json();
+    })
+    .then(data => {
+        console.log('Verify token data:', data);
+        if (!data.auth || data.user.tipo !== 'admin') {
+            localStorage.removeItem('token');
+            showFeedback("Acesso restrito a administradores.");
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 1500);
+        } else {
+            // Carrega níveis
+            fetchNiveis();
+        }
+    })
+    .catch(error => {
+        console.error("Erro ao verificar token:", error);
+        showFeedback("Erro ao verificar autenticação.");
+        localStorage.removeItem('token');
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 1500);
+    });
+});
+
+// Função para buscar os níveis do backend
+async function fetchNiveis() {
+    try {
+        const token = localStorage.getItem('token');
+        console.log('Buscando níveis...');
+        const response = await fetch(`${API_URL}/niveis`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        console.log('Resposta do backend:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = "/";
+                return;
+            }
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || "Erro ao buscar níveis");
+        }
+        
+        const data = await response.json();
+        console.log('Níveis recebidos:', data);
+        renderNiveis(data.niveis || data);
+    } catch (error) {
+        console.error("Erro ao buscar níveis:", error);
+        showFeedback("Erro ao buscar níveis: " + error.message);
+    }
+}
+
+// Função para renderizar os níveis na página
+function renderNiveis(niveis) {
+    console.log("Níveis carregados:", niveis);
+    const niveisList = document.getElementById('niveisList');
+    
+    if (!niveis || niveis.length === 0) {
+        niveisList.innerHTML = '<li class="text-center text-gray-500 p-4">Nenhum nível cadastrado.</li>';
+        return;
+    }
+    
+    niveisList.innerHTML = niveis.map(nivel => `
+        <li class="nivel-item bg-gray-100 p-4 rounded-lg shadow-md cursor-default" data-id="${nivel.id}">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+                <div class="flex-1">
+                    <span class="font-bold text-lg">${nivel.titulo || nivel.nome}</span>
+                    ${nivel.posicao ? `<span class="text-sm text-gray-500 ml-2">(Posição: ${nivel.posicao})</span>` : ''}
+                    <span class="text-sm ml-2 px-2 py-1 rounded ${nivel.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${nivel.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm" onclick="showDetails(${nivel.id})">
+                        <i class="fas fa-info-circle mr-1"></i>Detalhes
+                    </button>
+                    <button class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition text-sm" onclick="showQuestions(${nivel.id})">
+                        <i class="fas fa-question-circle mr-1"></i>Perguntas
+                    </button>
+                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm" onclick="showStatusModal(${nivel.id}, '${nivel.titulo || nivel.nome}', ${nivel.ativo})">
+                        <i class="fas fa-toggle-${nivel.ativo ? 'on' : 'off'} mr-1"></i>Situação
+                    </button>
+                </div>
+            </div>
+            <div id="details${nivel.id}" class="mt-4 hidden fade-in">
+                <p class="text-gray-600"><strong>Descrição:</strong> ${nivel.descricao || 'Sem descrição'}</p>
+                <p class="text-gray-600"><strong>XP Total:</strong> ${nivel.xp_total || 0}</p>
+                ${nivel.requisito_xp ? `<p class="text-gray-600"><strong>XP Necessário:</strong> ${nivel.requisito_xp}</p>` : ''}
+            </div>
+            <div id="questions${nivel.id}" class="mt-4 hidden fade-in">
+                <!-- Perguntas serão carregadas aqui -->
+            </div>
+        </li>
+    `).join('');
+}
+
+// Função para exibir o modal de situação
+async function showStatusModal(nivelId, titulo, ativo) {
+    console.log("Modal aberto para o nível:", nivelId, titulo, ativo);
+
+    const modal = document.getElementById('statusModal');
+    const statusContent = document.getElementById('statusContent');
+    const positionInput = document.getElementById('positionInput');
+    const posicaoInput = document.getElementById('posicao');
+    const toggleStatusButton = document.getElementById('toggleStatusButton');
+    const saveChangesButton = document.getElementById('saveChangesButton');
+
+    // Reset do modal
+    positionInput.classList.add('hidden');
+    toggleStatusButton.classList.remove('hidden');
+    saveChangesButton.classList.add('hidden');
+    modal.style.display = "block";
+
+    try {
+        const token = localStorage.getItem('token');
+        console.log('Buscando dados do nível:', nivelId);
+        const response = await fetch(`${API_URL}/niveis/${nivelId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        console.log('Resposta do nível:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error("Erro ao buscar dados do nível");
+        }
+        
+        const data = await response.json();
+        console.log("Dados do nível carregados:", data);
+
+        // Atualizar o conteúdo do modal
+        statusContent.innerHTML = `
+            <p class="text-gray-600 mb-2"><strong>Nível:</strong> ${data.titulo || data.nome}</p>
+            <p class="text-gray-600 mb-2"><strong>Situação Atual:</strong> <span class="font-bold ${data.ativo ? 'text-green-600' : 'text-red-600'}">${data.ativo ? 'Ativo' : 'Inativo'}</span></p>
+            ${data.ativo && data.posicao ? `<p class="text-gray-600"><strong>Posição Atual:</strong> ${data.posicao}</p>` : ''}
+        `;
+
+        // Configurar botão de alternância
+        toggleStatusButton.textContent = data.ativo ? 'Desativar Nível' : 'Ativar Nível';
+        toggleStatusButton.className = data.ativo ? 
+            'bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition' : 
+            'bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600 transition';
+        
+        toggleStatusButton.onclick = async () => {
+            if (!data.ativo) {
+                // Se estiver inativo, mostrar campo de posição
+                positionInput.classList.remove('hidden');
+                toggleStatusButton.classList.add('hidden');
+                saveChangesButton.classList.remove('hidden');
+                posicaoInput.value = "";
+                posicaoInput.focus();
+            } else {
+                // Se estiver ativo, desativar diretamente
+                if (confirm(`Tem certeza que deseja desativar o nível "${data.titulo || data.nome}"?`)) {
+                    try {
+                        console.log('Desativando nível:', nivelId);
+                        const response = await fetch(`${API_URL}/niveis/${nivelId}/ativar`, {
+                            method: "PUT",
+                            headers: { 
+                                "Content-Type": "application/json", 
+                                "Authorization": `Bearer ${token}` 
+                            },
+                            body: JSON.stringify({ ativo: false, posicao: null })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error("Erro ao desativar nível");
+                        }
+                        
+                        const result = await response.json();
+                        showFeedback(result.message || "Nível desativado com sucesso!", false);
+                        modal.style.display = "none";
+                        fetchNiveis();
+                    } catch (error) {
+                        console.error("Erro ao desativar nível:", error);
+                        showFeedback("Erro ao desativar nível: " + error.message);
+                    }
+                }
+            }
+        };
+
+        // Configurar botão de salvar alterações
+        saveChangesButton.onclick = async () => {
+            const novaPosicao = parseInt(posicaoInput.value);
+            if (!novaPosicao || novaPosicao <= 0) {
+                showFeedback("Informe uma posição válida (número positivo).");
+                return;
+            }
+            
+            try {
+                console.log('Ativando nível:', nivelId, 'com posição:', novaPosicao);
+                const response = await fetch(`${API_URL}/niveis/${nivelId}/ativar`, {
+                    method: "PUT",
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Authorization": `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ ativo: true, posicao: novaPosicao })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || "Erro ao ativar nível");
+                }
+                
+                const result = await response.json();
+                showFeedback(result.message || "Nível ativado com sucesso!", false);
+                modal.style.display = "none";
+                fetchNiveis();
+            } catch (error) {
+                console.error("Erro ao ativar nível:", error);
+                showFeedback("Erro ao ativar nível: " + error.message);
+            }
+        };
+    } catch (error) {
+        console.error("Erro ao buscar nível:", error);
+        statusContent.innerHTML = "<p class='text-red-500'>Erro ao carregar detalhes do nível.</p>";
+        showFeedback("Erro ao carregar detalhes do nível: " + error.message);
+    }
+
+    // Fechar modal ao clicar no X
+    document.querySelector('.close').onclick = () => {
+        modal.style.display = "none";
+    };
+
+    // Fechar modal ao clicar fora do conteúdo
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+}
+
+// Função para buscar e exibir os detalhes de um nível
+async function showDetails(nivelId) {
+    const details = document.getElementById(`details${nivelId}`);
+    details.classList.toggle('hidden');
+    if (!details.classList.contains('hidden')) {
+        details.classList.add('fade-in');
+        // Rolar para os detalhes
+        details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Função para buscar e exibir as perguntas de um nível
+async function showQuestions(nivelId) {
+    const questionsDiv = document.getElementById(`questions${nivelId}`);
+    questionsDiv.classList.toggle('hidden');
+    
+    if (!questionsDiv.classList.contains('hidden')) {
+        questionsDiv.classList.add('fade-in');
+        questionsDiv.innerHTML = '<div class="text-center py-4">Carregando perguntas...</div>';
+        
+        try {
+            const token = localStorage.getItem('token');
+            console.log('Buscando perguntas para nível:', nivelId);
+            const response = await fetch(`${API_URL}/perguntas?nivel_id=${nivelId}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                throw new Error("Erro ao buscar perguntas");
+            }
+            
+            const data = await response.json();
+            console.log('Perguntas recebidas:', data);
+            renderQuestions(nivelId, data.perguntas || data);
+            
+            // Rolar para as perguntas
+            questionsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } catch (error) {
+            console.error("Erro ao buscar perguntas:", error);
+            questionsDiv.innerHTML = `<div class="text-red-500 text-center py-4">Erro ao carregar perguntas: ${error.message}</div>`;
+            showFeedback("Erro ao buscar perguntas: " + error.message);
+        }
+    }
+}
+
+// Função para renderizar as perguntas de um nível
+function renderQuestions(nivelId, perguntas) {
+    const questionsDiv = document.getElementById(`questions${nivelId}`);
+    
+    if (!perguntas || perguntas.length === 0) {
+        questionsDiv.innerHTML = `
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <p class="text-yellow-700">Nenhuma pergunta cadastrada para este nível.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    questionsDiv.innerHTML = `
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="text-lg font-semibold mb-3 flex items-center">
+                <i class="fas fa-question-circle text-blue-500 mr-2"></i>
+                Perguntas (${perguntas.length})
+            </h4>
+            <div class="space-y-4">
+                ${perguntas.map((pergunta, index) => `
+                    <div class="border-b border-gray-200 pb-3 last:border-0">
+                        <p class="font-medium text-gray-800">
+                            <span class="text-blue-500 font-bold">${index + 1}.</span> 
+                            ${pergunta.texto}
+                        </p>
+                        <div class="mt-2 pl-4 space-y-1">
+                            <p class="text-sm text-gray-600">
+                                <span class="font-medium">Opções:</span> 
+                                ${pergunta.opcao1 || 'N/A'}, ${pergunta.opcao2 || 'N/A'}, ${pergunta.opcao3 || 'N/A'}
+                                ${pergunta.opcao4 ? `, ${pergunta.opcao4}` : ''}
+                            </p>
+                            <p class="text-sm text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                <span class="font-medium">Resposta Correta:</span> ${pergunta.resposta_correta || pergunta.correta}
+                            </p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// Logout
+document.getElementById('logoutButton')?.addEventListener('click', () => {
+    console.log('Efetuando logout...');
+    if (confirm('Tem certeza que deseja sair?')) {
+        localStorage.removeItem('token');
+        window.location.href = "/";
+    }
+});
+</script>
