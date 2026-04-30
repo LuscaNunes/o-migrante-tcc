@@ -1,45 +1,55 @@
-<nav class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col justify-start z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto" id="sidebar">
-  <h2 class="text-2xl font-bold mb-8 select-none text-[#2563eb] flex items-center space-x-3">
-    <img src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" alt="Logo" class="w-10 h-10 rounded-full">
-    <span>O Migrante</span>
-  </h2>
+<nav class="bg-white w-64 p-6 shadow-lg fixed top-0 left-0 h-screen flex flex-col z-30" id="sidebar">
+  <div class="flex-shrink-0">
+    <h2 class="text-2xl font-bold mb-8 select-none text-[#2563eb] flex items-center space-x-3">
+      <img src="https://storage.googleapis.com/a1aa/image/c564a5f6-93d6-4de8-e1b9-7405cfa7024a.jpg" alt="Logo" class="w-10 h-10 rounded-full">
+      <span>O Migrante</span>
+    </h2>
+  </div>
 
-  <ul class="space-y-2 w-full">
-    <li><a href="/app/painel" class="sidebar-link"><i class="fas fa-home mr-3"></i>Início</a></li>
-    <li><a href="/app/perfil" class="sidebar-link"><i class="fas fa-user mr-3"></i>Perfil</a></li>
-    <li><a href="Fases.html" class="sidebar-link"><i class="fas fa-tasks mr-3"></i>Missão</a></li>
-    <li><a href="../Biblioteca/paginaBiblioteca.html" class="sidebar-link"><i class="fas fa-book mr-3"></i>Biblioteca</a></li>
-    <li><a href="../telas/telas%20testes/testestestes.html" class="sidebar-link"><i class="fas fa-gamepad mr-3"></i>The Good Friends</a></li>
+  <div class="flex-1 overflow-y-auto">
+    <ul class="space-y-2 w-full">
+      <li><a href="/app/painel" class="sidebar-link"><i class="fas fa-home mr-3"></i>Início</a></li>
+      <li><a href="/app/perfil" class="sidebar-link"><i class="fas fa-user mr-3"></i>Perfil</a></li>
+      <li><a href="/app/missao" class="sidebar-link"><i class="fas fa-tasks mr-3"></i>Missão</a></li>
+      <li><a href="/app/biblia" class="sidebar-link"><i class="fas fa-book mr-3"></i>Bíblia</a></li>
+      <li><a href="/app/amigos" class="sidebar-link"><i class="fas fa-gamepad mr-3"></i>The Good Friends</a></li>
 
-    <!-- MENU ADMIN (só pra admin) -->
-    <% if (user && user.tipo === 'admin') { %>
-      <li class="mt-8">
-        <button id="adminToggle" class="sidebar-link w-full flex justify-between items-center" aria-expanded="false">
-          <span><i class="fas fa-cog mr-3"></i>Administração</span>
-          <i class="fas fa-chevron-down transition-transform duration-200" id="chevron"></i>
-        </button>
+      <!-- MENU ADMIN (só pra admin) -->
+      <% if (user && user.tipo === 'admin') { %>
+        <li class="mt-8">
+          <button id="adminToggle" class="sidebar-link w-full flex justify-between items-center" aria-expanded="false">
+            <span><i class="fas fa-cog mr-3"></i>Administração</span>
+            <i class="fas fa-chevron-down transition-transform duration-200" id="chevron"></i>
+          </button>
 
-        <ul id="adminMenu" class="mt-3 ml-10 space-y-2 hidden">
-          <li><a href="/admin/pesquisar" class="block py-2 hover:text-[#2563eb] transition">Usuários</a></li>
-          <li><a href="/admin/cadastrar-perguntas" class="block py-2 hover:text-[#2563eb] transition">Cadastro de Níveis e Perguntas</a></li>
-          <li><a href="/admin/fases" class="block py-2 hover:text-[#2563eb] transition">Dados das Fases</a></li>
-          <li><a href="/admin/niveis" class="block py-2 hover:text-[#2563eb] transition">Editar Níveis</a></li>
-          <li><a href="/admin/mensagem-diaria" class="block py-2 hover:text-[#2563eb] transition">Mensagem do Dia</a></li>
-          <li><a href="../telas/telas%20testes/testestestes.html" class="block py-2 hover:text-[#2563eb] transition">Tela de Teste 01</a></li>
-          <li><a href="../telas/telas%20testes/testetempo.html" class="block py-2 hover:text-[#2563eb] transition font-medium">Tela de Teste 02 </a></li>
-        </ul>
-      </li>
-    <% } %>
-  </ul>
+          <ul id="adminMenu" class="mt-3 ml-6 space-y-2 hidden">
+            <li><a href="/admin/pesquisar" class="block py-2 px-3 hover:text-[#2563eb] hover:bg-blue-50 rounded transition">Usuários</a></li>
+            <li><a href="/admin/cadastrar-niveis" class="block py-2 px-3 hover:text-[#2563eb] hover:bg-blue-50 rounded transition">Cadastrar Níveis</a></li>
+            <li><a href="/admin/cadastrar-perguntas" class="block py-2 px-3 hover:text-[#2563eb] hover:bg-blue-50 rounded transition">Cadastrar Perguntas</a></li>
+            <li><a href="/admin/fases" class="block py-2 px-3 hover:text-[#2563eb] hover:bg-blue-50 rounded transition">Dados das Fases</a></li>
+            <li><a href="/admin/niveis" class="block py-2 px-3 hover:text-[#2563eb] hover:bg-blue-50 rounded transition">Editar Níveis</a></li>
+            <li><a href="/admin/editar-perguntas" class="block py-2 px-3 hover:text-[#2563eb] hover:bg-blue-50 rounded transition">Editar Perguntas</a></li>
+            <li><a href="/admin/mensagem-diaria" class="block py-2 px-3 hover:text-[#2563eb] hover:bg-blue-50 rounded transition">Mensagem do Dia</a></li>
+          </ul>
+        </li>
+      <% } %>
+    </ul>
+  </div>
+  
+  <!-- Logout button no final da sidebar -->
+  <div class="flex-shrink-0 pt-4 mt-4 border-t border-gray-200">
+    <button id="logoutSidebar" class="sidebar-link w-full text-red-600 hover:bg-red-50">
+      <i class="fas fa-sign-out-alt mr-3"></i>Sair
+    </button>
+  </div>
 </nav>
 
-<!-- ESTILO EXATAMENTE IGUAL AO ORIGINAL (sem @apply = sem erro no VS Code) -->
 <style>
   .sidebar-link {
     display: flex;
     align-items: center;
     color: #111827;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border-radius: 8px;
     transition: all 0.2s ease;
     width: 100%;
@@ -49,4 +59,32 @@
     background-color: #dbeafe;
     color: #2563eb;
   }
+  
+  /* Sidebar scroll personalizado */
+  #sidebar .flex-1 {
+    scrollbar-width: thin;
+  }
+  
+  #sidebar .flex-1::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  #sidebar .flex-1::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  #sidebar .flex-1::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
 </style>
+
+<script>
+  // Logout da sidebar
+  document.getElementById('logoutSidebar')?.addEventListener('click', () => {
+    if (confirm('Tem certeza que deseja sair?')) {
+      localStorage.removeItem('token');
+      window.location.href = "/";
+    }
+  });
+</script>
