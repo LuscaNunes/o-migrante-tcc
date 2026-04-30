@@ -115,7 +115,7 @@ function showFeedback(message, isError = true) {
 async function loadBibleXML(version) {
     try {
         showFeedback(`Carregando versão ${getVersionName(version)}...`, false);
-        const response = await fetch(`/biblia/pt_${version}.xml`);
+        const response = await fetch(`/biblias/pt_${version}.xml`);
         if (!response.ok) throw new Error(`Failed to load XML: ${response.status}`);
         const xmlString = await response.text();
         const parser = new DOMParser();
