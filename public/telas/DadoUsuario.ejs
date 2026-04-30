@@ -1,11 +1,9 @@
 <%
-  // Esta página será injetada no layout.ejs como 'body'
-  // O objeto 'user' já vem do server.js
   title = "Meu Perfil - O Migrante";
 %>
 
 <style>
-  /* Estilos específicos para a página de perfil */
+  /* Estilos EXCLUSIVOS da página de perfil (sem conflitar com layout) */
   :root {
     --blue: #2563EB;
     --blue-light: #EFF6FF;
@@ -31,7 +29,7 @@
   }
 
   /* Cards */
-  .card {
+  .profile-card {
     background: var(--card);
     border-radius: 1rem;
     box-shadow: 0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(37,99,235,.06);
@@ -178,7 +176,7 @@
   .stat-card .stat-value { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 700; }
 
   /* Progresso por Nível */
-  #progressoNiveis { display: flex; flex-direction: column; gap: .875rem; }
+  .progresso-container { display: flex; flex-direction: column; gap: .875rem; }
 
   .nivel-card {
     background: white;
@@ -400,6 +398,21 @@
   }
   
   .fade-in { animation: fadeIn .4s ease forwards; }
+
+  /* GARANTIR QUE O CONTEÚDO RODE NO MOBILE */
+  .content-grid {
+    overflow-x: visible;
+  }
+  
+  @media (max-width: 768px) {
+    .profile-card, .profile-card * {
+      max-width: 100%;
+      overflow-x: visible;
+    }
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 
 <div class="content-grid">
@@ -407,7 +420,7 @@
   <!-- COLUNA ESQUERDA -->
   <div>
     <!-- Profile card -->
-    <div class="card fade-in">
+    <div class="profile-card fade-in">
       <div class="profile-header">
         <div class="profile-identity">
           <div class="avatar-wrap">
@@ -448,14 +461,14 @@
 
       <div>
         <h2 class="section-title">Progresso por Nível</h2>
-        <div id="progressoNiveis" style="background:var(--bg); border-radius:.75rem; padding:1rem;">
+        <div class="progresso-container" id="progressoNiveis">
           <p class="text-muted">Carregando níveis...</p>
         </div>
       </div>
     </div>
 
     <!-- Amigos card -->
-    <div class="card fade-in" style="animation-delay:.1s;">
+    <div class="profile-card fade-in" style="animation-delay:.1s;">
       <div class="tabs-bar">
         <button class="tab-btn active" data-tab="friends">
           <i class="fas fa-user-friends"></i> Amigos
@@ -493,7 +506,7 @@
 
   <!-- COLUNA DIREITA -->
   <div>
-    <div class="card fade-in" style="animation-delay:.15s;">
+    <div class="profile-card fade-in" style="animation-delay:.15s;">
       <h2 class="section-title">Informações Pessoais</h2>
       <div class="info-grid">
         <div class="info-item">
@@ -597,7 +610,6 @@
       window.location.href = '/';
     }
 
-    // TABS
     function setupTabs() {
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -609,8 +621,10 @@
           if (tab === 'friends') carregarAmigos();
           if (tab === 'requests') carregarSolicitacoes();
           if (tab === 'search') {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('searchResults').innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = '';
+            const results = document.getElementById('searchResults');
+            if (results) results.innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
           }
         });
       });
@@ -622,13 +636,20 @@
         const r = await makeAuthenticatedRequest('/progresso/detalhado');
         if (r.ok) {
           const data = await r.json();
-          document.getElementById('niveisCompletos').textContent = Object.keys(data.niveisCompletos || {}).length;
+          const niveisCompletosEl = document.getElementById('niveisCompletos');
+          if (niveisCompletosEl) {
+            niveisCompletosEl.textContent = Object.keys(data.niveisCompletos || {}).length;
+          }
         }
-      } catch { document.getElementById('niveisCompletos').textContent = '0'; }
+      } catch { 
+        const el = document.getElementById('niveisCompletos');
+        if (el) el.textContent = '0';
+      }
     }
 
     async function carregarProgressoNiveis() {
       const container = document.getElementById('progressoNiveis');
+      if (!container) return;
       container.innerHTML = '<p class="text-muted">Carregando níveis...</p>';
       try {
         const r = await makeAuthenticatedRequest('/niveis/ativos');
@@ -674,6 +695,7 @@
     async function carregarAmigos() {
       const list = document.getElementById('friendsList');
       const count = document.getElementById('friendsCount');
+      if (!list) return;
       list.innerHTML = '<p class="text-muted">Carregando...</p>';
       try {
         const r = await makeAuthenticatedRequest('/amizades/listar');
@@ -686,23 +708,33 @@
             el.className = 'friend-item';
             el.innerHTML = `
               <div class="friend-info">
-                <p class="friend-name">${a.nome}</p>
-                <p class="friend-email">${a.email}</p>
+                <p class="friend-name">${escapeHtml(a.nome)}</p>
+                <p class="friend-email">${escapeHtml(a.email)}</p>
               </div>
               <div class="friend-actions">
                 <button class="btn-sm btn-sm-danger remove-friend" data-id="${a.id_amizade}">Remover</button>
               </div>`;
             list.appendChild(el);
           });
-          count.textContent = `${amigos.length} amigo${amigos.length !== 1 ? 's' : ''}`;
+          if (count) count.textContent = `${amigos.length} amigo${amigos.length !== 1 ? 's' : ''}`;
         } else {
           list.innerHTML = '<p class="text-muted">Você ainda não tem amigos adicionados.</p>';
-          count.textContent = '0 amigos';
+          if (count) count.textContent = '0 amigos';
         }
         document.querySelectorAll('.remove-friend').forEach(b => b.addEventListener('click', e => removerAmizade(e.target.dataset.id)));
       } catch (e) {
         list.innerHTML = `<p style="color:#DC2626;">Erro: ${e.message}</p>`;
       }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
     }
 
     async function removerAmizade(id) {
@@ -717,6 +749,7 @@
     async function carregarSolicitacoes() {
       const recv = document.getElementById('receivedRequestsList');
       const sent = document.getElementById('sentRequestsList');
+      if (!recv || !sent) return;
       recv.innerHTML = '<p class="text-muted">Carregando...</p>';
       sent.innerHTML = '<p class="text-muted">Carregando...</p>';
       try {
@@ -730,7 +763,7 @@
             const el = document.createElement('div');
             el.className = 'friend-item';
             el.innerHTML = `
-              <div class="friend-info"><p class="friend-name">${p.nome}</p><p class="friend-email">${p.email}</p></div>
+              <div class="friend-info"><p class="friend-name">${escapeHtml(p.nome)}</p><p class="friend-email">${escapeHtml(p.email)}</p></div>
               <div class="friend-actions">
                 <button class="btn-sm btn-sm-success accept-friend" data-id="${p.id_amizade}">Aceitar</button>
                 <button class="btn-sm btn-sm-danger reject-friend" data-id="${p.id_amizade}">Recusar</button>
@@ -745,7 +778,7 @@
             const el = document.createElement('div');
             el.className = 'friend-item';
             el.innerHTML = `
-              <div class="friend-info"><p class="friend-name">${s.nome}</p><p class="friend-email">${s.email}</p></div>
+              <div class="friend-info"><p class="friend-name">${escapeHtml(s.nome)}</p><p class="friend-email">${escapeHtml(s.email)}</p></div>
               <div class="friend-actions">
                 <button class="btn-sm btn-sm-danger cancel-request" data-id="${s.id_amizade}">Cancelar</button>
               </div>`;
@@ -766,7 +799,11 @@
       try {
         const r = await makeAuthenticatedRequest(`/amizades/${id}/atualizar`, { method: 'PATCH', body: JSON.stringify({ status }) });
         const d = await r.json();
-        if (d.success) { showFeedback(`Amizade ${status === 'aceito' ? 'aceita' : 'recusada'}!`, false); await carregarSolicitacoes(); await carregarAmigos(); }
+        if (d.success) { 
+          showFeedback(`Amizade ${status === 'aceito' ? 'aceita' : 'recusada'}!`, false); 
+          await carregarSolicitacoes(); 
+          await carregarAmigos(); 
+        }
         else showFeedback(d.message || 'Erro.', true);
       } catch (e) { showFeedback('Erro: ' + e.message, true); }
     }
@@ -786,6 +823,7 @@
       searchInput.addEventListener('input', async () => {
         const termo = searchInput.value.trim();
         const results = document.getElementById('searchResults');
+        if (!results) return;
         if (!termo) { results.innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>'; return; }
         try {
           const r = await makeAuthenticatedRequest(`/amizades/pesquisar?termo=${encodeURIComponent(termo)}`);
@@ -798,7 +836,7 @@
               const el = document.createElement('div');
               el.className = 'friend-item';
               el.innerHTML = `
-                <div class="friend-info"><p class="friend-name">${u.nome}</p><p class="friend-email">${u.email}</p></div>
+                <div class="friend-info"><p class="friend-name">${escapeHtml(u.nome)}</p><p class="friend-email">${escapeHtml(u.email)}</p></div>
                 <div class="friend-actions">
                   <button class="btn-sm btn-sm-primary add-friend" data-id="${u.id_usuario}">Adicionar</button>
                 </div>`;
@@ -821,7 +859,8 @@
         if (d.success) {
           showFeedback('Pedido enviado!', false);
           if (searchInput) searchInput.value = '';
-          document.getElementById('searchResults').innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
+          const results = document.getElementById('searchResults');
+          if (results) results.innerHTML = '<p class="text-muted">Digite para pesquisar usuários...</p>';
         } else showFeedback(d.message || 'Erro.', true);
       } catch (e) { showFeedback('Erro: ' + e.message, true); }
     }
@@ -835,9 +874,16 @@
     const editProfileBtn = document.getElementById('editProfileBtn');
     if (editProfileBtn) {
       editProfileBtn.addEventListener('click', () => {
-        document.getElementById('editName').value = document.getElementById('fullName').textContent;
-        document.getElementById('editEmail').value = document.getElementById('emailInfo').textContent;
-        document.getElementById('editPassword').value = '';
+        const fullName = document.getElementById('fullName');
+        const emailInfo = document.getElementById('emailInfo');
+        const editName = document.getElementById('editName');
+        const editEmail = document.getElementById('editEmail');
+        const editPassword = document.getElementById('editPassword');
+        
+        if (editName && fullName) editName.value = fullName.textContent;
+        if (editEmail && emailInfo) editEmail.value = emailInfo.textContent;
+        if (editPassword) editPassword.value = '';
+        
         ['editNameError','editEmailError','editPasswordError'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.classList.add('hidden');
@@ -859,9 +905,9 @@
     if (editForm) {
       editForm.addEventListener('submit', async e => {
         e.preventDefault();
-        const nome = document.getElementById('editName').value.trim();
-        const email = document.getElementById('editEmail').value.trim();
-        const senha = document.getElementById('editPassword').value.trim();
+        const nome = document.getElementById('editName')?.value.trim() || '';
+        const email = document.getElementById('editEmail')?.value.trim() || '';
+        const senha = document.getElementById('editPassword')?.value.trim() || '';
         let valid = true;
         
         ['editNameError','editEmailError','editPasswordError'].forEach(id => {
@@ -885,8 +931,8 @@
           valid = false; 
         }
         
-        const curName = document.getElementById('fullName').textContent;
-        const curEmail = document.getElementById('emailInfo').textContent;
+        const curName = document.getElementById('fullName')?.textContent || '';
+        const curEmail = document.getElementById('emailInfo')?.textContent || '';
         if (nome === curName && (!email || email === curEmail) && !senha) {
           showFeedback('Nenhuma alteração feita.', true);
           return;
@@ -901,11 +947,16 @@
           const r = await makeAuthenticatedRequest('/usuarios/atualizar', { method: 'PUT', body: JSON.stringify(body) });
           const d = await r.json();
           if (d.success) {
-            document.getElementById('userName').textContent = nome;
-            document.getElementById('fullName').textContent = nome;
+            const userName = document.getElementById('userName');
+            const fullName = document.getElementById('fullName');
+            const userEmail = document.getElementById('userEmail');
+            const emailInfo = document.getElementById('emailInfo');
+            
+            if (userName) userName.textContent = nome;
+            if (fullName) fullName.textContent = nome;
             if (email && email !== curEmail) {
-              document.getElementById('userEmail').textContent = email;
-              document.getElementById('emailInfo').textContent = email;
+              if (userEmail) userEmail.textContent = email;
+              if (emailInfo) emailInfo.textContent = email;
             }
             showFeedback('Perfil atualizado!', false);
             closeModal();
@@ -944,7 +995,6 @@
     const logoutBtn = document.getElementById('logoutButton');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
-    // Init
     async function init() {
       const auth = await checkAuthentication();
       if (!auth.auth) { window.location.href = '/'; return; }
