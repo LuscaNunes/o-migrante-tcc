@@ -146,6 +146,7 @@ app.get('/app/biblia', authenticateToken, async (req, res) => {
         res.status(500).send('Erro interno ao carregar a página: ' + error.message);
     }
 });
+
 // Rota para a página de anotações do usuário
 app.get('/app/anotacoes', authenticateToken, async (req, res) => {
     try {

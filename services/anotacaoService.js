@@ -2,9 +2,6 @@ const db = require('../config/database');
 
 /**
  * Cria uma nova anotação para o usuário
- * @param {number} usuario_id - ID do usuário
- * @param {Object} dados - Dados da anotação (versao, livro, capitulo, versiculo, texto_versiculo, texto_anotacao, visibilidade)
- * @returns {Promise<Object>} Dados da anotação criada
  */
 async function criarAnotacao(usuario_id, { versao, livro, capitulo, versiculo, texto_versiculo, texto_anotacao, visibilidade = 'private' }) {
   if (!versao || !livro || !capitulo || !versiculo || !texto_versiculo || !texto_anotacao) {
@@ -21,7 +18,6 @@ async function criarAnotacao(usuario_id, { versao, livro, capitulo, versiculo, t
   }
 
   try {
-    // ❌ REMOVA o .promise() - use db.query diretamente
     const [result] = await db.query(
       `INSERT INTO Anotacoes 
        (usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, texto_anotacao, visibilidade) 
@@ -54,9 +50,6 @@ async function criarAnotacao(usuario_id, { versao, livro, capitulo, versiculo, t
 
 /**
  * Lista todas as anotações de um usuário
- * @param {number} usuario_id - ID do usuário
- * @param {string} visibilidade - Filtro de visibilidade ('public', 'private', ou undefined para todas)
- * @returns {Promise<Array>} Lista de anotações
  */
 async function listarAnotacoes(usuario_id, visibilidade) {
   try {
@@ -83,10 +76,7 @@ async function listarAnotacoes(usuario_id, visibilidade) {
 
     query += ` ORDER BY criado_em DESC`;
 
-    console.log('Query SQL:', query, 'Params:', params);
-    // ❌ REMOVA o .promise()
     const [anotacoes] = await db.query(query, params);
-    console.log('Anotações retornadas:', anotacoes);
     return anotacoes;
   } catch (error) {
     throw new Error('Erro ao buscar anotações: ' + error.message);
@@ -95,10 +85,6 @@ async function listarAnotacoes(usuario_id, visibilidade) {
 
 /**
  * Atualiza a visibilidade de uma anotação
- * @param {number} id_anotacao - ID da anotação
- * @param {number} usuario_id - ID do usuário
- * @param {string} visibilidade - Nova visibilidade ('public' ou 'private')
- * @returns {Promise<Object>} Dados da anotação atualizada
  */
 async function atualizarVisibilidadeAnotacao(id_anotacao, usuario_id, visibilidade) {
   console.log('Atualizando visibilidade:', { id_anotacao, usuario_id, visibilidade });
@@ -107,7 +93,6 @@ async function atualizarVisibilidadeAnotacao(id_anotacao, usuario_id, visibilida
   }
 
   try {
-    // ❌ REMOVA o .promise()
     const [anotacao] = await db.query(
       `SELECT usuario_id FROM Anotacoes WHERE id_anotacao = ?`,
       [id_anotacao]
@@ -120,13 +105,11 @@ async function atualizarVisibilidadeAnotacao(id_anotacao, usuario_id, visibilida
       throw new Error('Usuário não autorizado para editar esta anotação');
     }
 
-    // ❌ REMOVA o .promise()
     await db.query(
       `UPDATE Anotacoes SET visibilidade = ? WHERE id_anotacao = ?`,
       [visibilidade, id_anotacao]
     );
 
-    // ❌ REMOVA o .promise()
     const [anotacaoAtualizada] = await db.query(
       `SELECT 
          id_anotacao AS id,
