@@ -22,7 +22,7 @@ router.post('/', authenticateToken, checkAdmin, async (req, res) => {
 
     try {
         // Determina a próxima ordem_exibicao
-        const [lastOrder] = await db.promise().query('SELECT MAX(ordem_exibicao) as maxOrder FROM MensagensDiarias');
+        const [lastOrder] = await db.query('SELECT MAX(ordem_exibicao) as maxOrder FROM MensagensDiarias');
         const ordem_exibicao = (lastOrder[0].maxOrder || 0) + 1;
 
         await db.promise().query(
