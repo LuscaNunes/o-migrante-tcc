@@ -1,75 +1,84 @@
-<div class="flex-1 p-8 slide-in">
+<div class="container mx-auto p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Gerenciamento de Níveis</h2>
+        <h1 class="text-2xl font-bold">Gerenciamento de Níveis</h1>
         <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Sair</button>
     </div>
 
     <!-- Botão de Ordenação -->
     <div class="mb-4 flex justify-end">
-        <button id="ordenarBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">
-            <i class="fas fa-sort mr-2"></i>Salvar Ordem dos Níveis
+        <button id="ordenarBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md flex items-center gap-2">
+            <i class="fas fa-sort"></i> Salvar Ordem dos Níveis
         </button>
     </div>
 
     <!-- Lista de Níveis -->
-    <div id="niveisContainer" class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-bold mb-4">Níveis Cadastrados</h3>
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4 text-blue-600">
+            <i class="fas fa-layer-group mr-2"></i>Níveis Cadastrados
+        </h2>
         <ul id="niveisList" class="space-y-4">
-            <!-- Níveis serão carregados dinamicamente aqui -->
+            <li class="text-center text-gray-500 py-8">
+                <i class="fas fa-spinner fa-spin mr-2"></i> Carregando níveis...
+            </li>
         </ul>
     </div>
 </div>
 
-<!-- Modal de Situação (Ativar/Desativar) -->
-<div id="statusModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2 class="text-xl font-bold mb-4">Situação do Nível</h2>
-        <div id="statusContent"></div>
-        <div id="positionInput" class="hidden">
-            <label for="posicao" class="block text-gray-700 font-bold mb-2">Posição:</label>
-            <input type="number" id="posicao" class="w-full p-2 border rounded" placeholder="Informe a posição" />
+<!-- Modal de Situação -->
+<div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">Situação do Nível</h3>
+            <button class="closeModal text-gray-500 hover:text-gray-700">&times;</button>
         </div>
-        <button id="toggleStatusButton" class="bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition">Desativar</button>
-        <button id="saveChangesButton" class="hidden bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 transition">Salvar Alterações</button>
+        <div id="statusContent"></div>
+        <div id="positionInput" class="hidden mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Posição:</label>
+            <input type="number" id="posicao" class="w-full px-3 py-2 border rounded-lg" placeholder="Informe a posição" />
+        </div>
+        <button id="toggleStatusButton" class="w-full mt-4 px-4 py-2 rounded-lg transition">Desativar</button>
+        <button id="saveChangesButton" class="hidden w-full mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">Salvar Alterações</button>
     </div>
 </div>
 
 <!-- Modal de Perguntas -->
-<div id="questionsModal" class="modal">
-    <div class="modal-content" style="max-width: 700px;">
-        <span class="close-questions">&times;</span>
-        <h2 class="text-xl font-bold mb-4" id="questionsModalTitle">Perguntas do Nível</h2>
-        <div id="questionsList" class="max-h-96 overflow-y-auto"></div>
+<div id="questionsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-y-auto p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold" id="questionsModalTitle">Perguntas do Nível</h3>
+            <button class="closeQuestionsModal text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div id="questionsList"></div>
     </div>
 </div>
 
 <!-- Modal de Editar Pergunta -->
-<div id="editQuestionModal" class="modal">
-    <div class="modal-content">
-        <span class="close-edit">&times;</span>
-        <h2 class="text-xl font-bold mb-4">Editar Pergunta</h2>
+<div id="editQuestionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">Editar Pergunta</h3>
+            <button class="closeEditModal text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
         <form id="editQuestionForm">
             <div class="mb-3">
-                <label class="block text-gray-700 font-bold mb-2">Texto da Pergunta:</label>
-                <textarea id="editTexto" rows="3" class="w-full p-2 border rounded" required></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Texto da Pergunta:</label>
+                <textarea id="editTexto" rows="3" class="w-full px-3 py-2 border rounded-lg" required></textarea>
             </div>
             <div class="mb-3">
-                <label class="block text-gray-700 font-bold mb-2">Opção 1:</label>
-                <input type="text" id="editOpcao1" class="w-full p-2 border rounded" required>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opção 1 (Correta):</label>
+                <input type="text" id="editOpcao1" class="w-full px-3 py-2 border rounded-lg bg-green-50" required>
             </div>
             <div class="mb-3">
-                <label class="block text-gray-700 font-bold mb-2">Opção 2:</label>
-                <input type="text" id="editOpcao2" class="w-full p-2 border rounded" required>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opção 2 (Errada):</label>
+                <input type="text" id="editOpcao2" class="w-full px-3 py-2 border rounded-lg bg-red-50" required>
             </div>
             <div class="mb-3">
-                <label class="block text-gray-700 font-bold mb-2">Opção 3:</label>
-                <input type="text" id="editOpcao3" class="w-full p-2 border rounded" required>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opção 3 (Errada):</label>
+                <input type="text" id="editOpcao3" class="w-full px-3 py-2 border rounded-lg bg-red-50" required>
             </div>
             <div class="mb-3">
-                <label class="block text-gray-700 font-bold mb-2">Resposta Correta:</label>
-                <select id="editRespostaCorreta" class="w-full p-2 border rounded" required>
-                    <option value="">Selecione a resposta correta</option>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Resposta Correta:</label>
+                <select id="editRespostaCorreta" class="w-full px-3 py-2 border rounded-lg" required>
                     <option value="opcao1">Opção 1</option>
                     <option value="opcao2">Opção 2</option>
                     <option value="opcao3">Opção 3</option>
@@ -92,72 +101,19 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .slide-in {
-        animation: slide-in 0.5s forwards;
+    .ordem-handle {
+        cursor: move;
+        color: #9ca3af;
     }
-    @keyframes slide-in {
-        from {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+    .ordem-handle:hover {
+        color: #3b82f6;
     }
-    .fade-in {
-        animation: fadeIn 0.5s ease-in-out;
+    .dragging {
+        opacity: 0.5;
     }
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 50;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-    .modal-content {
-        background-color: #fefefe;
-        margin: 5% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 90%;
-        max-width: 600px;
-        border-radius: 8px;
-        max-height: 85vh;
-        overflow-y: auto;
-    }
-    .close, .close-questions, .close-edit {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    .close:hover, .close-questions:hover, .close-edit:hover,
-    .close:focus, .close-questions:focus, .close-edit:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-    .btn-primary {
-        transition: all 0.2s ease;
-    }
-    .btn-primary:hover {
-        transform: translateY(-1px);
+    .drag-over {
+        border-top: 2px solid #3b82f6;
+        margin-top: -2px;
     }
     .pergunta-card {
         border-left: 3px solid #3b82f6;
@@ -185,30 +141,12 @@
         background-color: #f3f4f6;
         border: 1px solid #e5e7eb;
     }
-    .ordem-handle {
-        cursor: move;
-        color: #9ca3af;
-    }
-    .ordem-handle:hover {
-        color: #3b82f6;
-    }
-    .dragging {
-        opacity: 0.5;
-    }
-    .drag-over {
-        border-top: 2px solid #3b82f6;
-        margin-top: -2px;
-    }
 </style>
 
 <script>
-// Configuração do backend
-const API_URL = 'http://localhost:3000';
-
-// Função para exibir mensagens de feedback
-function showFeedback(message, isError = true) {
+function showFeedback(message, isSuccess = true) {
     const feedbackDiv = document.createElement('div');
-    feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 transition-opacity duration-300`;
+    feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${isSuccess ? 'bg-green-500' : 'bg-red-500'} text-white`;
     feedbackDiv.textContent = message;
     document.body.appendChild(feedbackDiv);
     setTimeout(() => feedbackDiv.remove(), 3000);
@@ -225,74 +163,51 @@ let currentNivelId = null;
 let currentEditPerguntaId = null;
 let niveisOrdenados = [];
 
-// Inicialização
-document.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem('token');
-    console.log('Token on load:', token ? 'Presente' : 'Ausente');
-
-    if (!token) {
-        showFeedback("Você precisa estar logado para acessar esta página.");
-        setTimeout(() => window.location.href = "index.html", 1500);
-        return;
-    }
-
-    fetchNiveis();
-});
-
-// Buscar níveis
-async function fetchNiveis() {
+// ============================================
+// CARREGAR NÍVEIS
+// ============================================
+async function carregarNiveis() {
     try {
         const token = localStorage.getItem('token');
-        console.log('Buscando níveis em:', `${API_URL}/niveis`);
-        
-        const response = await fetch(`${API_URL}/niveis`, {
-            method: 'GET',
-            headers: { 
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+        const response = await fetch('/niveis', {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-        
-        console.log('Status da resposta:', response.status);
         
         if (!response.ok) {
             if (response.status === 401) {
                 localStorage.removeItem('token');
-                showFeedback("Sessão expirada. Faça login novamente.");
-                setTimeout(() => window.location.href = "index.html", 1500);
+                window.location.href = '/';
                 return;
             }
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
+            throw new Error('Erro ao carregar níveis');
         }
         
         const data = await response.json();
-        console.log('Níveis recebidos:', data);
         niveisOrdenados = data.niveis || [];
-        renderNiveis(niveisOrdenados);
+        renderizarNiveis(niveisOrdenados);
     } catch (error) {
-        console.error("Erro ao buscar níveis:", error);
-        showFeedback("Erro ao conectar com o servidor. Verifique se o backend está rodando em " + API_URL);
-        
-        // Exibir erro detalhado no console
-        console.log('Verifique se:');
-        console.log('1. O backend está rodando em', API_URL);
-        console.log('2. O token é válido');
-        console.log('3. O CORS está configurado no backend');
+        console.error('Erro:', error);
+        document.getElementById('niveisList').innerHTML = `
+            <li class="text-center text-red-500 py-8">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar níveis
+            </li>
+        `;
     }
 }
 
-// Renderizar níveis
-function renderNiveis(niveis) {
-    const niveisList = document.getElementById('niveisList');
+// ============================================
+// RENDERIZAR NÍVEIS
+// ============================================
+function renderizarNiveis(niveis) {
+    const container = document.getElementById('niveisList');
     
     if (!niveis || niveis.length === 0) {
-        niveisList.innerHTML = '<li class="text-center text-gray-500 p-4">Nenhum nível cadastrado.</li>';
+        container.innerHTML = '<li class="text-center text-gray-500 py-8">Nenhum nível cadastrado.</li>';
         return;
     }
     
-    niveisList.innerHTML = niveis.map((nivel, index) => `
-        <li class="nivel-item bg-gray-100 p-4 rounded-lg shadow-md" data-id="${nivel.id}" data-index="${index}">
+    container.innerHTML = niveis.map(nivel => `
+        <li class="nivel-item bg-gray-100 p-4 rounded-lg shadow-md" data-id="${nivel.id}">
             <div class="flex justify-between items-center flex-wrap gap-2">
                 <div class="flex items-center gap-3 flex-1">
                     <i class="fas fa-grip-vertical ordem-handle text-gray-400 hover:text-blue-500 cursor-move"></i>
@@ -305,29 +220,31 @@ function renderNiveis(niveis) {
                     </div>
                 </div>
                 <div class="flex gap-2 flex-wrap">
-                    <button class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm btn-primary" onclick="showDetails(${nivel.id})">
+                    <button onclick="mostrarDetalhes(${nivel.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm">
                         <i class="fas fa-info-circle mr-1"></i>Detalhes
                     </button>
-                    <button class="bg-purple-500 text-white px-3 py-1 rounded-lg hover:bg-purple-600 transition text-sm btn-primary" onclick="showQuestions(${nivel.id}, '${escapeHtml(nivel.titulo)}')">
+                    <button onclick="mostrarPerguntas(${nivel.id}, '${escapeHtml(nivel.titulo)}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg hover:bg-purple-600 transition text-sm">
                         <i class="fas fa-question-circle mr-1"></i>Perguntas
                     </button>
-                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm btn-primary" onclick="showStatusModal(${nivel.id}, '${escapeHtml(nivel.titulo)}', ${nivel.ativo})">
+                    <button onclick="mostrarModalSituacao(${nivel.id}, '${escapeHtml(nivel.titulo)}', ${nivel.ativo})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm">
                         <i class="fas fa-toggle-${nivel.ativo ? 'on' : 'off'} mr-1"></i>Situação
                     </button>
                 </div>
             </div>
-            <div id="details${nivel.id}" class="mt-4 hidden fade-in">
+            <div id="detalhes${nivel.id}" class="mt-4 hidden">
                 <p class="text-gray-600"><strong>Descrição:</strong> ${escapeHtml(nivel.descricao || 'Sem descrição')}</p>
                 <p class="text-gray-600"><strong>XP Total:</strong> ${nivel.xp_total || 'Não definido'}</p>
             </div>
         </li>
     `).join('');
-
-    setupDragAndDrop();
+    
+    configurarDragAndDrop();
 }
 
-// Configurar Drag and Drop
-function setupDragAndDrop() {
+// ============================================
+// DRAG AND DROP
+// ============================================
+function configurarDragAndDrop() {
     const items = document.querySelectorAll('#niveisList .nivel-item');
     let draggedItem = null;
 
@@ -340,7 +257,7 @@ function setupDragAndDrop() {
             e.dataTransfer.effectAllowed = 'move';
         });
 
-        item.addEventListener('dragend', (e) => {
+        item.addEventListener('dragend', () => {
             item.classList.remove('dragging');
             draggedItem = null;
             document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
@@ -353,14 +270,10 @@ function setupDragAndDrop() {
 
         item.addEventListener('dragenter', (e) => {
             e.preventDefault();
-            if (draggedItem !== item) {
-                item.classList.add('drag-over');
-            }
+            if (draggedItem !== item) item.classList.add('drag-over');
         });
 
-        item.addEventListener('dragleave', (e) => {
-            item.classList.remove('drag-over');
-        });
+        item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
 
         item.addEventListener('drop', (e) => {
             e.preventDefault();
@@ -377,36 +290,33 @@ function setupDragAndDrop() {
                     parent.insertBefore(draggedItem, item);
                 }
                 
-                const newOrder = Array.from(parent.children).map(li => parseInt(li.dataset.id));
-                niveisOrdenados = newOrder.map(id => niveisOrdenados.find(n => n.id === id)).filter(Boolean);
+                const novaOrdem = Array.from(parent.children).map(li => parseInt(li.dataset.id));
+                niveisOrdenados = novaOrdem.map(id => niveisOrdenados.find(n => n.id === id)).filter(Boolean);
             }
         });
     });
 }
 
-// Salvar ordem - Usando o endpoint de ativação para atualizar posições
+// ============================================
+// SALVAR ORDEM
+// ============================================
 document.getElementById('ordenarBtn')?.addEventListener('click', async () => {
     try {
         const token = localStorage.getItem('token');
         const items = document.querySelectorAll('#niveisList .nivel-item');
         
-        showFeedback("Salvando ordem dos níveis...", false);
-        
-        // Para cada nível, atualizar sua posição individualmente
         for (let index = 0; index < items.length; index++) {
             const item = items[index];
             const nivelId = parseInt(item.dataset.id);
             const novaPosicao = index + 1;
             
-            // Buscar o nível atual para verificar se está ativo
-            const responseGet = await fetch(`${API_URL}/niveis/${nivelId}`, {
-                headers: { "Authorization": `Bearer ${token}` }
+            const responseGet = await fetch(`/niveis/${nivelId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             const nivel = await responseGet.json();
             
             if (nivel.ativo) {
-                // Se o nível está ativo, atualizar sua posição
-                await fetch(`${API_URL}/niveis/${nivelId}/ativar`, {
+                await fetch(`/niveis/${nivelId}/ativar`, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -417,98 +327,93 @@ document.getElementById('ordenarBtn')?.addEventListener('click', async () => {
             }
         }
         
-        showFeedback("Ordem dos níveis salva com sucesso!", false);
-        fetchNiveis(); // Recarregar para mostrar as novas posições
+        showFeedback("Ordem salva com sucesso!", true);
+        carregarNiveis();
     } catch (error) {
-        console.error("Erro ao salvar ordem:", error);
-        showFeedback("Erro ao salvar ordem: " + error.message);
+        console.error('Erro:', error);
+        showFeedback("Erro ao salvar ordem: " + error.message, false);
     }
 });
 
-function showDetails(nivelId) {
-    const details = document.getElementById(`details${nivelId}`);
-    if (details) {
-        details.classList.toggle('hidden');
-        if (!details.classList.contains('hidden')) {
-            details.classList.add('fade-in');
-            details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+// ============================================
+// MOSTRAR DETALHES
+// ============================================
+function mostrarDetalhes(nivelId) {
+    const detalhes = document.getElementById(`detalhes${nivelId}`);
+    if (detalhes) {
+        detalhes.classList.toggle('hidden');
     }
 }
 
-// Modal de Situação
-async function showStatusModal(nivelId, titulo, ativo) {
+// ============================================
+// MODAL DE SITUAÇÃO
+// ============================================
+async function mostrarModalSituacao(nivelId, titulo, ativo) {
     currentNivelId = nivelId;
     const modal = document.getElementById('statusModal');
     const statusContent = document.getElementById('statusContent');
     const positionInput = document.getElementById('positionInput');
     const posicaoInput = document.getElementById('posicao');
-    const toggleStatusButton = document.getElementById('toggleStatusButton');
-    const saveChangesButton = document.getElementById('saveChangesButton');
+    const toggleButton = document.getElementById('toggleStatusButton');
+    const saveButton = document.getElementById('saveChangesButton');
 
     positionInput.classList.add('hidden');
-    toggleStatusButton.classList.remove('hidden');
-    saveChangesButton.classList.add('hidden');
-    modal.style.display = "block";
+    toggleButton.classList.remove('hidden');
+    saveButton.classList.add('hidden');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/niveis/${nivelId}`, {
-            headers: { "Authorization": `Bearer ${token}` }
+        const response = await fetch(`/niveis/${nivelId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-        
-        if (!response.ok) throw new Error("Erro ao buscar dados");
         const data = await response.json();
 
         statusContent.innerHTML = `
-            <p class="text-gray-600 mb-2"><strong>Nível:</strong> ${escapeHtml(data.titulo)}</p>
-            <p class="text-gray-600 mb-2"><strong>Situação Atual:</strong> 
-                <span class="font-bold ${data.ativo ? 'text-green-600' : 'text-red-600'}">${data.ativo ? 'Ativo' : 'Inativo'}</span>
-            </p>
-            ${data.ativo && data.posicao ? `<p class="text-gray-600"><strong>Posição:</strong> ${data.posicao}</p>` : ''}
+            <p class="mb-2"><strong>Nível:</strong> ${escapeHtml(data.titulo)}</p>
+            <p class="mb-2"><strong>Situação:</strong> <span class="font-bold ${data.ativo ? 'text-green-600' : 'text-red-600'}">${data.ativo ? 'Ativo' : 'Inativo'}</span></p>
+            ${data.ativo && data.posicao ? `<p><strong>Posição:</strong> ${data.posicao}</p>` : ''}
         `;
 
-        toggleStatusButton.textContent = data.ativo ? 'Desativar Nível' : 'Ativar Nível';
-        toggleStatusButton.className = data.ativo ? 
-            'bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition w-full' : 
-            'bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600 transition w-full';
+        toggleButton.textContent = data.ativo ? 'Desativar Nível' : 'Ativar Nível';
+        toggleButton.className = `w-full mt-4 px-4 py-2 rounded-lg transition text-white ${data.ativo ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`;
         
-        toggleStatusButton.onclick = async () => {
+        toggleButton.onclick = async () => {
             if (!data.ativo) {
                 positionInput.classList.remove('hidden');
-                toggleStatusButton.classList.add('hidden');
-                saveChangesButton.classList.remove('hidden');
-                posicaoInput.value = "";
+                toggleButton.classList.add('hidden');
+                saveButton.classList.remove('hidden');
             } else {
-                if (confirm(`Desativar o nível "${data.titulo}"?`)) {
-                    await toggleNivelStatus(nivelId, false, null);
-                    modal.style.display = "none";
+                if (confirm(`Desativar "${data.titulo}"?`)) {
+                    await alterarStatusNivel(nivelId, false, null);
+                    modal.classList.add('hidden');
                 }
             }
         };
 
-        saveChangesButton.onclick = async () => {
+        saveButton.onclick = async () => {
             const novaPosicao = parseInt(posicaoInput.value);
             if (!novaPosicao || novaPosicao <= 0) {
-                showFeedback("Informe uma posição válida.");
+                showFeedback("Informe uma posição válida!", false);
                 return;
             }
-            await toggleNivelStatus(nivelId, true, novaPosicao);
-            modal.style.display = "none";
+            await alterarStatusNivel(nivelId, true, novaPosicao);
+            modal.classList.add('hidden');
         };
     } catch (error) {
-        statusContent.innerHTML = "<p class='text-red-500'>Erro ao carregar detalhes.</p>";
+        statusContent.innerHTML = '<p class="text-red-500">Erro ao carregar dados.</p>';
     }
 
-    const closeBtn = document.querySelector('#statusModal .close');
-    if (closeBtn) closeBtn.onclick = () => modal.style.display = "none";
-    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
+    document.querySelectorAll('#statusModal .closeModal').forEach(btn => {
+        btn.onclick = () => modal.classList.add('hidden');
+    });
 }
 
-async function toggleNivelStatus(nivelId, ativo, posicao) {
+async function alterarStatusNivel(nivelId, ativo, posicao) {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/niveis/${nivelId}/ativar`, {
+        const response = await fetch(`/niveis/${nivelId}/ativar`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -517,68 +422,67 @@ async function toggleNivelStatus(nivelId, ativo, posicao) {
             body: JSON.stringify({ ativo, posicao })
         });
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Erro ao alterar status");
-        }
-        const result = await response.json();
-        showFeedback(result.message || `Nível ${ativo ? 'ativado' : 'desativado'} com sucesso!`, false);
-        fetchNiveis();
+        if (!response.ok) throw new Error("Erro ao alterar status");
+        
+        showFeedback(`Nível ${ativo ? 'ativado' : 'desativado'}!`, true);
+        carregarNiveis();
     } catch (error) {
-        showFeedback("Erro ao alterar status: " + error.message);
+        showFeedback("Erro: " + error.message, false);
     }
 }
 
-// Mostrar perguntas
-async function showQuestions(nivelId, titulo) {
+// ============================================
+// MODAL DE PERGUNTAS
+// ============================================
+async function mostrarPerguntas(nivelId, titulo) {
     currentNivelId = nivelId;
     const modal = document.getElementById('questionsModal');
     const questionsList = document.getElementById('questionsList');
     document.getElementById('questionsModalTitle').innerHTML = `<i class="fas fa-question-circle mr-2"></i>Perguntas - ${escapeHtml(titulo)}`;
     
-    modal.style.display = "block";
-    questionsList.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando perguntas...</div>';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    questionsList.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando...</div>';
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/perguntas?nivel_id=${nivelId}`, {
-            headers: { "Authorization": `Bearer ${token}` }
+        const response = await fetch(`/perguntas?nivel_id=${nivelId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (!response.ok) throw new Error("Erro ao buscar perguntas");
         const data = await response.json();
         const perguntas = data.perguntas || data;
         
         if (!perguntas || perguntas.length === 0) {
-            questionsList.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhuma pergunta cadastrada para este nível.</div>';
+            questionsList.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhuma pergunta cadastrada.</div>';
             return;
         }
         
-        questionsList.innerHTML = perguntas.map(pergunta => `
+        questionsList.innerHTML = perguntas.map(p => `
             <div class="pergunta-card">
                 <div class="flex justify-between items-start flex-wrap gap-2">
                     <div class="flex-1">
-                        <p class="font-semibold text-gray-800 mb-2">📝 ${escapeHtml(pergunta.texto)}</p>
+                        <p class="font-semibold mb-2">📝 ${escapeHtml(p.texto)}</p>
                         <div class="space-y-1 ml-4">
-                            <div class="opcao-item ${pergunta.resposta_correta === 'opcao1' ? 'opcao-correta' : 'opcao-normal'}">
-                                <span class="font-bold w-8">A)</span> ${escapeHtml(pergunta.opcao1)}
-                                ${pergunta.resposta_correta === 'opcao1' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                            <div class="opcao-item ${p.resposta_correta === 'opcao1' ? 'opcao-correta' : 'opcao-normal'}">
+                                <span class="font-bold w-8">A)</span> ${escapeHtml(p.opcao1)}
+                                ${p.resposta_correta === 'opcao1' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
                             </div>
-                            <div class="opcao-item ${pergunta.resposta_correta === 'opcao2' ? 'opcao-correta' : 'opcao-normal'}">
-                                <span class="font-bold w-8">B)</span> ${escapeHtml(pergunta.opcao2)}
-                                ${pergunta.resposta_correta === 'opcao2' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                            <div class="opcao-item ${p.resposta_correta === 'opcao2' ? 'opcao-correta' : 'opcao-normal'}">
+                                <span class="font-bold w-8">B)</span> ${escapeHtml(p.opcao2)}
+                                ${p.resposta_correta === 'opcao2' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
                             </div>
-                            <div class="opcao-item ${pergunta.resposta_correta === 'opcao3' ? 'opcao-correta' : 'opcao-normal'}">
-                                <span class="font-bold w-8">C)</span> ${escapeHtml(pergunta.opcao3)}
-                                ${pergunta.resposta_correta === 'opcao3' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                            <div class="opcao-item ${p.resposta_correta === 'opcao3' ? 'opcao-correta' : 'opcao-normal'}">
+                                <span class="font-bold w-8">C)</span> ${escapeHtml(p.opcao3)}
+                                ${p.resposta_correta === 'opcao3' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
                             </div>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="editPergunta(${pergunta.id})" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
+                        <button onclick="editarPergunta(${p.id})" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button onclick="deletePergunta(${pergunta.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
+                        <button onclick="excluirPergunta(${p.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
                             <i class="fas fa-trash"></i> Excluir
                         </button>
                     </div>
@@ -589,40 +493,41 @@ async function showQuestions(nivelId, titulo) {
         questionsList.innerHTML = `<div class="text-red-500 text-center py-4">Erro: ${error.message}</div>`;
     }
     
-    document.querySelector('#questionsModal .close-questions').onclick = () => modal.style.display = "none";
-    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
+    document.querySelectorAll('#questionsModal .closeQuestionsModal').forEach(btn => {
+        btn.onclick = () => modal.classList.add('hidden');
+    });
 }
 
-// Editar pergunta
-window.editPergunta = async (perguntaId) => {
+// ============================================
+// EDITAR PERGUNTA
+// ============================================
+window.editarPergunta = async (perguntaId) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/perguntas/${perguntaId}`, {
-            headers: { "Authorization": `Bearer ${token}` }
+        const response = await fetch(`/perguntas/${perguntaId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-        
-        if (!response.ok) throw new Error("Erro ao buscar pergunta");
-        const pergunta = await response.json();
+        const p = await response.json();
         
         currentEditPerguntaId = perguntaId;
-        document.getElementById('editTexto').value = pergunta.texto;
-        document.getElementById('editOpcao1').value = pergunta.opcao1;
-        document.getElementById('editOpcao2').value = pergunta.opcao2;
-        document.getElementById('editOpcao3').value = pergunta.opcao3;
-        document.getElementById('editRespostaCorreta').value = pergunta.resposta_correta;
+        document.getElementById('editTexto').value = p.texto;
+        document.getElementById('editOpcao1').value = p.opcao1;
+        document.getElementById('editOpcao2').value = p.opcao2;
+        document.getElementById('editOpcao3').value = p.opcao3;
+        document.getElementById('editRespostaCorreta').value = p.resposta_correta;
         
-        document.getElementById('editQuestionModal').style.display = "block";
-        document.getElementById('questionsModal').style.display = "none";
+        document.getElementById('editQuestionModal').classList.remove('hidden');
+        document.getElementById('editQuestionModal').classList.add('flex');
+        document.getElementById('questionsModal').classList.add('hidden');
     } catch (error) {
-        showFeedback("Erro ao carregar pergunta: " + error.message);
+        showFeedback("Erro ao carregar pergunta: " + error.message, false);
     }
 };
 
-// Salvar edição
 document.getElementById('editQuestionForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const updatedPergunta = {
+    const dados = {
         texto: document.getElementById('editTexto').value,
         opcao1: document.getElementById('editOpcao1').value,
         opcao2: document.getElementById('editOpcao2').value,
@@ -632,79 +537,95 @@ document.getElementById('editQuestionForm')?.addEventListener('submit', async (e
     
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/perguntas/${currentEditPerguntaId}`, {
+        const response = await fetch(`/perguntas/${currentEditPerguntaId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify(updatedPergunta)
+            body: JSON.stringify(dados)
         });
         
-        if (!response.ok) throw new Error("Erro ao salvar alterações");
+        if (!response.ok) throw new Error("Erro ao salvar");
         
-        showFeedback("Pergunta atualizada com sucesso!", false);
-        document.getElementById('editQuestionModal').style.display = "none";
+        showFeedback("Pergunta atualizada!", true);
+        document.getElementById('editQuestionModal').classList.add('hidden');
         
         if (currentNivelId) {
             const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
-            if (nivel) showQuestions(currentNivelId, nivel.titulo);
+            if (nivel) mostrarPerguntas(currentNivelId, nivel.titulo);
         }
     } catch (error) {
-        showFeedback("Erro ao salvar: " + error.message);
+        showFeedback("Erro: " + error.message, false);
     }
 });
 
-// Excluir pergunta
-window.deletePergunta = async (perguntaId) => {
-    if (!confirm("Tem certeza que deseja excluir esta pergunta? Esta ação não pode ser desfeita.")) return;
+// ============================================
+// EXCLUIR PERGUNTA
+// ============================================
+window.excluirPergunta = async (perguntaId) => {
+    if (!confirm("Excluir esta pergunta? Esta ação não pode ser desfeita.")) return;
     
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/perguntas/${perguntaId}`, {
+        const response = await fetch(`/perguntas/${perguntaId}`, {
             method: "DELETE",
-            headers: { "Authorization": `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (!response.ok) throw new Error("Erro ao excluir pergunta");
+        if (!response.ok) throw new Error("Erro ao excluir");
         
-        showFeedback("Pergunta excluída com sucesso!", false);
+        showFeedback("Pergunta excluída!", true);
         
         if (currentNivelId) {
             const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
-            if (nivel) showQuestions(currentNivelId, nivel.titulo);
+            if (nivel) mostrarPerguntas(currentNivelId, nivel.titulo);
         }
     } catch (error) {
-        showFeedback("Erro ao excluir: " + error.message);
+        showFeedback("Erro: " + error.message, false);
     }
 };
 
-// Fechar modais de edição
+// ============================================
+// FECHAR MODAIS
+// ============================================
 document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
-    document.getElementById('editQuestionModal').style.display = "none";
+    document.getElementById('editQuestionModal').classList.add('hidden');
     if (currentNivelId) {
         const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
-        if (nivel) showQuestions(currentNivelId, nivel.titulo);
+        if (nivel) mostrarPerguntas(currentNivelId, nivel.titulo);
     }
 });
 
-document.querySelector('#editQuestionModal .close-edit')?.addEventListener('click', () => {
-    document.getElementById('editQuestionModal').style.display = "none";
-    if (currentNivelId) {
-        const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
-        if (nivel) showQuestions(currentNivelId, nivel.titulo);
-    }
-});
-
-// Logout
-const logoutBtn = document.getElementById('logoutButton');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        console.log('Efetuando logout...');
-        if (confirm('Tem certeza que deseja sair?')) {
-            localStorage.removeItem('token');
-            window.location.href = "index.html";
+document.querySelectorAll('#editQuestionModal .closeEditModal').forEach(btn => {
+    btn.onclick = () => {
+        document.getElementById('editQuestionModal').classList.add('hidden');
+        if (currentNivelId) {
+            const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+            if (nivel) mostrarPerguntas(currentNivelId, nivel.titulo);
         }
-    });
-}
+    };
+});
+
+// ============================================
+// LOGOUT
+// ============================================
+document.getElementById('logoutButton')?.addEventListener('click', () => {
+    if (confirm('Sair do sistema?')) {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    }
+});
+
+// ============================================
+// INICIALIZAR
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    carregarNiveis();
+});
 </script>
