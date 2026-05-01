@@ -8,7 +8,6 @@ router.post('/', authenticateToken, checkAdmin, async (req, res) => {
     console.log('POST /mensagens received:', req.body);
     const { versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao } = req.body;
     const usuario_id = req.user.id;
-    console.log('Cadastrando mensagem:', { versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao });
 
     if (!versao || !livro || !capitulo || !versiculo || !texto_versiculo || !titulo || !descricao) {
         return res.status(400).json({ success: false, message: 'Preencha todos os campos.' });
@@ -21,35 +20,36 @@ router.post('/', authenticateToken, checkAdmin, async (req, res) => {
     }
 
     try {
-        // Determina a próxima ordem_exibição
-        const [lastOrder] = await db.query('SELECT MAX(ordem_exibição) as maxOrder FROM MensagensDiarias');
-        const ordem_exibição = (lastOrder[0].maxOrder || 0) + 1;
+        // Usar o nome correto da coluna: ordem_exibição (com acento)
+        const [lastOrder] = await db.query('SELECT MAX(ordem_exibição) as maxOrder FROM mensagensdiarias');
+        const ordem_exibicao = (lastOrder[0].maxOrder || 0) + 1;
 
-        await db.promise().query(
-            'INSERT INTO MensagensDiarias (usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição]
+        // NÃO use db.promise().query - use db.query diretamente
+        await db.query(
+            'INSERT INTO mensagensdiarias (usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibicao]
         );
         res.json({ success: true, message: 'Mensagem cadastrada com sucesso!' });
     } catch (error) {
         console.error('Erro ao cadastrar mensagem:', error);
-        res.status(500).json({ success: false, message: 'Erro ao cadastrar mensagem.' });
+        res.status(500).json({ success: false, message: 'Erro ao cadastrar mensagem: ' + error.message });
     }
 });
 
 // Listar mensagens cadastradas (admin)
 router.get('/', authenticateToken, checkAdmin, async (req, res) => {
     const { busca } = req.query;
-    console.log('Listando mensagens:', { busca });
 
     try {
-        let query = 'SELECT id_mensagem, usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição FROM MensagensDiarias WHERE 1=1';
+        let query = 'SELECT id_mensagem, usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição FROM mensagensdiarias WHERE 1=1';
         const params = [];
         if (busca) {
             query += ' AND (LOWER(titulo) LIKE LOWER(?) OR LOWER(livro) LIKE LOWER(?) OR LOWER(texto_versiculo) LIKE LOWER(?))';
             params.push(`%${busca}%`, `%${busca}%`, `%${busca}%`);
         }
         query += ' ORDER BY ordem_exibição DESC';
-        const [results] = await db.promise().query(query, params);
+        
+        const [results] = await db.query(query, params);
         res.json({ success: true, mensagens: results });
     } catch (error) {
         console.error('Erro ao listar mensagens:', error);
@@ -60,21 +60,24 @@ router.get('/', authenticateToken, checkAdmin, async (req, res) => {
 // Obter mensagem do dia (qualquer usuário autenticado)
 router.get('/diaria', authenticateToken, async (req, res) => {
     try {
-        // Calcula o índice da mensagem com base no dia atual
-        const startDate = new Date('2025-06-01'); // Data base
+        const startDate = new Date('2025-06-01');
         const today = new Date();
         const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-        const [count] = await db.promise().query('SELECT COUNT(*) as total FROM MensagensDiarias');
+        
+        const [count] = await db.query('SELECT COUNT(*) as total FROM mensagensdiarias');
         const totalMensagens = count[0].total;
+        
         if (totalMensagens === 0) {
             return res.status(404).json({ success: false, message: 'Nenhuma mensagem disponível.' });
         }
-        const ordem_exibição = (daysSinceStart % totalMensagens) + 1;
+        
+        const ordem_exibicao = (daysSinceStart % totalMensagens) + 1;
 
-        const [results] = await db.promise().query(
-            'SELECT id_mensagem, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao FROM MensagensDiarias WHERE ordem_exibição = ?',
-            [ordem_exibição]
+        const [results] = await db.query(
+            'SELECT id_mensagem, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao FROM mensagensdiarias WHERE ordem_exibição = ?',
+            [ordem_exibicao]
         );
+        
         if (results.length === 0) {
             return res.status(404).json({ success: false, message: 'Nenhuma mensagem para hoje.' });
         }
