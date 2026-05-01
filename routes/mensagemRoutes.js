@@ -21,13 +21,13 @@ router.post('/', authenticateToken, checkAdmin, async (req, res) => {
     }
 
     try {
-        // Determina a próxima ordem_exibicao
-        const [lastOrder] = await db.query('SELECT MAX(ordem_exibicao) as maxOrder FROM MensagensDiarias');
-        const ordem_exibicao = (lastOrder[0].maxOrder || 0) + 1;
+        // Determina a próxima ordem_exibição
+        const [lastOrder] = await db.query('SELECT MAX(ordem_exibição) as maxOrder FROM MensagensDiarias');
+        const ordem_exibição = (lastOrder[0].maxOrder || 0) + 1;
 
         await db.promise().query(
-            'INSERT INTO MensagensDiarias (usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibicao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibicao]
+            'INSERT INTO MensagensDiarias (usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição]
         );
         res.json({ success: true, message: 'Mensagem cadastrada com sucesso!' });
     } catch (error) {
@@ -42,13 +42,13 @@ router.get('/', authenticateToken, checkAdmin, async (req, res) => {
     console.log('Listando mensagens:', { busca });
 
     try {
-        let query = 'SELECT id_mensagem, usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibicao FROM MensagensDiarias WHERE 1=1';
+        let query = 'SELECT id_mensagem, usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição FROM MensagensDiarias WHERE 1=1';
         const params = [];
         if (busca) {
             query += ' AND (LOWER(titulo) LIKE LOWER(?) OR LOWER(livro) LIKE LOWER(?) OR LOWER(texto_versiculo) LIKE LOWER(?))';
             params.push(`%${busca}%`, `%${busca}%`, `%${busca}%`);
         }
-        query += ' ORDER BY ordem_exibicao DESC';
+        query += ' ORDER BY ordem_exibição DESC';
         const [results] = await db.promise().query(query, params);
         res.json({ success: true, mensagens: results });
     } catch (error) {
@@ -69,11 +69,11 @@ router.get('/diaria', authenticateToken, async (req, res) => {
         if (totalMensagens === 0) {
             return res.status(404).json({ success: false, message: 'Nenhuma mensagem disponível.' });
         }
-        const ordem_exibicao = (daysSinceStart % totalMensagens) + 1;
+        const ordem_exibição = (daysSinceStart % totalMensagens) + 1;
 
         const [results] = await db.promise().query(
-            'SELECT id_mensagem, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao FROM MensagensDiarias WHERE ordem_exibicao = ?',
-            [ordem_exibicao]
+            'SELECT id_mensagem, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao FROM MensagensDiarias WHERE ordem_exibição = ?',
+            [ordem_exibição]
         );
         if (results.length === 0) {
             return res.status(404).json({ success: false, message: 'Nenhuma mensagem para hoje.' });
