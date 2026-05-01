@@ -1,23 +1,30 @@
 <div class="flex-1 p-8 slide-in">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Gerenciamento de Fases</h2>
+        <h2 class="text-2xl font-bold">Gerenciamento de Níveis</h2>
         <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Sair</button>
     </div>
 
-    <!-- Lista de Fases -->
-    <div id="fasesContainer" class="bg-white p-6 rounded-lg shadow-lg">
-        <h3 class="text-xl font-bold mb-4">Fases Cadastradas</h3>
-        <ul id="fasesList" class="space-y-4">
-            <!-- Fases serão carregadas dinamicamente aqui -->
+    <!-- Botão de Ordenação -->
+    <div class="mb-4 flex justify-end">
+        <button id="ordenarBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition shadow-md">
+            <i class="fas fa-sort mr-2"></i>Salvar Ordem dos Níveis
+        </button>
+    </div>
+
+    <!-- Lista de Níveis -->
+    <div id="niveisContainer" class="bg-white p-6 rounded-lg shadow-lg">
+        <h3 class="text-xl font-bold mb-4">Níveis Cadastrados</h3>
+        <ul id="niveisList" class="space-y-4">
+            <!-- Níveis serão carregados dinamicamente aqui -->
         </ul>
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal de Situação (Ativar/Desativar) -->
 <div id="statusModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h2 class="text-xl font-bold mb-4">Situação da Fase</h2>
+        <h2 class="text-xl font-bold mb-4">Situação do Nível</h2>
         <div id="statusContent">
             <!-- Conteúdo da situação será carregado aqui -->
         </div>
@@ -34,11 +41,62 @@
     </div>
 </div>
 
+<!-- Modal de Perguntas -->
+<div id="questionsModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <span class="close-questions">&times;</span>
+        <h2 class="text-xl font-bold mb-4" id="questionsModalTitle">Perguntas do Nível</h2>
+        <div id="questionsList" class="max-h-96 overflow-y-auto">
+            <!-- Perguntas serão carregadas aqui -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar Pergunta -->
+<div id="editQuestionModal" class="modal">
+    <div class="modal-content">
+        <span class="close-edit">&times;</span>
+        <h2 class="text-xl font-bold mb-4">Editar Pergunta</h2>
+        <form id="editQuestionForm">
+            <div class="mb-3">
+                <label class="block text-gray-700 font-bold mb-2">Texto da Pergunta:</label>
+                <textarea id="editTexto" rows="3" class="w-full p-2 border rounded" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 font-bold mb-2">Opção 1:</label>
+                <input type="text" id="editOpcao1" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 font-bold mb-2">Opção 2:</label>
+                <input type="text" id="editOpcao2" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 font-bold mb-2">Opção 3:</label>
+                <input type="text" id="editOpcao3" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 font-bold mb-2">Resposta Correta:</label>
+                <select id="editRespostaCorreta" class="w-full p-2 border rounded" required>
+                    <option value="">Selecione a resposta correta</option>
+                    <option value="opcao1">Opção 1</option>
+                    <option value="opcao2">Opção 2</option>
+                    <option value="opcao3">Opção 3</option>
+                </select>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button type="submit" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Salvar</button>
+                <button type="button" id="cancelEditBtn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
-    .fase-item {
+    .nivel-item {
         transition: all 0.3s ease;
+        cursor: default;
     }
-    .fase-item:hover {
+    .nivel-item:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
@@ -81,22 +139,24 @@
     }
     .modal-content {
         background-color: #fefefe;
-        margin: 15% auto;
+        margin: 5% auto;
         padding: 20px;
         border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
+        width: 90%;
+        max-width: 600px;
         border-radius: 8px;
+        max-height: 85vh;
+        overflow-y: auto;
     }
-    .close {
+    .close, .close-questions, .close-edit {
         color: #aaa;
         float: right;
         font-size: 28px;
         font-weight: bold;
         cursor: pointer;
     }
-    .close:hover,
-    .close:focus {
+    .close:hover, .close-questions:hover, .close-edit:hover,
+    .close:focus, .close-questions:focus, .close-edit:focus {
         color: black;
         text-decoration: none;
         cursor: pointer;
@@ -106,6 +166,46 @@
     }
     .btn-primary:hover {
         transform: translateY(-1px);
+    }
+    .pergunta-card {
+        border-left: 3px solid #3b82f6;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+    .pergunta-card:hover {
+        background: #f3f4f6;
+    }
+    .opcao-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        margin: 6px 0;
+        border-radius: 6px;
+    }
+    .opcao-correta {
+        background-color: #d1fae5;
+        border: 1px solid #10b981;
+    }
+    .opcao-normal {
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+    }
+    .ordem-handle {
+        cursor: move;
+        color: #9ca3af;
+    }
+    .ordem-handle:hover {
+        color: #3b82f6;
+    }
+    .dragging {
+        opacity: 0.5;
+    }
+    .drag-over {
+        border-top: 2px solid #3b82f6;
+        margin-top: -2px;
     }
 </style>
 
@@ -127,7 +227,11 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Inicialização simplificada (sem verificação extra de token)
+let currentNivelId = null;
+let currentEditPerguntaId = null;
+let niveisOrdenados = [];
+
+// Inicialização
 document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem('token');
     console.log('Token on load:', token ? 'Presente' : 'Ausente');
@@ -140,90 +244,187 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // Carrega fases diretamente (a rota já está protegida pelo middleware)
-    fetchFases();
+    fetchNiveis();
 });
 
-// Função para buscar as fases do backend
-async function fetchFases() {
+// Buscar níveis
+async function fetchNiveis() {
     try {
         const token = localStorage.getItem('token');
-        console.log('Buscando fases...');
-        const response = await fetch('/fases', {
+        console.log('Buscando níveis...');
+        const response = await fetch('http://localhost:3000/niveis', {
             headers: { "Authorization": `Bearer ${token}` }
         });
-        console.log('Resposta do backend:', response.status, response.statusText);
         
         if (!response.ok) {
             if (response.status === 401) {
                 localStorage.removeItem('token');
                 showFeedback("Sessão expirada. Faça login novamente.");
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 1500);
+                setTimeout(() => window.location.href = "/", 1500);
                 return;
             }
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || "Erro ao buscar fases");
+            throw new Error("Erro ao buscar níveis");
         }
         
         const data = await response.json();
-        console.log('Fases recebidas:', data);
-        // Verifica se data é um array ou tem a propriedade fases
-        const fasesArray = Array.isArray(data) ? data : (data.fases || []);
-        renderFases(fasesArray);
+        console.log('Níveis recebidos:', data);
+        niveisOrdenados = data.niveis || data;
+        renderNiveis(niveisOrdenados);
     } catch (error) {
-        console.error("Erro ao buscar fases:", error);
-        showFeedback("Erro ao buscar fases: " + error.message);
+        console.error("Erro ao buscar níveis:", error);
+        showFeedback("Erro ao buscar níveis: " + error.message);
     }
 }
 
-// Função para renderizar as fases na página
-function renderFases(fases) {
-    console.log("Fases carregadas:", fases);
-    const fasesList = document.getElementById('fasesList');
+// Renderizar níveis
+function renderNiveis(niveis) {
+    const niveisList = document.getElementById('niveisList');
     
-    if (!fases || fases.length === 0) {
-        fasesList.innerHTML = '<li class="text-center text-gray-500 p-4">Nenhuma fase cadastrada.</li>';
+    if (!niveis || niveis.length === 0) {
+        niveisList.innerHTML = '<li class="text-center text-gray-500 p-4">Nenhum nível cadastrado.</li>';
         return;
     }
     
-    fasesList.innerHTML = fases.map(fase => `
-        <li class="fase-item bg-gray-100 p-4 rounded-lg shadow-md cursor-default" data-id="${fase.id}">
+    niveisList.innerHTML = niveis.map((nivel, index) => `
+        <li class="nivel-item bg-gray-100 p-4 rounded-lg shadow-md" data-id="${nivel.id}" data-index="${index}">
             <div class="flex justify-between items-center flex-wrap gap-2">
-                <div class="flex-1">
-                    <span class="font-bold text-lg">${escapeHtml(fase.titulo || fase.nome || 'Sem título')}</span>
-                    ${fase.posicao ? `<span class="text-sm text-gray-500 ml-2">(Posição: ${fase.posicao})</span>` : ''}
-                    <span class="text-sm ml-2 px-2 py-1 rounded ${fase.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                        ${fase.ativo ? 'Ativa' : 'Inativa'}
-                    </span>
+                <div class="flex items-center gap-3 flex-1">
+                    <i class="fas fa-grip-vertical ordem-handle text-gray-400 hover:text-blue-500 cursor-move"></i>
+                    <div>
+                        <span class="font-bold text-lg">${escapeHtml(nivel.titulo)}</span>
+                        ${nivel.posicao ? `<span class="text-sm text-gray-500 ml-2">(Pos: ${nivel.posicao})</span>` : ''}
+                        <span class="text-sm ml-2 px-2 py-1 rounded ${nivel.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${nivel.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </div>
                 </div>
                 <div class="flex gap-2">
-                    <button class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm btn-primary" onclick="showDetails(${fase.id})">
+                    <button class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm btn-primary" onclick="showDetails(${nivel.id})">
                         <i class="fas fa-info-circle mr-1"></i>Detalhes
                     </button>
-                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm btn-primary" onclick="showStatusModal(${fase.id}, '${escapeHtml(fase.titulo || fase.nome || 'Sem título')}', ${fase.ativo})">
-                        <i class="fas fa-toggle-${fase.ativo ? 'on' : 'off'} mr-1"></i>Situação
+                    <button class="bg-purple-500 text-white px-3 py-1 rounded-lg hover:bg-purple-600 transition text-sm btn-primary" onclick="showQuestions(${nivel.id}, '${escapeHtml(nivel.titulo)}')">
+                        <i class="fas fa-question-circle mr-1"></i>Perguntas
+                    </button>
+                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm btn-primary" onclick="showStatusModal(${nivel.id}, '${escapeHtml(nivel.titulo)}', ${nivel.ativo})">
+                        <i class="fas fa-toggle-${nivel.ativo ? 'on' : 'off'} mr-1"></i>Situação
                     </button>
                 </div>
             </div>
-            <div id="details${fase.id}" class="mt-4 hidden fade-in">
-                <p class="text-gray-600"><strong>Descrição:</strong> ${escapeHtml(fase.descricao || 'Sem descrição')}</p>
-                <p class="text-gray-600"><strong>Ordem:</strong> ${fase.ordem || fase.posicao || 'Não definida'}</p>
-                ${fase.nivel_requisito ? `<p class="text-gray-600"><strong>Nível Necessário:</strong> ${fase.nivel_requisito}</p>` : ''}
-                ${fase.xp_necessario ? `<p class="text-gray-600"><strong>XP Necessário:</strong> ${fase.xp_necessario}</p>` : ''}
+            <div id="details${nivel.id}" class="mt-4 hidden fade-in">
+                <p class="text-gray-600"><strong>Descrição:</strong> ${escapeHtml(nivel.descricao || 'Sem descrição')}</p>
+                <p class="text-gray-600"><strong>XP Total:</strong> ${nivel.xp_total || 'Não definido'}</p>
             </div>
         </li>
     `).join('');
+
+    setupDragAndDrop();
 }
 
-// Função para exibir o modal de situação
-let currentFaseId = null;
+// Configurar Drag and Drop
+function setupDragAndDrop() {
+    const items = document.querySelectorAll('#niveisList .nivel-item');
+    let draggedItem = null;
 
-async function showStatusModal(faseId, titulo, ativo) {
-    console.log("Modal aberto para a fase:", faseId, titulo, ativo);
-    currentFaseId = faseId;
+    items.forEach(item => {
+        item.setAttribute('draggable', 'true');
+        
+        item.addEventListener('dragstart', (e) => {
+            draggedItem = item;
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
 
+        item.addEventListener('dragend', (e) => {
+            item.classList.remove('dragging');
+            draggedItem = null;
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        });
+
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        item.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            if (draggedItem !== item) {
+                item.classList.add('drag-over');
+            }
+        });
+
+        item.addEventListener('dragleave', (e) => {
+            item.classList.remove('drag-over');
+        });
+
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            item.classList.remove('drag-over');
+            
+            if (draggedItem && draggedItem !== item) {
+                const parent = document.getElementById('niveisList');
+                const draggedIndex = Array.from(parent.children).indexOf(draggedItem);
+                const targetIndex = Array.from(parent.children).indexOf(item);
+                
+                if (draggedIndex < targetIndex) {
+                    parent.insertBefore(draggedItem, item.nextSibling);
+                } else {
+                    parent.insertBefore(draggedItem, item);
+                }
+                
+                // Atualizar array de níveis ordenados
+                const newOrder = Array.from(parent.children).map(li => parseInt(li.dataset.id));
+                niveisOrdenados = newOrder.map(id => niveisOrdenados.find(n => n.id === id)).filter(Boolean);
+            }
+        });
+    });
+}
+
+// Salvar ordem
+document.getElementById('ordenarBtn')?.addEventListener('click', async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const items = document.querySelectorAll('#niveisList .nivel-item');
+        const ordem = Array.from(items).map((item, index) => ({
+            id: parseInt(item.dataset.id),
+            ordem: index + 1
+        }));
+
+        console.log('Salvando ordem:', ordem);
+        
+        const response = await fetch("http://localhost:3000/niveis/ordenar", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ ordem })
+        });
+
+        if (!response.ok) throw new Error("Erro ao salvar ordem");
+        
+        showFeedback("Ordem dos níveis salva com sucesso!", false);
+        fetchNiveis();
+    } catch (error) {
+        console.error("Erro ao salvar ordem:", error);
+        showFeedback("Erro ao salvar ordem: " + error.message);
+    }
+});
+
+// Mostrar detalhes
+function showDetails(nivelId) {
+    const details = document.getElementById(`details${nivelId}`);
+    if (details) {
+        details.classList.toggle('hidden');
+        if (!details.classList.contains('hidden')) {
+            details.classList.add('fade-in');
+            details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+}
+
+// Modal de Situação
+async function showStatusModal(nivelId, titulo, ativo) {
+    currentNivelId = nivelId;
     const modal = document.getElementById('statusModal');
     const statusContent = document.getElementById('statusContent');
     const positionInput = document.getElementById('positionInput');
@@ -231,7 +432,6 @@ async function showStatusModal(faseId, titulo, ativo) {
     const toggleStatusButton = document.getElementById('toggleStatusButton');
     const saveChangesButton = document.getElementById('saveChangesButton');
 
-    // Reset do modal
     positionInput.classList.add('hidden');
     toggleStatusButton.classList.remove('hidden');
     saveChangesButton.classList.add('hidden');
@@ -239,137 +439,245 @@ async function showStatusModal(faseId, titulo, ativo) {
 
     try {
         const token = localStorage.getItem('token');
-        console.log('Buscando dados da fase:', faseId);
-        const response = await fetch(`/fases/${faseId}`, {
+        const response = await fetch(`http://localhost:3000/niveis/${nivelId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
-        console.log('Resposta da fase:', response.status, response.statusText);
         
-        if (!response.ok) {
-            throw new Error("Erro ao buscar dados da fase");
-        }
-        
+        if (!response.ok) throw new Error("Erro ao buscar dados");
         const data = await response.json();
-        console.log("Dados da fase carregados:", data);
 
-        // Atualizar o conteúdo do modal
         statusContent.innerHTML = `
-            <p class="text-gray-600 mb-2"><strong>Fase:</strong> ${escapeHtml(data.titulo || data.nome)}</p>
-            <p class="text-gray-600 mb-2"><strong>Situação Atual:</strong> <span class="font-bold ${data.ativo ? 'text-green-600' : 'text-red-600'}">${data.ativo ? 'Ativa' : 'Inativa'}</span></p>
-            ${data.ativo && data.posicao ? `<p class="text-gray-600"><strong>Posição Atual:</strong> ${data.posicao}</p>` : ''}
+            <p class="text-gray-600 mb-2"><strong>Nível:</strong> ${escapeHtml(data.titulo)}</p>
+            <p class="text-gray-600 mb-2"><strong>Situação Atual:</strong> 
+                <span class="font-bold ${data.ativo ? 'text-green-600' : 'text-red-600'}">${data.ativo ? 'Ativo' : 'Inativo'}</span>
+            </p>
+            ${data.ativo && data.posicao ? `<p class="text-gray-600"><strong>Posição:</strong> ${data.posicao}</p>` : ''}
         `;
 
-        // Configurar botão de alternância
-        toggleStatusButton.textContent = data.ativo ? 'Desativar Fase' : 'Ativar Fase';
+        toggleStatusButton.textContent = data.ativo ? 'Desativar Nível' : 'Ativar Nível';
         toggleStatusButton.className = data.ativo ? 
-            'bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition' : 
-            'bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600 transition';
+            'bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition w-full' : 
+            'bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600 transition w-full';
         
         toggleStatusButton.onclick = async () => {
             if (!data.ativo) {
-                // Se estiver inativo, mostrar campo de posição
                 positionInput.classList.remove('hidden');
                 toggleStatusButton.classList.add('hidden');
                 saveChangesButton.classList.remove('hidden');
                 posicaoInput.value = "";
-                posicaoInput.focus();
             } else {
-                // Se estiver ativo, desativar diretamente
-                if (confirm(`Tem certeza que deseja desativar a fase "${data.titulo || data.nome}"?`)) {
-                    try {
-                        console.log('Desativando fase:', faseId);
-                        const response = await fetch(`/fases/${faseId}/ativar`, {
-                            method: "PUT",
-                            headers: { 
-                                "Content-Type": "application/json", 
-                                "Authorization": `Bearer ${token}` 
-                            },
-                            body: JSON.stringify({ ativo: false, posicao: null })
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error("Erro ao desativar fase");
-                        }
-                        
-                        const result = await response.json();
-                        showFeedback(result.message || "Fase desativada com sucesso!", false);
-                        modal.style.display = "none";
-                        fetchFases();
-                    } catch (error) {
-                        console.error("Erro ao desativar fase:", error);
-                        showFeedback("Erro ao desativar fase: " + error.message);
-                    }
+                if (confirm(`Desativar o nível "${data.titulo}"?`)) {
+                    await toggleNivelStatus(nivelId, false, null);
+                    modal.style.display = "none";
                 }
             }
         };
 
-        // Configurar botão de salvar alterações
         saveChangesButton.onclick = async () => {
             const novaPosicao = parseInt(posicaoInput.value);
             if (!novaPosicao || novaPosicao <= 0) {
-                showFeedback("Informe uma posição válida (número positivo).");
+                showFeedback("Informe uma posição válida.");
                 return;
             }
-            
-            try {
-                console.log('Ativando fase:', faseId, 'com posição:', novaPosicao);
-                const response = await fetch(`/fases/${faseId}/ativar`, {
-                    method: "PUT",
-                    headers: { 
-                        "Content-Type": "application/json", 
-                        "Authorization": `Bearer ${token}` 
-                    },
-                    body: JSON.stringify({ ativo: true, posicao: novaPosicao })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || "Erro ao ativar fase");
-                }
-                
-                const result = await response.json();
-                showFeedback(result.message || "Fase ativada com sucesso!", false);
-                modal.style.display = "none";
-                fetchFases();
-            } catch (error) {
-                console.error("Erro ao ativar fase:", error);
-                showFeedback("Erro ao ativar fase: " + error.message);
-            }
+            await toggleNivelStatus(nivelId, true, novaPosicao);
+            modal.style.display = "none";
         };
     } catch (error) {
-        console.error("Erro ao buscar fase:", error);
-        statusContent.innerHTML = "<p class='text-red-500'>Erro ao carregar detalhes da fase.</p>";
-        showFeedback("Erro ao carregar detalhes da fase: " + error.message);
+        statusContent.innerHTML = "<p class='text-red-500'>Erro ao carregar detalhes.</p>";
     }
 
-    // Fechar modal ao clicar no X
-    const closeBtn = document.querySelector('.close');
-    if (closeBtn) {
-        closeBtn.onclick = () => {
-            modal.style.display = "none";
-        };
-    }
+    const closeBtn = document.querySelector('#statusModal .close');
+    if (closeBtn) closeBtn.onclick = () => modal.style.display = "none";
+    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
+}
 
-    // Fechar modal ao clicar fora do conteúdo
-    window.onclick = (event) => {
-        if (event.target == modal) {
-            modal.style.display = "none";
+async function toggleNivelStatus(nivelId, ativo, posicao) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:3000/niveis/${nivelId}/ativar`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ ativo, posicao })
+        });
+        
+        if (!response.ok) throw new Error("Erro ao alterar status");
+        const result = await response.json();
+        showFeedback(result.message || `Nível ${ativo ? 'ativado' : 'desativado'} com sucesso!`, false);
+        fetchNiveis();
+    } catch (error) {
+        showFeedback("Erro ao alterar status: " + error.message);
+    }
+}
+
+// Mostrar perguntas
+async function showQuestions(nivelId, titulo) {
+    currentNivelId = nivelId;
+    const modal = document.getElementById('questionsModal');
+    const questionsList = document.getElementById('questionsList');
+    document.getElementById('questionsModalTitle').innerHTML = `<i class="fas fa-question-circle mr-2"></i>Perguntas - ${escapeHtml(titulo)}`;
+    
+    modal.style.display = "block";
+    questionsList.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando perguntas...</div>';
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:3000/perguntas?nivel_id=${nivelId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error("Erro ao buscar perguntas");
+        const data = await response.json();
+        const perguntas = data.perguntas || data;
+        
+        if (!perguntas || perguntas.length === 0) {
+            questionsList.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhuma pergunta cadastrada para este nível.</div>';
+            return;
         }
+        
+        questionsList.innerHTML = perguntas.map(pergunta => `
+            <div class="pergunta-card">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800 mb-2">📝 ${escapeHtml(pergunta.texto)}</p>
+                        <div class="space-y-1 ml-4">
+                            <div class="opcao-item ${pergunta.resposta_correta === 'opcao1' ? 'opcao-correta' : 'opcao-normal'}">
+                                <span class="font-bold w-8">A)</span> ${escapeHtml(pergunta.opcao1)}
+                                ${pergunta.resposta_correta === 'opcao1' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                            </div>
+                            <div class="opcao-item ${pergunta.resposta_correta === 'opcao2' ? 'opcao-correta' : 'opcao-normal'}">
+                                <span class="font-bold w-8">B)</span> ${escapeHtml(pergunta.opcao2)}
+                                ${pergunta.resposta_correta === 'opcao2' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                            </div>
+                            <div class="opcao-item ${pergunta.resposta_correta === 'opcao3' ? 'opcao-correta' : 'opcao-normal'}">
+                                <span class="font-bold w-8">C)</span> ${escapeHtml(pergunta.opcao3)}
+                                ${pergunta.resposta_correta === 'opcao3' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <button onclick="editPergunta(${pergunta.id})" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button onclick="deletePergunta(${pergunta.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        questionsList.innerHTML = `<div class="text-red-500 text-center py-4">Erro: ${error.message}</div>`;
+    }
+    
+    document.querySelector('#questionsModal .close-questions').onclick = () => modal.style.display = "none";
+    window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
+}
+
+// Editar pergunta
+window.editPergunta = async (perguntaId) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:3000/perguntas/${perguntaId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error("Erro ao buscar pergunta");
+        const pergunta = await response.json();
+        
+        currentEditPerguntaId = perguntaId;
+        document.getElementById('editTexto').value = pergunta.texto;
+        document.getElementById('editOpcao1').value = pergunta.opcao1;
+        document.getElementById('editOpcao2').value = pergunta.opcao2;
+        document.getElementById('editOpcao3').value = pergunta.opcao3;
+        document.getElementById('editRespostaCorreta').value = pergunta.resposta_correta;
+        
+        document.getElementById('editQuestionModal').style.display = "block";
+        document.getElementById('questionsModal').style.display = "none";
+    } catch (error) {
+        showFeedback("Erro ao carregar pergunta: " + error.message);
+    }
+};
+
+// Salvar edição
+document.getElementById('editQuestionForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const updatedPergunta = {
+        texto: document.getElementById('editTexto').value,
+        opcao1: document.getElementById('editOpcao1').value,
+        opcao2: document.getElementById('editOpcao2').value,
+        opcao3: document.getElementById('editOpcao3').value,
+        resposta_correta: document.getElementById('editRespostaCorreta').value
     };
-}
-
-// Função para buscar e exibir os detalhes de uma fase
-async function showDetails(faseId) {
-    const details = document.getElementById(`details${faseId}`);
-    if (details) {
-        details.classList.toggle('hidden');
-        if (!details.classList.contains('hidden')) {
-            details.classList.add('fade-in');
-            // Rolar para os detalhes
-            details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:3000/perguntas/${currentEditPerguntaId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(updatedPergunta)
+        });
+        
+        if (!response.ok) throw new Error("Erro ao salvar alterações");
+        
+        showFeedback("Pergunta atualizada com sucesso!", false);
+        document.getElementById('editQuestionModal').style.display = "none";
+        
+        if (currentNivelId) {
+            const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+            if (nivel) showQuestions(currentNivelId, nivel.titulo);
         }
+    } catch (error) {
+        showFeedback("Erro ao salvar: " + error.message);
     }
-}
+});
+
+// Excluir pergunta
+window.deletePergunta = async (perguntaId) => {
+    if (!confirm("Tem certeza que deseja excluir esta pergunta? Esta ação não pode ser desfeita.")) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:3000/perguntas/${perguntaId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error("Erro ao excluir pergunta");
+        
+        showFeedback("Pergunta excluída com sucesso!", false);
+        
+        if (currentNivelId) {
+            const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+            if (nivel) showQuestions(currentNivelId, nivel.titulo);
+        }
+    } catch (error) {
+        showFeedback("Erro ao excluir: " + error.message);
+    }
+};
+
+// Fechar modais de edição
+document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
+    document.getElementById('editQuestionModal').style.display = "none";
+    if (currentNivelId) {
+        const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+        if (nivel) showQuestions(currentNivelId, nivel.titulo);
+    }
+});
+
+document.querySelector('#editQuestionModal .close-edit')?.addEventListener('click', () => {
+    document.getElementById('editQuestionModal').style.display = "none";
+    if (currentNivelId) {
+        const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+        if (nivel) showQuestions(currentNivelId, nivel.titulo);
+    }
+});
 
 // Logout
 const logoutBtn = document.getElementById('logoutButton');

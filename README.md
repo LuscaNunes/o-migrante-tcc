@@ -1,10 +1,8 @@
-┌─────────────────────────────────────────────────────────┐
-│                    ADM PODE FAZER                       │
-├─────────────────────────────────────────────────────────┤
-│  ✚ Criar/Editar/Excluir Níveis                          │
-│  ✚ Criar/Editar/Excluir Perguntas                       │
-│  ✚ Ativar/Desativar Fases                               │
-│  ✚ Publicar Mensagem Diária                             │
-│  ✚ Gerenciar Usuários                                   │
-│  ✚ Controlar Progressão (XP e posições)                 │
-└─────────────────────────────────────────────────────────┘
+-- ADM PODE FAZER
+
+✚ Criar/Editar/Excluir Níveis          → DadosNiveis.ejs   
+✚ Criar/Editar/Excluir Perguntas       → DadosPergunta.ejs 
+✚ Ativar/Desativar Fases               → DadosFases.ejs    
+✚ Publicar Mensagem Diária             → MensagemDiaria.ejs
+✚ Gerenciar Usuários                   → PesquisaUsuario.ejs
+✚ Controlar Progressão (XP e posições) → DadosNiveis.ejs
