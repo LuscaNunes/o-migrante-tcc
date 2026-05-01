@@ -21,14 +21,15 @@ async function criarAnotacao(usuario_id, { versao, livro, capitulo, versiculo, t
   }
 
   try {
-    const [result] = await db.promise().query(
+    // ❌ REMOVA o .promise() - use db.query diretamente
+    const [result] = await db.query(
       `INSERT INTO Anotacoes 
        (usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, texto_anotacao, visibilidade) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, texto_anotacao, visibilidade]
     );
 
-    const [anotacao] = await db.promise().query(
+    const [anotacao] = await db.query(
       `SELECT 
          id_anotacao AS id,
          usuario_id,
@@ -82,9 +83,10 @@ async function listarAnotacoes(usuario_id, visibilidade) {
 
     query += ` ORDER BY criado_em DESC`;
 
-    console.log('Query SQL:', query, 'Params:', params); // Log para depuração
-    const [anotacoes] = await db.promise().query(query, params);
-    console.log('Anotações retornadas:', anotacoes); // Log para depuração
+    console.log('Query SQL:', query, 'Params:', params);
+    // ❌ REMOVA o .promise()
+    const [anotacoes] = await db.query(query, params);
+    console.log('Anotações retornadas:', anotacoes);
     return anotacoes;
   } catch (error) {
     throw new Error('Erro ao buscar anotações: ' + error.message);
@@ -99,13 +101,14 @@ async function listarAnotacoes(usuario_id, visibilidade) {
  * @returns {Promise<Object>} Dados da anotação atualizada
  */
 async function atualizarVisibilidadeAnotacao(id_anotacao, usuario_id, visibilidade) {
-  console.log('Atualizando visibilidade:', { id_anotacao, usuario_id, visibilidade }); // Log para depuração
+  console.log('Atualizando visibilidade:', { id_anotacao, usuario_id, visibilidade });
   if (!['public', 'private'].includes(visibilidade)) {
     throw new Error(`Visibilidade deve ser "public" ou "private", recebido: ${visibilidade}`);
   }
 
   try {
-    const [anotacao] = await db.promise().query(
+    // ❌ REMOVA o .promise()
+    const [anotacao] = await db.query(
       `SELECT usuario_id FROM Anotacoes WHERE id_anotacao = ?`,
       [id_anotacao]
     );
@@ -117,12 +120,14 @@ async function atualizarVisibilidadeAnotacao(id_anotacao, usuario_id, visibilida
       throw new Error('Usuário não autorizado para editar esta anotação');
     }
 
-    await db.promise().query(
+    // ❌ REMOVA o .promise()
+    await db.query(
       `UPDATE Anotacoes SET visibilidade = ? WHERE id_anotacao = ?`,
       [visibilidade, id_anotacao]
     );
 
-    const [anotacaoAtualizada] = await db.promise().query(
+    // ❌ REMOVA o .promise()
+    const [anotacaoAtualizada] = await db.query(
       `SELECT 
          id_anotacao AS id,
          usuario_id,
