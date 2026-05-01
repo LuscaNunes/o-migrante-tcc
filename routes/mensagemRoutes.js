@@ -12,21 +12,14 @@ router.post('/', authenticateToken, checkAdmin, async (req, res) => {
     if (!versao || !livro || !capitulo || !versiculo || !texto_versiculo || !titulo || !descricao) {
         return res.status(400).json({ success: false, message: 'Preencha todos os campos.' });
     }
-    if (typeof capitulo !== 'number' || capitulo <= 0) {
-        return res.status(400).json({ success: false, message: 'Capítulo deve ser um número positivo.' });
-    }
-    if (typeof versiculo !== 'number' || versiculo <= 0) {
-        return res.status(400).json({ success: false, message: 'Versículo deve ser um número positivo.' });
-    }
 
     try {
-        // Usar o nome correto da coluna: ordem_exibição (com acento)
+        // Usar os nomes EXATOS das colunas no banco: capítulo e versículo (com acento)
         const [lastOrder] = await db.query('SELECT MAX(ordem_exibição) as maxOrder FROM mensagensdiarias');
         const ordem_exibicao = (lastOrder[0].maxOrder || 0) + 1;
 
-        // NÃO use db.promise().query - use db.query diretamente
         await db.query(
-            'INSERT INTO mensagensdiarias (usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO mensagensdiarias (usuario_id, versao, livro, capítulo, versículo, texto_versículo, título, descrição, ordem_exibição) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibicao]
         );
         res.json({ success: true, message: 'Mensagem cadastrada com sucesso!' });
@@ -36,15 +29,15 @@ router.post('/', authenticateToken, checkAdmin, async (req, res) => {
     }
 });
 
-// Listar mensagens cadastradas (admin)
+// Listar mensagens
 router.get('/', authenticateToken, checkAdmin, async (req, res) => {
     const { busca } = req.query;
 
     try {
-        let query = 'SELECT id_mensagem, usuario_id, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao, ordem_exibição FROM mensagensdiarias WHERE 1=1';
+        let query = 'SELECT id_mensagem, usuario_id, versao, livro, capítulo, versículo, texto_versículo, título, descrição, ordem_exibição FROM mensagensdiarias WHERE 1=1';
         const params = [];
         if (busca) {
-            query += ' AND (LOWER(titulo) LIKE LOWER(?) OR LOWER(livro) LIKE LOWER(?) OR LOWER(texto_versiculo) LIKE LOWER(?))';
+            query += ' AND (LOWER(título) LIKE LOWER(?) OR LOWER(livro) LIKE LOWER(?) OR LOWER(texto_versículo) LIKE LOWER(?))';
             params.push(`%${busca}%`, `%${busca}%`, `%${busca}%`);
         }
         query += ' ORDER BY ordem_exibição DESC';
@@ -57,7 +50,7 @@ router.get('/', authenticateToken, checkAdmin, async (req, res) => {
     }
 });
 
-// Obter mensagem do dia (qualquer usuário autenticado)
+// Mensagem do dia
 router.get('/diaria', authenticateToken, async (req, res) => {
     try {
         const startDate = new Date('2025-06-01');
@@ -74,7 +67,7 @@ router.get('/diaria', authenticateToken, async (req, res) => {
         const ordem_exibicao = (daysSinceStart % totalMensagens) + 1;
 
         const [results] = await db.query(
-            'SELECT id_mensagem, versao, livro, capitulo, versiculo, texto_versiculo, titulo, descricao FROM mensagensdiarias WHERE ordem_exibição = ?',
+            'SELECT id_mensagem, versao, livro, capítulo, versículo, texto_versículo, título, descrição FROM mensagensdiarias WHERE ordem_exibição = ?',
             [ordem_exibicao]
         );
         
