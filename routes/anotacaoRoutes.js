@@ -1,13 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
-const anotacoesService = require('../services/anotacoesService');
+const anotacoesService = require('../services/anotacaoService');
 
-// Middleware para extrair usuário do token (seu auth middleware já faz isso)
 // Rota para criar anotação
 router.post('/', async (req, res) => {
     try {
-        // Pega o usuario_id do middleware authenticateToken
         const usuario_id = req.user?.id;
         
         if (!usuario_id) {
@@ -19,11 +16,15 @@ router.post('/', async (req, res) => {
 
         const { versao, livro, capitulo, versiculo, texto_versiculo, texto_anotacao, visibilidade } = req.body;
         
+        // Converte para números
+        const capituloNum = parseInt(capitulo);
+        const versiculoNum = parseInt(versiculo);
+        
         const anotacao = await anotacoesService.criarAnotacao(usuario_id, {
             versao,
             livro,
-            capitulo: parseInt(capitulo),
-            versiculo: parseInt(versiculo),
+            capitulo: capituloNum,
+            versiculo: versiculoNum,
             texto_versiculo,
             texto_anotacao,
             visibilidade: visibilidade || 'private'
@@ -70,9 +71,10 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Rota para anotações públicas
+// Rota para anotações públicas (não requer autenticação)
 router.get('/publicas', async (req, res) => {
     try {
+        const db = require('../config/database');
         const [anotacoes] = await db.query(
             `SELECT 
                 a.id_anotacao AS id,
@@ -95,14 +97,14 @@ router.get('/publicas', async (req, res) => {
             success: true,
             anotacoes: anotacoes.map(anotacao => ({
                 ...anotacao,
-                visibilidade: anotacao.visibilidade === 'public' ? 'publico' : 'privado'
+                visibilidade_label: anotacao.visibilidade === 'public' ? 'Público' : 'Privado'
             }))
         });
     } catch (error) {
         console.error('Erro ao buscar anotações públicas:', error);
         res.status(500).json({
             success: false,
-            message: 'Erro ao buscar anotações públicas.'
+            message: 'Erro ao buscar anotações públicas: ' + error.message
         });
     }
 });
