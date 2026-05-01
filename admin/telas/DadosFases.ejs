@@ -25,19 +25,13 @@
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2 class="text-xl font-bold mb-4">Situação do Nível</h2>
-        <div id="statusContent">
-            <!-- Conteúdo da situação será carregado aqui -->
-        </div>
+        <div id="statusContent"></div>
         <div id="positionInput" class="hidden">
             <label for="posicao" class="block text-gray-700 font-bold mb-2">Posição:</label>
             <input type="number" id="posicao" class="w-full p-2 border rounded" placeholder="Informe a posição" />
         </div>
-        <button id="toggleStatusButton" class="bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition">
-            Desativar
-        </button>
-        <button id="saveChangesButton" class="hidden bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 transition">
-            Salvar Alterações
-        </button>
+        <button id="toggleStatusButton" class="bg-red-500 text-white px-4 py-2 rounded mt-4 hover:bg-red-600 transition">Desativar</button>
+        <button id="saveChangesButton" class="hidden bg-blue-500 text-white px-4 py-2 rounded mt-4 hover:bg-blue-600 transition">Salvar Alterações</button>
     </div>
 </div>
 
@@ -46,9 +40,7 @@
     <div class="modal-content" style="max-width: 700px;">
         <span class="close-questions">&times;</span>
         <h2 class="text-xl font-bold mb-4" id="questionsModalTitle">Perguntas do Nível</h2>
-        <div id="questionsList" class="max-h-96 overflow-y-auto">
-            <!-- Perguntas serão carregadas aqui -->
-        </div>
+        <div id="questionsList" class="max-h-96 overflow-y-auto"></div>
     </div>
 </div>
 
@@ -210,6 +202,9 @@
 </style>
 
 <script>
+// Configuração do backend
+const API_URL = 'http://localhost:3000';
+
 // Função para exibir mensagens de feedback
 function showFeedback(message, isError = true) {
     const feedbackDiv = document.createElement('div');
@@ -219,7 +214,6 @@ function showFeedback(message, isError = true) {
     setTimeout(() => feedbackDiv.remove(), 3000);
 }
 
-// Função auxiliar para escapar HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -238,9 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!token) {
         showFeedback("Você precisa estar logado para acessar esta página.");
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 1500);
+        setTimeout(() => window.location.href = "index.html", 1500);
         return;
     }
 
@@ -251,28 +243,42 @@ document.addEventListener("DOMContentLoaded", () => {
 async function fetchNiveis() {
     try {
         const token = localStorage.getItem('token');
-        console.log('Buscando níveis...');
-        const response = await fetch('http://localhost:3000/niveis', {
-            headers: { "Authorization": `Bearer ${token}` }
+        console.log('Buscando níveis em:', `${API_URL}/niveis`);
+        
+        const response = await fetch(`${API_URL}/niveis`, {
+            method: 'GET',
+            headers: { 
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
         });
+        
+        console.log('Status da resposta:', response.status);
         
         if (!response.ok) {
             if (response.status === 401) {
                 localStorage.removeItem('token');
                 showFeedback("Sessão expirada. Faça login novamente.");
-                setTimeout(() => window.location.href = "/", 1500);
+                setTimeout(() => window.location.href = "index.html", 1500);
                 return;
             }
-            throw new Error("Erro ao buscar níveis");
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
         const data = await response.json();
         console.log('Níveis recebidos:', data);
-        niveisOrdenados = data.niveis || data;
+        niveisOrdenados = data.niveis || [];
         renderNiveis(niveisOrdenados);
     } catch (error) {
         console.error("Erro ao buscar níveis:", error);
-        showFeedback("Erro ao buscar níveis: " + error.message);
+        showFeedback("Erro ao conectar com o servidor. Verifique se o backend está rodando em " + API_URL);
+        
+        // Exibir erro detalhado no console
+        console.log('Verifique se:');
+        console.log('1. O backend está rodando em', API_URL);
+        console.log('2. O token é válido');
+        console.log('3. O CORS está configurado no backend');
     }
 }
 
@@ -298,7 +304,7 @@ function renderNiveis(niveis) {
                         </span>
                     </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
                     <button class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm btn-primary" onclick="showDetails(${nivel.id})">
                         <i class="fas fa-info-circle mr-1"></i>Detalhes
                     </button>
@@ -371,7 +377,6 @@ function setupDragAndDrop() {
                     parent.insertBefore(draggedItem, item);
                 }
                 
-                // Atualizar array de níveis ordenados
                 const newOrder = Array.from(parent.children).map(li => parseInt(li.dataset.id));
                 niveisOrdenados = newOrder.map(id => niveisOrdenados.find(n => n.id === id)).filter(Boolean);
             }
@@ -379,38 +384,47 @@ function setupDragAndDrop() {
     });
 }
 
-// Salvar ordem
+// Salvar ordem - Usando o endpoint de ativação para atualizar posições
 document.getElementById('ordenarBtn')?.addEventListener('click', async () => {
     try {
         const token = localStorage.getItem('token');
         const items = document.querySelectorAll('#niveisList .nivel-item');
-        const ordem = Array.from(items).map((item, index) => ({
-            id: parseInt(item.dataset.id),
-            ordem: index + 1
-        }));
-
-        console.log('Salvando ordem:', ordem);
         
-        const response = await fetch("http://localhost:3000/niveis/ordenar", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ ordem })
-        });
-
-        if (!response.ok) throw new Error("Erro ao salvar ordem");
+        showFeedback("Salvando ordem dos níveis...", false);
+        
+        // Para cada nível, atualizar sua posição individualmente
+        for (let index = 0; index < items.length; index++) {
+            const item = items[index];
+            const nivelId = parseInt(item.dataset.id);
+            const novaPosicao = index + 1;
+            
+            // Buscar o nível atual para verificar se está ativo
+            const responseGet = await fetch(`${API_URL}/niveis/${nivelId}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const nivel = await responseGet.json();
+            
+            if (nivel.ativo) {
+                // Se o nível está ativo, atualizar sua posição
+                await fetch(`${API_URL}/niveis/${nivelId}/ativar`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ ativo: true, posicao: novaPosicao })
+                });
+            }
+        }
         
         showFeedback("Ordem dos níveis salva com sucesso!", false);
-        fetchNiveis();
+        fetchNiveis(); // Recarregar para mostrar as novas posições
     } catch (error) {
         console.error("Erro ao salvar ordem:", error);
         showFeedback("Erro ao salvar ordem: " + error.message);
     }
 });
 
-// Mostrar detalhes
 function showDetails(nivelId) {
     const details = document.getElementById(`details${nivelId}`);
     if (details) {
@@ -439,7 +453,7 @@ async function showStatusModal(nivelId, titulo, ativo) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:3000/niveis/${nivelId}`, {
+        const response = await fetch(`${API_URL}/niveis/${nivelId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         
@@ -494,7 +508,7 @@ async function showStatusModal(nivelId, titulo, ativo) {
 async function toggleNivelStatus(nivelId, ativo, posicao) {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:3000/niveis/${nivelId}/ativar`, {
+        const response = await fetch(`${API_URL}/niveis/${nivelId}/ativar`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -503,7 +517,10 @@ async function toggleNivelStatus(nivelId, ativo, posicao) {
             body: JSON.stringify({ ativo, posicao })
         });
         
-        if (!response.ok) throw new Error("Erro ao alterar status");
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Erro ao alterar status");
+        }
         const result = await response.json();
         showFeedback(result.message || `Nível ${ativo ? 'ativado' : 'desativado'} com sucesso!`, false);
         fetchNiveis();
@@ -524,7 +541,7 @@ async function showQuestions(nivelId, titulo) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:3000/perguntas?nivel_id=${nivelId}`, {
+        const response = await fetch(`${API_URL}/perguntas?nivel_id=${nivelId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         
@@ -539,7 +556,7 @@ async function showQuestions(nivelId, titulo) {
         
         questionsList.innerHTML = perguntas.map(pergunta => `
             <div class="pergunta-card">
-                <div class="flex justify-between items-start">
+                <div class="flex justify-between items-start flex-wrap gap-2">
                     <div class="flex-1">
                         <p class="font-semibold text-gray-800 mb-2">📝 ${escapeHtml(pergunta.texto)}</p>
                         <div class="space-y-1 ml-4">
@@ -557,7 +574,7 @@ async function showQuestions(nivelId, titulo) {
                             </div>
                         </div>
                     </div>
-                    <div class="flex gap-2 ml-4">
+                    <div class="flex gap-2">
                         <button onclick="editPergunta(${pergunta.id})" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
                             <i class="fas fa-edit"></i> Editar
                         </button>
@@ -580,7 +597,7 @@ async function showQuestions(nivelId, titulo) {
 window.editPergunta = async (perguntaId) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:3000/perguntas/${perguntaId}`, {
+        const response = await fetch(`${API_URL}/perguntas/${perguntaId}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         
@@ -615,7 +632,7 @@ document.getElementById('editQuestionForm')?.addEventListener('submit', async (e
     
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:3000/perguntas/${currentEditPerguntaId}`, {
+        const response = await fetch(`${API_URL}/perguntas/${currentEditPerguntaId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -644,7 +661,7 @@ window.deletePergunta = async (perguntaId) => {
     
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:3000/perguntas/${perguntaId}`, {
+        const response = await fetch(`${API_URL}/perguntas/${perguntaId}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
         });
@@ -686,7 +703,7 @@ if (logoutBtn) {
         console.log('Efetuando logout...');
         if (confirm('Tem certeza que deseja sair?')) {
             localStorage.removeItem('token');
-            window.location.href = "/";
+            window.location.href = "index.html";
         }
     });
 }
