@@ -1,3 +1,6 @@
+const express = require('express');
+const router = express.Router();
+
 // Rota para listar anotações públicas
 router.get('/publicas', async (req, res) => {
   try {
@@ -35,3 +38,5 @@ router.get('/publicas', async (req, res) => {
     });
   }
 });
+
+module.exports = router;
