@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const anotacoesService = require('../services/anotacoesService');
+const anotacoesService = require('../services/anotacaoService');
 
 // Rota para criar anotação
 router.post('/', async (req, res) => {
