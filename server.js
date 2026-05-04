@@ -261,6 +261,24 @@ app.get('/app/missao', authenticateToken, async (req, res) => {
     res.status(500).send('Erro ao carregar missões.');
   }
 });
+
+// Rota para o painel do nível (mapa de perguntas)
+app.get('/app/painel-nivel', authenticateToken, async (req, res) => {
+  try {
+    const bodyContent = await renderViewToString(req.app, 'PainelNivel', { 
+      user: req.user 
+    });
+    
+    res.render('layout', { 
+      title: 'Missão - Detalhes do Nível | O Migrante',
+      body: bodyContent,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Erro ao renderizar Painel do Nível:', error);
+    res.status(500).send('Erro interno ao carregar a página.');
+  }
+});
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================
