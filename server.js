@@ -251,6 +251,16 @@ app.get('/admin/editar-perguntas', authenticateToken, checkAdmin, async (req, re
         res.status(500).send('Erro interno ao carregar a página.');
     }
 });
+
+// Rota para a página de missões/fases
+app.get('/app/missao', authenticateToken, async (req, res) => {
+  try {
+    const bodyContent = await renderViewToString(req.app, 'Fases', { user: req.user });
+    res.render('layout', { title: 'Missões - O Migrante', body: bodyContent, user: req.user });
+  } catch (error) {
+    res.status(500).send('Erro ao carregar missões.');
+  }
+});
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================

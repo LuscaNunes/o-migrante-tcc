@@ -1,0 +1,205 @@
+<%
+  // Esta página será injetada no layout.ejs como 'body'
+  // O objeto 'user' já vem do server.js
+%>
+
+<style>
+  .nivel-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .nivel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1), 0 8px 10px -6px rgba(59, 130, 246, 0.1);
+  }
+
+  .action-button {
+    transition: all 0.2s ease;
+  }
+
+  .action-button:hover {
+    transform: scale(1.05);
+    background-color: #EFF6FF;
+    color: #2563EB;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease forwards;
+  }
+</style>
+
+<div class="w-full max-w-5xl mx-auto">
+  <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-10 animate-fadeIn">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-semibold text-gray-900 flex items-center">
+        <i class="fas fa-tasks text-indigo-600 mr-3"></i>
+        Escolha Um Nível
+      </h1>
+      <div class="flex space-x-4">
+        <a href="/app/ranking" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition flex items-center">
+          <i class="fas fa-trophy mr-2"></i> Ranking
+        </a>
+        <a href="/app/temporada" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition flex items-center">
+          <i class="fas fa-calendar-alt mr-2"></i> Temporada
+        </a>
+      </div>
+    </div>
+
+    <!-- Carregando -->
+    <div id="loadingContainer" class="text-center py-12">
+      <i class="fas fa-spinner fa-spin text-indigo-600 text-3xl mb-3"></i>
+      <p class="text-gray-500">Carregando níveis disponíveis...</p>
+    </div>
+
+    <!-- Lista de Níveis -->
+    <div id="niveisContainer" class="space-y-4">
+      <!-- Os blocos de níveis serão renderizados aqui -->
+    </div>
+
+    <!-- Mensagem de erro -->
+    <div id="erroContainer" class="hidden text-center py-12">
+      <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+      <p id="erroMensagem" class="text-gray-500"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    'use strict';
+
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? `http://${window.location.hostname}:${window.location.port || 3000}`
+      : 'https://o-migrante.onrender.com';
+
+    function showFeedback(message, isError = true) {
+      const existingFeedback = document.querySelector('.feedback-toast');
+      if (existingFeedback) existingFeedback.remove();
+      
+      const div = document.createElement('div');
+      div.className = `feedback-toast fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-all duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white`;
+      div.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'} mr-2"></i>${message}`;
+      document.body.appendChild(div);
+      setTimeout(() => {
+        div.style.opacity = '0';
+        setTimeout(() => div.remove(), 300);
+      }, 3000);
+    }
+
+    function redirectToNivel(nivelId) {
+      window.location.href = `/app/painel-nivel?nivel_id=${nivelId}`;
+    }
+
+    async function fetchNiveisAtivos() {
+      const loadingDiv = document.getElementById('loadingContainer');
+      const niveisContainer = document.getElementById('niveisContainer');
+      const erroContainer = document.getElementById('erroContainer');
+      const erroMensagem = document.getElementById('erroMensagem');
+
+      try {
+        loadingDiv.classList.remove('hidden');
+        niveisContainer.classList.add('hidden');
+        erroContainer.classList.add('hidden');
+
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`${API_BASE_URL}/niveis/ativos`, {
+          method: "GET",
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            showFeedback("Sessão expirada. Faça login novamente.", true);
+            setTimeout(() => window.location.href = "/", 1500);
+            return;
+          }
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Erro ${response.status}`);
+        }
+
+        const data = await response.json();
+        const niveis = data.niveis || [];
+
+        loadingDiv.classList.add('hidden');
+
+        if (niveis.length === 0) {
+          niveisContainer.innerHTML = `
+            <div class="text-center py-8 text-gray-500 bg-gray-50 rounded-xl">
+              <i class="fas fa-tasks text-4xl mb-3 text-indigo-300"></i>
+              <p>Nenhum nível ativo disponível no momento.</p>
+              <p class="text-sm mt-2">Volte mais tarde para novas missões!</p>
+            </div>
+          `;
+          niveisContainer.classList.remove('hidden');
+          return;
+        }
+
+        niveisContainer.innerHTML = niveis.map(nivel => `
+          <div class="nivel-card bg-white rounded-xl shadow-md p-5 border border-indigo-100 hover:shadow-lg transition cursor-pointer" onclick="redirectToNivel(${nivel.id})">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <h2 class="text-xl font-semibold text-indigo-700 mb-2 flex items-center">
+                  <i class="fas fa-layer-group mr-2 text-indigo-500"></i>
+                  ${escapeHtml(nivel.titulo)}
+                </h2>
+                <p class="text-gray-600">${escapeHtml(nivel.descricao || 'Sem descrição disponível')}</p>
+                <div class="mt-3 flex items-center text-sm text-indigo-500">
+                  <i class="fas fa-star mr-1"></i>
+                  <span>${nivel.xp_total || 0} XP</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-arrow-right text-indigo-600"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        niveisContainer.classList.remove('hidden');
+
+      } catch (error) {
+        console.error('Erro ao carregar níveis:', error);
+        loadingDiv.classList.add('hidden');
+        erroMensagem.textContent = error.message || 'Erro ao carregar níveis. Tente novamente mais tarde.';
+        erroContainer.classList.remove('hidden');
+        showFeedback(error.message || 'Erro ao carregar níveis', true);
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Expor função global para o onclick
+    window.redirectToNivel = redirectToNivel;
+
+    // Inicializar
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fetchNiveisAtivos);
+    } else {
+      fetchNiveisAtivos();
+    }
+  })();
+</script>
