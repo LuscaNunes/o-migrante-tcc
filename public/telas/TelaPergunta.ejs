@@ -4,34 +4,39 @@
 %>
 
 <style>
-  .glow {
-    animation: glow 1.5s infinite;
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
   }
 
-  @keyframes glow {
-    0% { box-shadow: 0 0 5px #00F0FF; }
-    50% { box-shadow: 0 0 20px #00F0FF; }
-    100% { box-shadow: 0 0 5px #00F0FF; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  .animate-error { animation: shake 0.3s ease-in-out; }
+  .animate-success { animation: pop 0.4s ease-out; }
+  
+  .option-btn {
+    transition: all 0.2s ease;
+  }
+  
+  .option-btn.correct {
+    background-color: #22c55e !important;
+    border-color: #16a34a !important;
+    color: white !important;
+  }
+
+  .option-btn.wrong {
+    background-color: #ef4444 !important;
+    border-color: #dc2626 !important;
+    color: white !important;
   }
 
   .indicador-progresso {
     transition: all 0.3s ease-in-out;
-  }
-
-  .resposta {
-    transition: all 0.2s ease;
-  }
-
-  @media (max-width: 400px) {
-    #quizContainer, #resultadoContainer, #feedbackOverlay > div, #sairOverlay > div, #erroContainer > div {
-      max-width: 90%;
-      padding: 1rem;
-    }
-    h1, .text-2xl { font-size: 1.25rem; }
-    button.resposta, #confirmarResposta, #voltarMissoesButton, #proximoNivelButton {
-      font-size: 0.875rem;
-      padding: 0.5rem;
-    }
   }
 </style>
 
@@ -44,62 +49,67 @@
   <div class="w-4 h-4 bg-gray-500 rounded-full indicador-progresso"></div>
 </div>
 
-<div class="min-h-screen flex items-center justify-center py-20 px-4">
-  <!-- Container do Quiz -->
-  <div id="quizContainer" class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md glow">
-    <h1 class="text-2xl font-bold mb-6 text-center text-white" id="pergunta-titulo">Carregando...</h1>
-    <div id="pergunta-container" class="space-y-4"></div>
-    <button id="confirmarResposta"
-      class="w-full mt-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-      disabled>
-      <i class="fas fa-check"></i> Confirmar Resposta
-    </button>
-  </div>
-
-  <!-- Resultado Final -->
-  <div id="resultadoContainer" class="hidden bg-white shadow-md rounded-lg p-6 w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-4" id="resultadoTitulo">Parabéns!</h1>
-    <p class="text-center text-lg mb-4">Você completou a missão com sucesso.</p>
-    <div class="text-center mb-4">
-      <p class="text-xl font-semibold">Total de XP: <span class="text-green-500" id="xpTotal">0</span></p>
-      <p class="text-xl font-semibold">Total de Acertos: <span class="text-green-500" id="totalAcertos">0</span></p>
-      <p class="text-xl font-semibold">Porcentagem: <span class="text-green-500" id="porcentagemAcertos">0</span>%</p>
+<div class="min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+    <!-- Cabeçalho -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold text-slate-800 mt-2" id="perguntaTitulo">Carregando pergunta...</h2>
     </div>
-    <div class="flex flex-col sm:flex-row justify-between gap-4 mt-6">
-      <button id="voltarMissoesButton" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 transition">
-        <i class="fas fa-arrow-left mr-2"></i>Voltar às Missões
-      </button>
-      <button id="proximoNivelButton" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-700 transition">
-        Próximo Nível <i class="fas fa-arrow-right ml-2"></i>
-      </button>
-    </div>
-  </div>
 
-  <!-- Overlay de Feedback -->
-  <div id="feedbackOverlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg p-6 text-center w-full max-w-md">
-      <p id="feedbackMessage" class="text-xl font-semibold mb-4 text-gray-900"></p>
-      <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
-    </div>
-  </div>
+    <!-- Opções -->
+    <div id="options-container" class="space-y-3"></div>
 
-  <!-- Overlay de Confirmação de Saída -->
-  <div id="sairOverlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-lg p-6 text-center w-full max-w-md">
-      <p class="text-xl font-semibold mb-4 text-gray-900">Se sair, irá perder seu progresso até o momento.</p>
-      <div class="flex gap-4">
-        <button id="confirmarSair" class="flex-1 py-2 bg-white border border-gray-900 text-gray-900 rounded hover:bg-gray-100 transition">Sim</button>
-        <button id="cancelarSair" class="flex-1 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">Não</button>
+    <!-- Feedback -->
+    <div id="feedback" class="mt-6 text-center font-bold h-6 transition-all duration-300 opacity-0"></div>
+  </div>
+</div>
+
+<!-- Resultado Final -->
+<div id="resultadoContainer" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
+    <div class="text-center">
+      <i class="fas fa-trophy text-yellow-500 text-5xl mb-4"></i>
+      <h1 class="text-2xl font-bold text-slate-800 mb-4" id="resultadoTitulo">Parabéns!</h1>
+      <p class="text-slate-600 mb-6">Você completou a missão com sucesso.</p>
+      <div class="space-y-2 mb-6">
+        <p class="text-lg font-semibold">Total de XP: <span class="text-green-600" id="xpTotal">0</span></p>
+        <p class="text-lg font-semibold">Total de Acertos: <span class="text-green-600" id="totalAcertos">0</span></p>
+        <p class="text-lg font-semibold">Porcentagem: <span class="text-green-600" id="porcentagemAcertos">0</span>%</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button id="voltarMissoesButton" class="flex-1 bg-blue-500 text-white py-3 px-4 rounded-xl hover:bg-blue-600 transition font-medium">
+          <i class="fas fa-arrow-left mr-2"></i>Voltar às Missões
+        </button>
+        <button id="proximoNivelButton" class="flex-1 bg-green-500 text-white py-3 px-4 rounded-xl hover:bg-green-600 transition font-medium">
+          Próximo Nível <i class="fas fa-arrow-right ml-2"></i>
+        </button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Mensagem de Erro -->
-  <div id="erroContainer" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 text-center w-full max-w-md">
-      <h2 class="text-xl font-bold mb-4 text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>Erro</h2>
-      <p id="mensagemErro" class="mb-4 text-gray-700">Ocorreu um erro ao carregar as perguntas.</p>
-      <button id="recarregarPagina" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700 transition">
+<!-- Overlay de Confirmação de Saída -->
+<div id="sairOverlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
+    <div class="text-center">
+      <i class="fas fa-exclamation-triangle text-yellow-500 text-5xl mb-4"></i>
+      <p class="text-xl font-semibold mb-6 text-slate-800">Se sair, irá perder seu progresso até o momento.</p>
+      <div class="flex gap-4">
+        <button id="confirmarSair" class="flex-1 py-3 bg-gray-100 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-gray-200 transition font-medium">Sim</button>
+        <button id="cancelarSair" class="flex-1 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium">Não</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mensagem de Erro -->
+<div id="erroContainer" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
+    <div class="text-center">
+      <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+      <h2 class="text-xl font-bold mb-4 text-red-600">Erro</h2>
+      <p id="mensagemErro" class="mb-6 text-slate-600">Ocorreu um erro ao carregar as perguntas.</p>
+      <button id="recarregarPagina" class="w-full bg-blue-500 text-white py-3 px-4 rounded-xl hover:bg-blue-600 transition font-medium">
         <i class="fas fa-sync-alt mr-2"></i>Recarregar Página
       </button>
     </div>
@@ -122,6 +132,8 @@
   let xpTotal = 0;
   let nivelId = null;
   let ordem = null;
+  let answered = false;
+  let aguardandoProximo = false;
 
   function showFeedback(message, isError = true) {
     const existingFeedback = document.querySelector('.feedback-toast');
@@ -140,7 +152,6 @@
   function mostrarErro(mensagem) {
     document.getElementById('mensagemErro').textContent = mensagem;
     document.getElementById('erroContainer').classList.remove('hidden');
-    document.getElementById('quizContainer').classList.add('hidden');
   }
 
   function atualizarIndicadoresProgresso(indiceAtual) {
@@ -200,7 +211,12 @@
       return;
     }
 
-    document.getElementById('pergunta-titulo').textContent = perguntaAtual.texto;
+    answered = false;
+    aguardandoProximo = false;
+    document.getElementById('perguntaTitulo').textContent = perguntaAtual.texto;
+    document.getElementById('feedback').classList.remove('opacity-100');
+    document.getElementById('feedback').classList.add('opacity-0');
+    document.getElementById('feedback').innerHTML = '';
 
     const todasOpcoes = [
       perguntaAtual.resposta_correta,
@@ -210,27 +226,71 @@
     ].filter(opcao => opcao);
 
     const opcoesEmbaralhadas = shuffleArray([...todasOpcoes]);
-    const perguntaContainer = document.getElementById('pergunta-container');
-    perguntaContainer.innerHTML = '';
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
 
     opcoesEmbaralhadas.forEach(opcao => {
       const button = document.createElement('button');
-      button.className = 'w-full py-2 bg-transparent border border-[#7194ce] rounded hover:bg-[#7194ce] hover:text-white transition transform hover:scale-105 resposta';
+      button.className = 'option-btn w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 font-medium text-slate-700 transition-all duration-200';
       button.textContent = opcao;
-      button.addEventListener('click', () => {
-        document.querySelectorAll('.resposta').forEach(btn => {
-          btn.classList.remove('bg-[#7194ce]', 'text-white');
-        });
-        button.classList.add('bg-[#7194ce]', 'text-white');
-        respostaSelecionada = opcao;
-        document.getElementById('confirmarResposta').disabled = false;
-      });
-      perguntaContainer.appendChild(button);
+      button.onclick = () => verificarResposta(button, opcao);
+      container.appendChild(button);
     });
 
-    respostaSelecionada = null;
-    document.getElementById('confirmarResposta').disabled = true;
     atualizarIndicadoresProgresso(indicePerguntaAtual);
+  }
+
+  function verificarResposta(button, resposta) {
+    if (answered || aguardandoProximo) return;
+    
+    const perguntaAtual = perguntas[indicePerguntaAtual];
+    const isCorrect = resposta === perguntaAtual.resposta_correta;
+    const feedback = document.getElementById('feedback');
+    
+    answered = true;
+    respostaSelecionada = resposta;
+
+    if (isCorrect) {
+      acertos++;
+      respostasCorretas[indicePerguntaAtual] = true;
+      button.classList.add('correct', 'animate-success');
+      feedback.innerHTML = "✨ Parabéns, você acertou!";
+      feedback.classList.remove('opacity-0', 'text-red-600');
+      feedback.classList.add('opacity-100', 'text-green-600');
+    } else {
+      respostasCorretas[indicePerguntaAtual] = false;
+      button.classList.add('wrong', 'animate-error');
+      feedback.innerHTML = `❌ Ops, resposta incorreta. A resposta certa era: ${perguntaAtual.resposta_correta}`;
+      feedback.classList.remove('opacity-0', 'text-green-600');
+      feedback.classList.add('opacity-100', 'text-red-600');
+
+      // Destacar a opção correta
+      setTimeout(() => {
+        const botoes = document.querySelectorAll('.option-btn');
+        botoes.forEach(btn => {
+          if (btn.textContent === perguntaAtual.resposta_correta) {
+            btn.classList.add('correct', 'animate-success');
+          }
+        });
+      }, 400);
+    }
+
+    // Desabilitar hover nos botões
+    const botoes = document.querySelectorAll('.option-btn');
+    botoes.forEach(btn => {
+      btn.classList.remove('hover:border-blue-400', 'hover:bg-blue-50');
+    });
+
+    // Avançar para próxima pergunta após delay
+    aguardandoProximo = true;
+    setTimeout(() => {
+      indicePerguntaAtual++;
+      if (indicePerguntaAtual < perguntas.length) {
+        carregarPergunta();
+      } else {
+        finalizarQuiz();
+      }
+    }, 2000);
   }
 
   async function salvarProgressoNoServidor(xpGanho) {
@@ -259,7 +319,6 @@
 
   async function finalizarQuiz() {
     try {
-      // Verificar se a ordem já foi concluída
       const progressoResponse = await fetch(`${API_BASE_URL}/progresso/botoes/${nivelId}`, {
         method: "GET",
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
@@ -277,9 +336,9 @@
 
       await salvarProgressoNoServidor(xpGanho);
 
-      // Exibir resultados
-      document.querySelectorAll('.indicador-progresso').forEach(i => i.classList.add('hidden'));
-      document.getElementById('quizContainer').classList.add('hidden');
+      // Esconder quiz e mostrar resultado
+      document.querySelector('.indicador-progresso').parentElement.classList.add('hidden');
+      document.querySelector('.max-w-md.w-full.bg-white').classList.add('hidden');
       document.getElementById('resultadoContainer').classList.remove('hidden');
       document.getElementById('resultadoTitulo').innerHTML = `<i class="fas fa-trophy mr-2 text-yellow-500"></i>Parabéns, ${window.userName || 'Jogador'}!`;
       document.getElementById('xpTotal').textContent = xpGanho;
@@ -293,33 +352,6 @@
   }
 
   // Event Listeners
-  document.getElementById('confirmarResposta')?.addEventListener('click', () => {
-    const perguntaAtual = perguntas[indicePerguntaAtual];
-    if (!respostaSelecionada) {
-      showFeedback("Selecione uma resposta antes de confirmar", true);
-      return;
-    }
-
-    const isCorreta = respostaSelecionada === perguntaAtual.resposta_correta;
-    respostasCorretas[indicePerguntaAtual] = isCorreta;
-    
-    if (isCorreta) {
-      acertos++;
-      showFeedback("✅ Parabéns, resposta certa!", false);
-    } else {
-      showFeedback(`❌ Resposta errada. A resposta certa era: ${perguntaAtual.resposta_correta}`, true);
-    }
-
-    setTimeout(() => {
-      indicePerguntaAtual++;
-      if (indicePerguntaAtual < perguntas.length) {
-        carregarPergunta();
-      } else {
-        finalizarQuiz();
-      }
-    }, 2000);
-  });
-
   document.getElementById('voltarMissoesButton')?.addEventListener('click', () => {
     window.location.href = `/app/painel-nivel?nivel_id=${nivelId}`;
   });
@@ -355,13 +387,19 @@
   });
 
   // Sair
+  const sairButton = document.getElementById('sairButton');
   const sairOverlay = document.getElementById('sairOverlay');
-  document.getElementById('sairButton')?.addEventListener('click', () => {
-    sairOverlay.classList.remove('hidden');
-  });
+  
+  if (sairButton) {
+    sairButton.addEventListener('click', () => {
+      sairOverlay.classList.remove('hidden');
+    });
+  }
+  
   document.getElementById('confirmarSair')?.addEventListener('click', () => {
     window.location.href = `/app/painel-nivel?nivel_id=${nivelId}`;
   });
+  
   document.getElementById('cancelarSair')?.addEventListener('click', () => {
     sairOverlay.classList.add('hidden');
   });
