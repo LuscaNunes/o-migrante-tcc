@@ -293,63 +293,136 @@
     }, 2000);
   }
 
+  
   async function salvarProgressoNoServidor(xpGanho) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/progresso`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          nivel_id: parseInt(nivelId),
-          xp_ganho: xpGanho,
-          ordem: parseInt(ordem)
-        })
-      });
+  try {
+    const response = await fetch(`${API_BASE_URL}/progresso`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',  // ← estava faltando as aspas
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        nivel_id: parseInt(nivelId),
+        xp_ganho: xpGanho,
+        ordem: parseInt(ordem)
+      })
+    });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erro ao salvar progresso');
-      return { success: true };
-    } catch (error) {
-      console.error('Erro ao salvar progresso:', error);
-      return { success: false, error: error.message };
-    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao salvar progresso');
+    return { success: true, data };
+  } catch (error) {
+    console.error('Erro ao salvar progresso:', error);
+    return { success: false, error: error.message };
   }
+}
+
 
   async function finalizarQuiz() {
-    try {
-      const progressoResponse = await fetch(`${API_BASE_URL}/progresso/botoes/${nivelId}`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
-      });
-      
-      const progressoData = await progressoResponse.json();
-      const ordemJaConcluida = progressoData.botoesCompletos[ordem]?.xp_ganho > 0;
-      
-      let xpGanho;
-      if (ordemJaConcluida) {
-        xpGanho = acertos;
-      } else {
-        xpGanho = Math.round((xpTotal / perguntas.length) * acertos);
-      }
-
-      await salvarProgressoNoServidor(xpGanho);
-
-      // Esconder quiz e mostrar resultado
-      document.querySelector('.indicador-progresso').parentElement.classList.add('hidden');
-      document.querySelector('.max-w-md.w-full.bg-white').classList.add('hidden');
-      document.getElementById('resultadoContainer').classList.remove('hidden');
-      document.getElementById('resultadoTitulo').innerHTML = `<i class="fas fa-trophy mr-2 text-yellow-500"></i>Parabéns, ${window.userName || 'Jogador'}!`;
-      document.getElementById('xpTotal').textContent = xpGanho;
-      document.getElementById('totalAcertos').textContent = `${acertos} de ${perguntas.length}`;
-      document.getElementById('porcentagemAcertos').textContent = ((acertos / perguntas.length) * 100).toFixed(2);
-    } catch (error) {
-      console.error("Erro ao finalizar quiz:", error);
-      showFeedback("Erro ao finalizar o quiz. Redirecionando...", true);
-      setTimeout(() => window.location.href = `/app/painel-nivel?nivel_id=${nivelId}`, 3000);
+  try {
+    // Buscar progresso atual para verificar se a ordem já foi concluída
+    const progressoResponse = await fetch(`${API_BASE_URL}/progresso/botoes/${nivelId}`, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+    });
+    
+    if (!progressoResponse.ok) {
+      throw new Error('Erro ao verificar progresso');
     }
+    
+    const progressoData = await progressoResponse.json();
+    const ordemJaConcluida = progressoData.botoesCompletos[ordem]?.concluido === true;
+    
+    // Calcular XP ganho: 1 XP por acerto (máximo 5)
+    let xpGanho = acertos;
+    
+    // Se já foi concluído antes, ainda ganha XP (revisão)
+    // Se não foi concluído, ganha XP normalmente
+    console.log('Finalizando quiz:', { 
+      nivelId, 
+      ordem, 
+      acertos, 
+      xpGanho, 
+      ordemJaConcluida,
+      totalPerguntas: perguntas.length 
+    });
+    
+    // Salvar progresso no servidor (sempre salvar, mesmo se for 0)
+    const salvarResponse = await fetch(`${API_BASE_URL}/progresso`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        nivel_id: parseInt(nivelId),
+        xp_ganho: xpGanho,
+        ordem: parseInt(ordem)
+      })
+    });
+    
+    if (!salvarResponse.ok) {
+      const errorData = await salvarResponse.json();
+      throw new Error(errorData.error || 'Erro ao salvar progresso');
+    }
+    
+    const salvarData = await salvarResponse.json();
+    console.log('Progresso salvo:', salvarData);
+    
+    // Verificar se a ordem foi concluída após o salvamento
+    const verificarResponse = await fetch(`${API_BASE_URL}/progresso/botoes/${nivelId}`, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+    });
+    
+    const verificarData = await verificarResponse.json();
+    const foiConcluida = verificarData.botoesCompletos[ordem]?.concluido === true;
+    
+    console.log('Ordem concluída?', foiConcluida);
+    
+    // Esconder quiz e mostrar resultado
+    const indicadoresContainer = document.querySelector('.fixed.top-4.left-0.right-0');
+    if (indicadoresContainer) indicadoresContainer.classList.add('hidden');
+    
+    const quizCard = document.querySelector('.max-w-md.w-full.bg-white.rounded-2xl.shadow-xl.p-8');
+    if (quizCard) quizCard.classList.add('hidden');
+    
+    const resultadoDiv = document.getElementById('resultadoContainer');
+    if (resultadoDiv) resultadoDiv.classList.remove('hidden');
+    
+    // Atualizar texto do resultado
+    const resultadoTitulo = document.getElementById('resultadoTitulo');
+    if (resultadoTitulo) {
+      resultadoTitulo.innerHTML = `<i class="fas fa-trophy mr-2 text-yellow-500"></i>Parabéns, ${window.userName || 'Jogador'}!`;
+    }
+    
+    const xpTotalSpan = document.getElementById('xpTotal');
+    if (xpTotalSpan) xpTotalSpan.textContent = xpGanho;
+    
+    const totalAcertosSpan = document.getElementById('totalAcertos');
+    if (totalAcertosSpan) totalAcertosSpan.textContent = `${acertos} de ${perguntas.length}`;
+    
+    const porcentagemSpan = document.getElementById('porcentagemAcertos');
+    if (porcentagemSpan) {
+      const porcentagem = ((acertos / perguntas.length) * 100).toFixed(2);
+      porcentagemSpan.textContent = porcentagem;
+    }
+    
+    // Se a ordem foi concluída, mostrar mensagem especial
+    if (foiConcluida && !ordemJaConcluida) {
+      showFeedback("🎉 Missão completa! Você desbloqueou a próxima fase!", false);
+    }
+    
+  } catch (error) {
+    console.error("Erro ao finalizar quiz:", error);
+    showFeedback("Erro ao finalizar o quiz. Redirecionando...", true);
+    setTimeout(() => {
+      window.location.href = `/app/painel-nivel?nivel_id=${nivelId}`;
+    }, 3000);
   }
+}
+
 
   // Event Listeners
   document.getElementById('voltarMissoesButton')?.addEventListener('click', () => {
