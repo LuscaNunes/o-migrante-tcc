@@ -52,41 +52,47 @@
     </div>
 </div>
 
+
 <!-- Modal de Editar Pergunta -->
 <div id="editQuestionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-semibold">Editar Pergunta</h3>
-            <button class="closeEditModal text-gray-500 hover:text-gray-700">&times;</button>
+            <button class="closeEditModal text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         <form id="editQuestionForm">
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Texto da Pergunta:</label>
-                <textarea id="editTexto" rows="3" class="w-full px-3 py-2 border rounded-lg" required></textarea>
+                <textarea id="editTexto" rows="3" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required></textarea>
             </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Opção 1 (Correta):</label>
-                <input type="text" id="editOpcao1" class="w-full px-3 py-2 border rounded-lg bg-green-50" required>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opção Correta:</label>
+                <input type="text" id="editRespostaCorreta" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 bg-green-50" required>
             </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Opção 2 (Errada):</label>
-                <input type="text" id="editOpcao2" class="w-full px-3 py-2 border rounded-lg bg-red-50" required>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opção Errada 1:</label>
+                <input type="text" id="editOpcao1" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 bg-red-50" required>
             </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Opção 3 (Errada):</label>
-                <input type="text" id="editOpcao3" class="w-full px-3 py-2 border rounded-lg bg-red-50" required>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opção Errada 2:</label>
+                <input type="text" id="editOpcao2" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 bg-red-50" required>
             </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Resposta Correta:</label>
-                <select id="editRespostaCorreta" class="w-full px-3 py-2 border rounded-lg" required>
-                    <option value="opcao1">Opção 1</option>
-                    <option value="opcao2">Opção 2</option>
-                    <option value="opcao3">Opção 3</option>
-                </select>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opção Errada 3:</label>
+                <input type="text" id="editOpcao3" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 bg-red-50" required>
             </div>
-            <div class="flex gap-2 mt-4">
-                <button type="submit" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Salvar</button>
-                <button type="button" id="cancelEditBtn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">Cancelar</button>
+            
+            <div class="flex gap-2 mt-6">
+                <button type="submit" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+                <button type="button" id="cancelEditBtn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition font-medium">
+                    <i class="fas fa-times mr-2"></i>Cancelar
+                </button>
             </div>
         </form>
     </div>
@@ -458,23 +464,24 @@ async function mostrarPerguntas(nivelId, titulo) {
             return;
         }
         
+        // CORRIGIDO: compara o texto da resposta com cada opção
         questionsList.innerHTML = perguntas.map(p => `
             <div class="pergunta-card">
                 <div class="flex justify-between items-start flex-wrap gap-2">
                     <div class="flex-1">
                         <p class="font-semibold mb-2">📝 ${escapeHtml(p.texto)}</p>
                         <div class="space-y-1 ml-4">
-                            <div class="opcao-item ${p.resposta_correta === 'opcao1' ? 'opcao-correta' : 'opcao-normal'}">
+                            <div class="opcao-item ${p.resposta_correta === p.opcao1 ? 'opcao-correta' : 'opcao-normal'}">
                                 <span class="font-bold w-8">A)</span> ${escapeHtml(p.opcao1)}
-                                ${p.resposta_correta === 'opcao1' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                                ${p.resposta_correta === p.opcao1 ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
                             </div>
-                            <div class="opcao-item ${p.resposta_correta === 'opcao2' ? 'opcao-correta' : 'opcao-normal'}">
+                            <div class="opcao-item ${p.resposta_correta === p.opcao2 ? 'opcao-correta' : 'opcao-normal'}">
                                 <span class="font-bold w-8">B)</span> ${escapeHtml(p.opcao2)}
-                                ${p.resposta_correta === 'opcao2' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                                ${p.resposta_correta === p.opcao2 ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
                             </div>
-                            <div class="opcao-item ${p.resposta_correta === 'opcao3' ? 'opcao-correta' : 'opcao-normal'}">
+                            <div class="opcao-item ${p.resposta_correta === p.opcao3 ? 'opcao-correta' : 'opcao-normal'}">
                                 <span class="font-bold w-8">C)</span> ${escapeHtml(p.opcao3)}
-                                ${p.resposta_correta === 'opcao3' ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
+                                ${p.resposta_correta === p.opcao3 ? '<span class="ml-auto text-green-600 text-sm"><i class="fas fa-check-circle"></i> Correta</span>' : ''}
                             </div>
                         </div>
                     </div>
@@ -498,6 +505,7 @@ async function mostrarPerguntas(nivelId, titulo) {
     });
 }
 
+
 // ============================================
 // EDITAR PERGUNTA
 // ============================================
@@ -507,19 +515,23 @@ window.editarPergunta = async (perguntaId) => {
         const response = await fetch(`/perguntas/${perguntaId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const p = await response.json();
+        const pergunta = await response.json();
         
         currentEditPerguntaId = perguntaId;
-        document.getElementById('editTexto').value = p.texto;
-        document.getElementById('editOpcao1').value = p.opcao1;
-        document.getElementById('editOpcao2').value = p.opcao2;
-        document.getElementById('editOpcao3').value = p.opcao3;
-        document.getElementById('editRespostaCorreta').value = p.resposta_correta;
+        
+        // Preencher todos os campos
+        document.getElementById('editTexto').value = pergunta.texto;
+        document.getElementById('editRespostaCorreta').value = pergunta.resposta_correta;
+        document.getElementById('editOpcao1').value = pergunta.opcao1;
+        document.getElementById('editOpcao2').value = pergunta.opcao2;
+        document.getElementById('editOpcao3').value = pergunta.opcao3;
         
         document.getElementById('editQuestionModal').classList.remove('hidden');
         document.getElementById('editQuestionModal').classList.add('flex');
         document.getElementById('questionsModal').classList.add('hidden');
+        
     } catch (error) {
+        console.error('Erro:', error);
         showFeedback("Erro ao carregar pergunta: " + error.message, false);
     }
 };
@@ -529,11 +541,17 @@ document.getElementById('editQuestionForm')?.addEventListener('submit', async (e
     
     const dados = {
         texto: document.getElementById('editTexto').value,
+        resposta_correta: document.getElementById('editRespostaCorreta').value,
         opcao1: document.getElementById('editOpcao1').value,
         opcao2: document.getElementById('editOpcao2').value,
-        opcao3: document.getElementById('editOpcao3').value,
-        resposta_correta: document.getElementById('editRespostaCorreta').value
+        opcao3: document.getElementById('editOpcao3').value
     };
+    
+    // Validar se todos os campos estão preenchidos
+    if (!dados.texto || !dados.resposta_correta || !dados.opcao1 || !dados.opcao2 || !dados.opcao3) {
+        showFeedback("Preencha todos os campos!", false);
+        return;
+    }
     
     try {
         const token = localStorage.getItem('token');
@@ -546,17 +564,24 @@ document.getElementById('editQuestionForm')?.addEventListener('submit', async (e
             body: JSON.stringify(dados)
         });
         
-        if (!response.ok) throw new Error("Erro ao salvar");
+        const result = await response.json();
         
-        showFeedback("Pergunta atualizada!", true);
+        if (!response.ok) {
+            throw new Error(result.error || "Erro ao salvar");
+        }
+        
+        showFeedback("Pergunta atualizada com sucesso!", true);
         document.getElementById('editQuestionModal').classList.add('hidden');
         
+        // Recarregar a lista de perguntas
         if (currentNivelId) {
             const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
             if (nivel) mostrarPerguntas(currentNivelId, nivel.titulo);
         }
+        
     } catch (error) {
-        showFeedback("Erro: " + error.message, false);
+        console.error('Erro:', error);
+        showFeedback("Erro ao salvar: " + error.message, false);
     }
 });
 
