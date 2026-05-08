@@ -173,6 +173,26 @@ router.put('/atualizar', authenticateToken, async (req, res) => {
 	}
 });
 
+/**
+ * Rota para buscar o perfil do usuário autenticado
+ * GET /usuarios/perfil
+ * Requer autenticação
+ */
+router.get('/perfil', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id_usuario, nome, email, tipo, xp_total, fase_atual, criado_em FROM Usuarios WHERE id_usuario = ?',
+      [req.user.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+    }
+    res.json({ success: true, usuario: rows[0] });
+  } catch (error) {
+    console.error('Erro ao buscar perfil:', error);
+    res.status(500).json({ success: false, message: 'Erro ao buscar perfil' });
+  }
+});
 // REMOVIDO: A rota /app/painel foi removida por estar fora de lugar aqui (já está em server.js).
 
 module.exports = router;

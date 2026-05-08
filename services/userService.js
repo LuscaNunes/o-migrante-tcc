@@ -21,7 +21,8 @@ async function buscarUsuarios(busca) {
   }
 
   try {
-    const [results] = await db.promise().query(sql, params);
+    // CORRIGIDO: Removido .promise()
+    const [results] = await db.query(sql, params);
     return results;
   } catch (err) {
     throw new Error('Erro ao buscar usuários: ' + err.message);
@@ -35,7 +36,8 @@ async function buscarUsuarios(busca) {
  */
 async function buscarUsuarioPublico(id) {
   try {
-    const [results] = await db.promise().query(
+    // CORRIGIDO: Removido .promise()
+    const [results] = await db.query(
       'SELECT id_usuario, nome, email, xp_total, fase_atual, tipo, criado_em FROM Usuarios WHERE id_usuario = ?',
       [id]
     );
@@ -55,7 +57,8 @@ async function buscarUsuarioPublico(id) {
  */
 async function buscarUsuarioPorId(id) {
   try {
-    const [results] = await db.promise().query('SELECT * FROM Usuarios WHERE id_usuario = ?', [id]);
+    // CORRIGIDO: Removido .promise()
+    const [results] = await db.query('SELECT * FROM Usuarios WHERE id_usuario = ?', [id]);
     if (results.length === 0) {
       throw new Error('Usuário não encontrado');
     }
@@ -77,7 +80,8 @@ async function atualizarUsuario(id, { nome, email, tipo, xp_total, fase_atual })
   }
 
   try {
-    const [result] = await db.promise().query(
+    // CORRIGIDO: Removido .promise()
+    const [result] = await db.query(
       'UPDATE Usuarios SET nome = ?, email = ?, tipo = ?, xp_total = ?, fase_atual = ? WHERE id_usuario = ?',
       [nome, email, tipo, xp_total, fase_atual, id]
     );
@@ -101,7 +105,8 @@ async function atualizarPerfil(usuario_id, { nome, email, senha }) {
   }
 
   try {
-    const [currentUser] = await db.promise().query('SELECT email FROM Usuarios WHERE id_usuario = ?', [usuario_id]);
+    // CORRIGIDO: Removido .promise()
+    const [currentUser] = await db.query('SELECT email FROM Usuarios WHERE id_usuario = ?', [usuario_id]);
     if (currentUser.length === 0) {
       throw new Error('Usuário não encontrado');
     }
@@ -113,7 +118,8 @@ async function atualizarPerfil(usuario_id, { nome, email, senha }) {
       if (!emailRegex.test(email)) {
         throw new Error('Email inválido');
       }
-      const [existingUser] = await db.promise().query(
+      // CORRIGIDO: Removido .promise()
+      const [existingUser] = await db.query(
         'SELECT id_usuario FROM Usuarios WHERE email = ? AND id_usuario != ?',
         [email, usuario_id]
       );
@@ -137,7 +143,8 @@ async function atualizarPerfil(usuario_id, { nome, email, senha }) {
     queryParams.push(usuario_id);
     updateQuery += ' WHERE id_usuario = ?';
 
-    const [result] = await db.promise().query(updateQuery, queryParams);
+    // CORRIGIDO: Removido .promise()
+    const [result] = await db.query(updateQuery, queryParams);
     if (result.affectedRows === 0) {
       throw new Error('Usuário não encontrado');
     }
