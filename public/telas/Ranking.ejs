@@ -322,21 +322,22 @@
     try {
       const token = localStorage.getItem('token');
       
-      // Buscar dados do usuário logado primeiro
+      // PRIMEIRO: Buscar dados do usuário logado (igual ao perfil)
       let userXP = 0;
       try {
-        const perfilResponse = await fetch(`${API_BASE_URL}/usuarios/perfil`, {
+        const userResponse = await fetch(`${API_BASE_URL}/usuarios/perfil`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (perfilResponse.ok) {
-          const perfilData = await perfilResponse.json();
-          userXP = perfilData.usuario?.xp_total || 0;
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          userXP = userData.usuario?.xp_total || 0;
+          console.log('XP do usuário:', userXP);
         }
       } catch (e) {
         console.warn('Erro ao buscar perfil', e);
       }
       
-      // Buscar ranking global
+      // SEGUNDO: Buscar ranking global
       const response = await fetch(`${API_BASE_URL}/ranking/global`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
