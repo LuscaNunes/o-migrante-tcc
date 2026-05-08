@@ -322,10 +322,8 @@
     try {
       const token = localStorage.getItem('token');
       
-      // Primeiro, buscar o perfil do usuário logado
+      // Buscar dados do usuário logado primeiro
       let userXP = 0;
-      let userEmail = '';
-      
       try {
         const perfilResponse = await fetch(`${API_BASE_URL}/usuarios/perfil`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -333,13 +331,12 @@
         if (perfilResponse.ok) {
           const perfilData = await perfilResponse.json();
           userXP = perfilData.usuario?.xp_total || 0;
-          userEmail = perfilData.usuario?.email || '';
         }
       } catch (e) {
         console.warn('Erro ao buscar perfil', e);
       }
       
-      // Buscar ranking
+      // Buscar ranking global
       const response = await fetch(`${API_BASE_URL}/ranking/global`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -369,7 +366,7 @@
       document.getElementById('rankingGlobalContainer').innerHTML = `<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar ranking</div>`;
     }
   }
-  
+
   async function carregarRankingNiveis() {
     try {
       const token = localStorage.getItem('token');
