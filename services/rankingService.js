@@ -7,6 +7,7 @@ const db = require('../config/database');
  */
 async function getRankingGlobal(limit = 50) {
   try {
+    // Corrigido: ordena por xp_total DESC e calcula posição corretamente
     const [rows] = await db.query(`
       SELECT 
         id_usuario,
@@ -15,9 +16,9 @@ async function getRankingGlobal(limit = 50) {
         xp_total,
         tipo,
         criado_em,
-        @row_number := @row_number + 1 AS posicao
-      FROM Usuarios, (SELECT @row_number := 0) AS vars
-      WHERE tipo = 'user' OR tipo = 'admin'
+        ROW_NUMBER() OVER (ORDER BY xp_total DESC, id_usuario ASC) AS posicao
+      FROM Usuarios
+      WHERE tipo IN ('user', 'admin')
       ORDER BY xp_total DESC, id_usuario ASC
       LIMIT ?
     `, [limit]);
@@ -35,11 +36,12 @@ async function getRankingGlobal(limit = 50) {
  */
 async function getUserRankPosition(usuario_id) {
   try {
+    // Corrigido: conta quantos usuários têm XP maior que o usuário atual
     const [rows] = await db.query(`
       SELECT COUNT(*) + 1 AS posicao
       FROM Usuarios
       WHERE xp_total > (SELECT xp_total FROM Usuarios WHERE id_usuario = ?)
-      AND (tipo = 'user' OR tipo = 'admin')
+      AND tipo IN ('user', 'admin')
     `, [usuario_id]);
 
     return { posicao: rows[0]?.posicao || 1 };
@@ -50,7 +52,6 @@ async function getUserRankPosition(usuario_id) {
 
 /**
  * Busca os top usuários por nível concluído
- * @param {number} nivelId - ID do nível específico (opcional)
  * @param {number} limit - Quantidade de usuários
  * @returns {Promise<Array>} Lista de usuários que mais completaram níveis
  */
@@ -61,12 +62,13 @@ async function getRankingNiveisCompletos(limit = 20) {
         u.id_usuario,
         u.nome,
         u.xp_total,
-        COUNT(p.concluido) AS niveis_completos
+        COUNT(p.concluido) AS niveis_completos,
+        ROW_NUMBER() OVER (ORDER BY COUNT(p.concluido) DESC, u.xp_total DESC, u.id_usuario ASC) AS posicao
       FROM Usuarios u
       LEFT JOIN ProgressoUsuario p ON u.id_usuario = p.usuario_id AND p.concluido = true
-      WHERE u.tipo = 'user' OR u.tipo = 'admin'
+      WHERE u.tipo IN ('user', 'admin')
       GROUP BY u.id_usuario
-      ORDER BY niveis_completos DESC, u.xp_total DESC
+      ORDER BY niveis_completos DESC, u.xp_total DESC, u.id_usuario ASC
       LIMIT ?
     `, [limit]);
 
@@ -88,13 +90,14 @@ async function getRankingSemanal(limit = 20) {
         u.id_usuario,
         u.nome,
         u.xp_total,
-        COALESCE(SUM(p.xp_ganho), 0) AS xp_semana
+        COALESCE(SUM(p.xp_ganho), 0) AS xp_semana,
+        ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(p.xp_ganho), 0) DESC, u.xp_total DESC, u.id_usuario ASC) AS posicao
       FROM Usuarios u
       LEFT JOIN ProgressoUsuario p ON u.id_usuario = p.usuario_id 
         AND p.criado_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-      WHERE u.tipo = 'user' OR u.tipo = 'admin'
+      WHERE u.tipo IN ('user', 'admin')
       GROUP BY u.id_usuario
-      ORDER BY xp_semana DESC, u.xp_total DESC
+      ORDER BY xp_semana DESC, u.xp_total DESC, u.id_usuario ASC
       LIMIT ?
     `, [limit]);
 
@@ -111,15 +114,15 @@ async function getRankingSemanal(limit = 20) {
 async function getRankingStats() {
   try {
     const [totalUsuarios] = await db.query(`
-      SELECT COUNT(*) as total FROM Usuarios WHERE tipo = 'user' OR tipo = 'admin'
+      SELECT COUNT(*) as total FROM Usuarios WHERE tipo IN ('user', 'admin')
     `);
     
     const [totalXP] = await db.query(`
-      SELECT SUM(xp_total) as total FROM Usuarios WHERE tipo = 'user' OR tipo = 'admin'
+      SELECT SUM(xp_total) as total FROM Usuarios WHERE tipo IN ('user', 'admin')
     `);
     
     const [mediaXP] = await db.query(`
-      SELECT AVG(xp_total) as media FROM Usuarios WHERE tipo = 'user' OR tipo = 'admin'
+      SELECT AVG(xp_total) as media FROM Usuarios WHERE tipo IN ('user', 'admin')
     `);
     
     return {
