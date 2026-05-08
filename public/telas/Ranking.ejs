@@ -341,21 +341,27 @@
         userPositionCard.classList.remove('hidden');
         document.getElementById('userPosicao').textContent = `#${data.userPosition}`;
         
-        // Extrair ID do token
+        // Buscar XP do usuário logado via API /usuarios/perfil
         try {
-          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-          const currentUserId = tokenPayload.id;
+          const perfilResponse = await fetch(`${API_BASE_URL}/usuarios/perfil`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           
-          // Buscar o usuário no ranking
-          const userInRanking = data.ranking.find(u => u.id_usuario === currentUserId);
-          if (userInRanking) {
-            document.getElementById('userXP').textContent = `${userInRanking.xp_total} XP`;
+          if (perfilResponse.ok) {
+            const perfilData = await perfilResponse.json();
+            const xp = perfilData.usuario?.xp_total || 0;
+            document.getElementById('userXP').textContent = `${xp} XP`;
           } else {
-            // Se não estiver no ranking, usar 0 (mas mostrar que está fora)
-            document.getElementById('userXP').textContent = `0 XP (fora do top ${data.ranking.length})`;
+            // Fallback: tentar buscar do ranking pelo email
+            const userInRanking = data.ranking.find(u => u.email === perfilData?.usuario?.email);
+            if (userInRanking) {
+              document.getElementById('userXP').textContent = `${userInRanking.xp_total} XP`;
+            } else {
+              document.getElementById('userXP').textContent = `? XP`;
+            }
           }
         } catch (e) {
-          console.warn('Erro ao extrair ID do token', e);
+          console.warn('Erro ao buscar perfil', e);
           document.getElementById('userXP').textContent = `? XP`;
         }
       } else {
