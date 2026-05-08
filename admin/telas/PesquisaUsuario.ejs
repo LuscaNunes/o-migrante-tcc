@@ -1,7 +1,6 @@
 <%
   // Esta página será injetada no layout.ejs como 'body'
   // O objeto 'user' já vem do server.js
-  title = "Admin - Busca e Edição de Usuários - O Migrante";
 %>
 
 <style>
@@ -277,17 +276,27 @@
     <form id="buscaUsuarioForm">
       <div class="mb-4">
         <label for="buscaUsuario" class="form-label">ID, Nome ou E-mail:</label>
-        <input type="text" id="buscaUsuario" class="form-input" placeholder="Digite o ID, nome ou email do usuário" required>
+        <input type="text" id="buscaUsuario" class="form-input" placeholder="Digite o ID, nome ou email do usuário">
       </div>
-      <button type="submit" class="btn-primary">
-        <i class="fas fa-search mr-2"></i> Buscar
-      </button>
+      <div class="flex gap-3">
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-search mr-2"></i> Buscar
+        </button>
+        <button type="button" id="limparBuscaBtn" class="btn-secondary">
+          <i class="fas fa-eraser mr-2"></i> Limpar Busca
+        </button>
+      </div>
     </form>
   </div>
 
   <!-- Tabela de Usuários -->
-  <div id="usuariosTable" class="admin-card hidden">
-    <h2 class="text-xl font-bold mb-4 text-blue-600">Resultados</h2>
+  <div id="usuariosTable" class="admin-card">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-blue-600">
+        <i class="fas fa-list mr-2"></i> Todos os Usuários
+      </h2>
+      <span id="totalUsuarios" class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full"></span>
+    </div>
     <div class="table-container">
       <table class="user-table">
         <thead>
@@ -302,6 +311,11 @@
           </tr>
         </thead>
         <tbody id="usuariosTableBody">
+          <tr>
+            <td colspan="7" class="text-center py-8 text-gray-500">
+              <i class="fas fa-spinner fa-spin mr-2"></i> Carregando usuários...
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -361,6 +375,7 @@
     
     let lastSearchedUsers = [];
     let userIdToDelete = null;
+    let isSearchMode = false;
 
     function showFeedback(message, isError = true) {
       const existingFeedback = document.querySelector('.toast');
@@ -386,13 +401,26 @@
     }
 
     async function makeAuthenticatedRequest(url, options = {}) {
+      const token = localStorage.getItem('token');
       const opts = {
+        method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...options.headers },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...options.headers 
+        },
         ...options
       };
       const response = await fetch(`${API_BASE_URL}${url}`, opts);
       return response;
+    }
+
+    function updateTotalUsuarios(count) {
+      const span = document.getElementById('totalUsuarios');
+      if (span) {
+        span.textContent = `${count} usuário${count !== 1 ? 's' : ''}`;
+      }
     }
 
     function renderUsuarios(usuarios) {
@@ -403,19 +431,28 @@
       lastSearchedUsers = usuarios;
 
       if (!usuarios || usuarios.length === 0) {
-        showFeedback("Nenhum usuário encontrado.", true);
-        const table = document.getElementById('usuariosTable');
-        if (table) table.classList.add('hidden');
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-8 text-gray-500">
+              <i class="fas fa-info-circle mr-2"></i> Nenhum usuário encontrado.
+            </td>
+          </tr>
+        `;
+        updateTotalUsuarios(0);
         return;
       }
 
       usuarios.forEach(usuario => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${usuario.id_usuario || '-'}</td>
+          <td class="font-medium">${usuario.id_usuario || '-'}</td>
           <td>${escapeHtml(usuario.nome || '-')}</td>
           <td>${escapeHtml(usuario.email || '-')}</td>
-          <td class="capitalize">${usuario.tipo || 'user'}</td>
+          <td>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold ${usuario.tipo === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+              ${usuario.tipo === 'admin' ? 'Administrador' : 'Usuário'}
+            </span>
+          </td>
           <td>${usuario.xp_total || 0}</td>
           <td>${usuario.fase_atual || 1}</td>
           <td class="whitespace-nowrap">
@@ -430,8 +467,7 @@
         tbody.appendChild(row);
       });
 
-      const table = document.getElementById('usuariosTable');
-      if (table) table.classList.remove('hidden');
+      updateTotalUsuarios(usuarios.length);
     }
 
     function escapeHtml(str) {
@@ -442,6 +478,57 @@
         if (m === '>') return '&gt;';
         return m;
       });
+    }
+
+    async function carregarTodosUsuarios() {
+      toggleLoading(true);
+      isSearchMode = false;
+      
+      try {
+        const response = await makeAuthenticatedRequest(API_USER_PATH);
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao carregar usuários (${response.status})`);
+        }
+        
+        const data = await response.json();
+        renderUsuarios(data.usuarios || []);
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        showFeedback("Erro ao carregar lista de usuários: " + error.message, true);
+        renderUsuarios([]);
+      } finally {
+        toggleLoading(false);
+      }
+    }
+
+    async function buscarUsuarios(termo) {
+      toggleLoading(true);
+      isSearchMode = true;
+      
+      try {
+        const urlBusca = `${API_USER_PATH}?busca=${encodeURIComponent(termo)}`;
+        const response = await makeAuthenticatedRequest(urlBusca);
+
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar usuários (${response.status})`);
+        }
+
+        const data = await response.json();
+        renderUsuarios(data.usuarios || []);
+        
+        if (data.usuarios && data.usuarios.length === 0) {
+          showFeedback(`Nenhum usuário encontrado para "${termo}"`, true);
+        } else {
+          showFeedback(`Encontrados ${data.usuarios.length} usuário(s)`, false);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar usuários:", error);
+        showFeedback("Erro ao buscar usuários: " + error.message, true);
+        renderUsuarios([]);
+      } finally {
+        toggleLoading(false);
+      }
     }
 
     async function editarUsuario(id) {
@@ -459,6 +546,7 @@
       const editXpTotal = document.getElementById('editaUsuarioXpTotal');
       const editFaseAtual = document.getElementById('editaUsuarioFaseAtual');
       const editForm = document.getElementById('editaUsuarioForm');
+      const table = document.getElementById('usuariosTable');
 
       if (editId) editId.value = usuario.id_usuario || '';
       if (editNome) editNome.value = usuario.nome || '';
@@ -466,9 +554,8 @@
       if (editTipo) editTipo.value = usuario.tipo || 'user';
       if (editXpTotal) editXpTotal.value = usuario.xp_total || 0;
       if (editFaseAtual) editFaseAtual.value = usuario.fase_atual || 1;
-      if (editForm) editForm.classList.remove('hidden');
       
-      const table = document.getElementById('usuariosTable');
+      if (editForm) editForm.classList.remove('hidden');
       if (table) table.classList.add('hidden');
     }
 
@@ -502,15 +589,12 @@
 
         showFeedback("Usuário deletado com sucesso!", false);
         
+        // Recarregar dados conforme o modo atual
         const buscaInput = document.getElementById('buscaUsuario');
-        if (buscaInput && buscaInput.value.trim()) {
-          document.getElementById('buscaUsuarioForm').dispatchEvent(new Event('submit', { bubbles: true }));
+        if (isSearchMode && buscaInput && buscaInput.value.trim()) {
+          await buscarUsuarios(buscaInput.value.trim());
         } else {
-          const table = document.getElementById('usuariosTable');
-          if (table) table.classList.add('hidden');
-          const tbody = document.getElementById('usuariosTableBody');
-          if (tbody) tbody.innerHTML = '';
-          lastSearchedUsers = [];
+          await carregarTodosUsuarios();
         }
       } catch (error) {
         console.error("Erro ao deletar usuário:", error);
@@ -520,8 +604,19 @@
       }
     }
 
+    function limparBusca() {
+      const buscaInput = document.getElementById('buscaUsuario');
+      if (buscaInput) {
+        buscaInput.value = '';
+      }
+      carregarTodosUsuarios();
+    }
+
     // Event Listeners
     document.addEventListener("DOMContentLoaded", () => {
+      // Carregar todos os usuários ao abrir a página
+      carregarTodosUsuarios();
+
       // Busca de usuários
       const buscaForm = document.getElementById('buscaUsuarioForm');
       if (buscaForm) {
@@ -530,33 +625,22 @@
           const busca = document.getElementById('buscaUsuario')?.value.trim();
           
           const editForm = document.getElementById('editaUsuarioForm');
-          if (editForm) editForm.classList.add('hidden');
+          if (editForm) editForm.classList.remove('hidden');
           
-          const tbody = document.getElementById('usuariosTableBody');
-          if (tbody) tbody.innerHTML = '';
-
           if (!busca) {
-            showFeedback("Por favor, insira um ID, nome ou e-mail para buscar.", true);
+            carregarTodosUsuarios();
             return;
           }
+          
+          await buscarUsuarios(busca);
+        });
+      }
 
-          toggleLoading(true);
-          try {
-            const urlBusca = `${API_USER_PATH}?busca=${encodeURIComponent(busca)}`;
-            const response = await makeAuthenticatedRequest(urlBusca);
-
-            if (!response.ok) {
-              throw new Error(`Erro ao buscar usuários (${response.status})`);
-            }
-
-            const data = await response.json();
-            renderUsuarios(data.usuarios || []);
-          } catch (error) {
-            console.error("Erro ao buscar usuários:", error);
-            showFeedback("Erro ao buscar usuários: " + error.message, true);
-          } finally {
-            toggleLoading(false);
-          }
+      // Botão Limpar Busca
+      const limparBtn = document.getElementById('limparBuscaBtn');
+      if (limparBtn) {
+        limparBtn.addEventListener('click', () => {
+          limparBusca();
         });
       }
 
@@ -644,13 +728,16 @@
             editForm.reset();
             editForm.classList.add('hidden');
             
+            // Recarregar dados conforme o modo atual
             const buscaInput = document.getElementById('buscaUsuario');
-            if (buscaInput && buscaInput.value.trim()) {
-              buscaForm.dispatchEvent(new Event('submit', { bubbles: true }));
+            if (isSearchMode && buscaInput && buscaInput.value.trim()) {
+              await buscarUsuarios(buscaInput.value.trim());
             } else {
-              const table = document.getElementById('usuariosTable');
-              if (table) table.classList.remove('hidden');
+              await carregarTodosUsuarios();
             }
+            
+            const table = document.getElementById('usuariosTable');
+            if (table) table.classList.remove('hidden');
           } catch (error) {
             console.error("Erro ao salvar edição:", error);
             showFeedback("Erro ao salvar edição: " + error.message, true);
