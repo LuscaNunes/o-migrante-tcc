@@ -297,6 +297,28 @@ app.get('/app/perguntas', authenticateToken, async (req, res) => {
     res.status(500).send('Erro interno ao carregar a página.');
   }
 });
+
+// Rota para o Ranking
+app.get('/app/ranking', authenticateToken, async (req, res) => {
+  try {
+    const bodyContent = await renderViewToString(req.app, 'Ranking', { 
+      user: req.user 
+    });
+    
+    res.render('layout', { 
+      title: 'Ranking - O Migrante',
+      body: bodyContent,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Erro ao renderizar Ranking:', error);
+    res.status(500).send('Erro interno ao carregar a página.');
+  }
+});
+
+// Rotas da API de Ranking
+const rankingRoutes = require('./routes/rankingRoutes');
+app.use('/ranking', authenticateToken, rankingRoutes);
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================

@@ -1,0 +1,482 @@
+<%
+  // Esta página será injetada no layout.ejs como 'body'
+  // O objeto 'user' já vem do server.js
+%>
+
+<style>
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes shine {
+    from { background-position: -200% center; }
+    to { background-position: 200% center; }
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+
+  .ranking-card {
+    animation: fadeInUp 0.6s ease forwards;
+    transition: all 0.3s ease;
+  }
+
+  .ranking-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+
+  .top-1 {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    box-shadow: 0 10px 25px -5px rgba(255, 215, 0, 0.3);
+  }
+
+  .top-2 {
+    background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+  }
+
+  .top-3 {
+    background: linear-gradient(135deg, #CD7F32, #B87333);
+  }
+
+  .medal-icon {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .shine-text {
+    background: linear-gradient(90deg, #2563EB, #06B6D4, #2563EB);
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 2s linear infinite;
+  }
+
+  .tab-button {
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+  }
+
+  .tab-button.active {
+    color: #2563EB;
+    border-bottom-color: #2563EB;
+  }
+
+  .tab-pane.hidden {
+    display: none;
+  }
+
+  .avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.25rem;
+  }
+
+  .xp-bar {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #E5E7EB;
+    overflow: hidden;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #2563EB, #06B6D4);
+    transition: width 0.5s ease;
+  }
+
+  .stat-card {
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-5px);
+  }
+</style>
+
+<div class="w-full max-w-6xl mx-auto">
+  <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 animate-fadeInUp">
+    
+    <!-- Cabeçalho -->
+    <div class="text-center mb-8">
+      <div class="flex justify-center mb-3">
+        <i class="fas fa-trophy text-5xl text-yellow-500"></i>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+        Ranking <span class="shine-text">dos Jogadores</span>
+      </h1>
+      <p class="text-gray-500">Veja quem está liderando a missão!</p>
+    </div>
+
+    <!-- Estatísticas Rápidas -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8" id="statsContainer">
+      <div class="stat-card bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 text-center">
+        <i class="fas fa-users text-blue-500 text-2xl mb-2"></i>
+        <p class="text-2xl font-bold text-gray-800" id="totalUsuarios">0</p>
+        <p class="text-sm text-gray-500">Participantes</p>
+      </div>
+      <div class="stat-card bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 text-center">
+        <i class="fas fa-star text-green-500 text-2xl mb-2"></i>
+        <p class="text-2xl font-bold text-gray-800" id="totalXP">0</p>
+        <p class="text-sm text-gray-500">XP Total</p>
+      </div>
+      <div class="stat-card bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 text-center">
+        <i class="fas fa-chart-line text-purple-500 text-2xl mb-2"></i>
+        <p class="text-2xl font-bold text-gray-800" id="mediaXP">0</p>
+        <p class="text-sm text-gray-500">Média de XP</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+      <button id="tabGlobal" class="tab-button px-4 py-2 font-medium text-gray-600 hover:text-blue-600 transition active whitespace-nowrap">
+        <i class="fas fa-globe mr-2"></i>Ranking Global
+      </button>
+      <button id="TabNiveis" class="tab-button px-4 py-2 font-medium text-gray-600 hover:text-blue-600 transition whitespace-nowrap">
+        <i class="fas fa-layer-group mr-2"></i>Ranking por Níveis
+      </button>
+      <button id="TabSemanal" class="tab-button px-4 py-2 font-medium text-gray-600 hover:text-blue-600 transition whitespace-nowrap">
+        <i class="fas fa-calendar-week mr-2"></i>Ranking Semanal
+      </button>
+    </div>
+
+    <!-- Sua Posição -->
+    <div id="userPositionCard" class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-4 mb-6 text-white hidden">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <p class="text-sm opacity-80">Sua posição</p>
+            <p class="text-2xl font-bold" id="userPosicao">#0</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm opacity-80">Seu XP</p>
+          <p class="text-xl font-bold" id="userXP">0 XP</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL 1: RANKING GLOBAL -->
+    <div id="paneGlobal" class="tab-pane">
+      <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <h2 class="text-xl font-semibold text-gray-800">
+          <i class="fas fa-crown text-yellow-500 mr-2"></i>Top Jogadores
+        </h2>
+        <div class="flex gap-2">
+          <button id="atualizarGlobalBtn" class="bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600 transition text-sm">
+            <i class="fas fa-sync-alt mr-1"></i>Atualizar
+          </button>
+        </div>
+      </div>
+      
+      <div id="rankingGlobalContainer" class="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-spinner fa-spin mr-2"></i> Carregando ranking...
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL 2: RANKING POR NÍVEIS -->
+    <div id="paneNiveis" class="tab-pane hidden">
+      <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <h2 class="text-xl font-semibold text-gray-800">
+          <i class="fas fa-flag-checkered text-green-500 mr-2"></i>Mais Níveis Completados
+        </h2>
+        <button id="atualizarNiveisBtn" class="bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600 transition text-sm">
+          <i class="fas fa-sync-alt mr-1"></i>Atualizar
+        </button>
+      </div>
+      
+      <div id="rankingNiveisContainer" class="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-spinner fa-spin mr-2"></i> Carregando ranking...
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL 3: RANKING SEMANAL -->
+    <div id="paneSemanal" class="tab-pane hidden">
+      <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <h2 class="text-xl font-semibold text-gray-800">
+          <i class="fas fa-fire text-orange-500 mr-2"></i>Destaques da Semana
+        </h2>
+        <button id="atualizarSemanalBtn" class="bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600 transition text-sm">
+          <i class="fas fa-sync-alt mr-1"></i>Atualizar
+        </button>
+      </div>
+      
+      <div id="rankingsemanalContainer" class="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-spinner fa-spin mr-2"></i> Carregando ranking...
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? `http://${window.location.hostname}:${window.location.port || 3000}`
+    : 'https://o-migrante.onrender.com';
+
+  let currentUserXP = 0;
+
+  function showFeedback(message, isError = true) {
+    const existingFeedback = document.querySelector('.toast');
+    if (existingFeedback) existingFeedback.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.cssText = 'position: fixed; bottom: 1.5rem; right: 1rem; padding: 0.875rem 1.25rem; border-radius: 0.75rem; color: white; font-weight: 600; font-size: 0.875rem; z-index: 1100; box-shadow: 0 4px 20px rgba(0,0,0,0.15);';
+    toast.style.background = isError ? '#DC2626' : '#10B981';
+    toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'} mr-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function getMedalIcon(posicao) {
+    if (posicao === 1) return '<i class="fas fa-crown text-yellow-500 text-xl"></i>';
+    if (posicao === 2) return '<i class="fas fa-medal text-gray-400 text-xl"></i>';
+    if (posicao === 3) return '<i class="fas fa-medal text-amber-600 text-xl"></i>';
+    return `<span class="text-gray-400 font-bold">#${posicao}</span>`;
+  }
+
+  function getTopClass(posicao) {
+    if (posicao === 1) return 'top-1';
+    if (posicao === 2) return 'top-2';
+    if (posicao === 3) return 'top-3';
+    return '';
+  }
+
+  function getAvatarInitials(nome) {
+    if (!nome) return '?';
+    const names = nome.split(' ');
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  }
+
+  function getAvatarColor(nome) {
+    const colors = ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4'];
+    let hash = 0;
+    for (let i = 0; i < nome.length; i++) {
+      hash = ((hash << 5) - hash) + nome.charCodeAt(i);
+      hash |= 0;
+    }
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  function renderRanking(containerId, ranking, tipo = 'global') {
+    const container = document.getElementById(containerId);
+    
+    if (!ranking || ranking.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-info-circle mr-2"></i> Nenhum dado disponível.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = ranking.map(item => {
+      const posicao = item.posicao || item.position;
+      const xp = tipo === 'semanal' ? (item.xp_semana || 0) : (item.xp_total || 0);
+      const niveisCompletos = item.niveis_completos || 0;
+      
+      return `
+        <div class="ranking-card bg-gray-50 rounded-xl p-3 flex items-center justify-between flex-wrap gap-3 ${getTopClass(posicao)}">
+          <div class="flex items-center gap-3">
+            <div class="w-10 text-center font-bold">
+              ${getMedalIcon(posicao)}
+            </div>
+            <div class="avatar-placeholder" style="background-color: ${getAvatarColor(item.nome)}; color: white;">
+              ${escapeHtml(getAvatarInitials(item.nome))}
+            </div>
+            <div>
+              <p class="font-semibold text-gray-800">${escapeHtml(item.nome)}</p>
+              <p class="text-xs text-gray-500">ID: ${item.id_usuario}</p>
+            </div>
+          </div>
+          <div class="flex-1 max-w-[200px]">
+            <div class="xp-bar">
+              <div class="xp-bar-fill" style="width: ${Math.min(100, (xp / 1000) * 100)}%"></div>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-bold text-indigo-600">${xp} XP</p>
+            ${tipo === 'niveis' ? `<p class="text-xs text-gray-500">${niveisCompletos} níveis</p>` : ''}
+            ${tipo === 'semanal' ? `<p class="text-xs text-green-500">+${xp} XP esta semana</p>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function carregarRankingGlobal() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/ranking/global`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Erro ao carregar ranking');
+      
+      const data = await response.json();
+      
+      renderRanking('rankingGlobalContainer', data.ranking, 'global');
+      
+      if (data.stats) {
+        document.getElementById('totalUsuarios').textContent = data.stats.totalUsuarios || 0;
+        document.getElementById('totalXP').textContent = data.stats.totalXP || 0;
+        document.getElementById('mediaXP').textContent = data.stats.mediaXP || 0;
+      }
+      
+      const userPositionCard = document.getElementById('userPositionCard');
+      if (data.userPosition) {
+        userPositionCard.classList.remove('hidden');
+        document.getElementById('userPosicao').textContent = `#${data.userPosition}`;
+        
+        const user = data.ranking.find(u => u.id_usuario === <%= user.id_usuario %>);
+        if (user) {
+          document.getElementById('userXP').textContent = `${user.xp_total} XP`;
+          currentUserXP = user.xp_total;
+        }
+      } else {
+        userPositionCard.classList.add('hidden');
+      }
+      
+    } catch (error) {
+      console.error('Erro:', error);
+      showFeedback('Erro ao carregar ranking global: ' + error.message, true);
+      document.getElementById('rankingGlobalContainer').innerHTML = `
+        <div class="text-center py-8 text-red-500">
+          <i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar ranking
+        </div>
+      `;
+    }
+  }
+
+  async function carregarRankingNiveis() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/ranking/niveis`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Erro ao carregar ranking');
+      
+      const data = await response.json();
+      const rankingComPosicao = data.ranking.map((item, index) => ({ ...item, position: index + 1 }));
+      renderRanking('rankingNiveisContainer', rankingComPosicao, 'niveis');
+    } catch (error) {
+      console.error('Erro:', error);
+      showFeedback('Erro ao carregar ranking por níveis: ' + error.message, true);
+      document.getElementById('rankingNiveisContainer').innerHTML = `
+        <div class="text-center py-8 text-red-500">
+          <i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar ranking
+        </div>
+      `;
+    }
+  }
+
+  async function carregarRankingSemanal() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/ranking/semanal`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Erro ao carregar ranking');
+      
+      const data = await response.json();
+      const rankingComPosicao = data.ranking.map((item, index) => ({ ...item, position: index + 1 }));
+      renderRanking('rankingsemanalContainer', rankingComPosicao, 'semanal');
+    } catch (error) {
+      console.error('Erro:', error);
+      showFeedback('Erro ao carregar ranking semanal: ' + error.message, true);
+      document.getElementById('rankingsemanalContainer').innerHTML = `
+        <div class="text-center py-8 text-red-500">
+          <i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar ranking
+        </div>
+      `;
+    }
+  }
+
+  // Tab navigation
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+    document.getElementById(`pane${tabId}`).classList.remove('hidden');
+    
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    if (tabId === 'Global') document.getElementById('tabGlobal').classList.add('active');
+    else if (tabId === 'Niveis') document.getElementById('TabNiveis').classList.add('active');
+    else if (tabId === 'Semanal') document.getElementById('TabSemanal').classList.add('active');
+  }
+
+  // Inicialização
+  document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showFeedback("Você precisa estar logado!", true);
+      setTimeout(() => window.location.href = "/", 1500);
+      return;
+    }
+    
+    carregarRankingGlobal();
+    
+    document.getElementById('tabGlobal').addEventListener('click', () => {
+      switchTab('Global');
+      if (document.getElementById('rankingGlobalContainer').innerHTML.includes('Carregando')) {
+        carregarRankingGlobal();
+      }
+    });
+    
+    document.getElementById('TabNiveis').addEventListener('click', () => {
+      switchTab('Niveis');
+      carregarRankingNiveis();
+    });
+    
+    document.getElementById('TabSemanal').addEventListener('click', () => {
+      switchTab('Semanal');
+      carregarRankingSemanal();
+    });
+    
+    document.getElementById('atualizarGlobalBtn')?.addEventListener('click', carregarRankingGlobal);
+    document.getElementById('atualizarNiveisBtn')?.addEventListener('click', carregarRankingNiveis);
+    document.getElementById('atualizarSemanalBtn')?.addEventListener('click', carregarRankingSemanal);
+  });
+})();
+</script>
