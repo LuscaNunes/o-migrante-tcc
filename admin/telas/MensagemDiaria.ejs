@@ -1,165 +1,416 @@
-<div class="w-full max-w-5xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-10 animate-fadeIn">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-semibold text-gray-900">Cadastro de Mensagens Diárias</h1>
-            <button id="logoutButton" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Sair</button>
-        </div>
-
-        <!-- Seletores -->
-        <div class="flex flex-col sm:flex-row gap-4 mb-8">
-            <div class="flex-1">
-                <label for="versao" class="block text-gray-700 text-sm font-bold mb-2">Versão</label>
-                <select id="versao" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="">Selecione uma versão</option>
-                    <option value="acf">Almeida Corrigida Fiel (ACF)</option>
-                    <option value="nvi">Nova Versão Internacional (NVI)</option>
-                    <option value="aa">Almeida Atualizada (AA)</option>
-                </select>
-            </div>
-            <div class="flex-1">
-                <label for="livro" class="block text-gray-700 text-sm font-bold mb-2">Livro</label>
-                <select id="livro" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" disabled>
-                    <option value="">Selecione um livro</option>
-                </select>
-            </div>
-            <div class="flex-1">
-                <label for="capitulo" class="block text-gray-700 text-sm font-bold mb-2">Capítulo</label>
-                <select id="capitulo" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" disabled>
-                    <option value="">Selecione um capítulo</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Conteúdo Principal -->
-        <div class="flex flex-col lg:flex-row gap-6">
-            <!-- Lista de Versículos -->
-            <div class="lg:w-2/3">
-                <div class="bg-white rounded-xl shadow-md p-5 border border-indigo-100">
-                    <h2 id="versiculos-titulo" class="text-xl font-semibold text-indigo-700 mb-4">Selecione uma versão, livro e capítulo</h2>
-                    <div id="versiculos-container" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
-                </div>
-            </div>
-
-            <!-- Formulário de Mensagem -->
-            <div class="lg:w-1/3">
-                <div class="bg-white rounded-xl shadow-md p-5 border border-indigo-100">
-                    <h2 class="text-xl font-semibold text-indigo-700 mb-4">Mensagem Diária</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="versiculo-selecionado" class="block text-gray-700 text-sm font-bold mb-2">Versículo Selecionado</label>
-                            <input id="versiculo-selecionado" class="block w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-700" readonly>
-                        </div>
-                        <div>
-                            <label for="titulo-mensagem" class="block text-gray-700 text-sm font-bold mb-2">Título</label>
-                            <input id="titulo-mensagem" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Digite o título">
-                        </div>
-                        <div>
-                            <label for="texto-mensagem" class="block text-gray-700 text-sm font-bold mb-2">Mensagem</label>
-                            <textarea id="texto-mensagem" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" rows="6" placeholder="Digite a mensagem aqui..."></textarea>
-                        </div>
-                        <button id="salvar-mensagem" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition w-full disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            Salvar Mensagem
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<%
+  // Esta página será injetada no layout.ejs como 'body'
+  // O objeto 'user' já vem do server.js
+%>
 
 <style>
-    .versiculo-card { 
-        transition: all 0.2s ease; 
-        cursor: pointer;
-    }
-    .versiculo-card:hover { 
-        background-color: #EFF6FF; 
-        transform: translateY(-2px); 
-    }
-    .versiculo-selecionado {
-        background-color: #EEF2FF; 
-        color: #4F46E5; 
-        border-left: 4px solid #4F46E5; 
-        transition: all 0.2s ease;
-    }
-    .action-button { 
-        transition: all 0.2s ease; 
-    }
-    .action-button:hover:not(:disabled) { 
-        transform: scale(1.05); 
-        background-color: #EFF6FF; 
-        color: #2563EB; 
-    }
-    @keyframes fadeIn { 
-        from { opacity: 0; transform: translateY(10px); } 
-        to { opacity: 1; transform: translateY(0); } 
-    }
-    .animate-fadeIn { 
-        animation: fadeIn 0.5s ease forwards; 
-    }
+  /* Estilos específicos para a página de mensagens diárias */
+  .spinner {
+    border-top-color: #3b82f6;
+    border-left-color: #3b82f6;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .versiculo-card { 
+    transition: all 0.2s ease; 
+    cursor: pointer;
+  }
+  .versiculo-card:hover { 
+    background-color: #EFF6FF; 
+    transform: translateY(-2px); 
+  }
+  .versiculo-selecionado {
+    background-color: #EEF2FF; 
+    color: #4F46E5; 
+    border-left: 4px solid #4F46E5; 
+  }
+  .action-button { 
+    transition: all 0.2s ease; 
+  }
+  .action-button:hover:not(:disabled) { 
+    transform: scale(1.05); 
+    background-color: #EFF6FF; 
+    color: #2563EB; 
+  }
+  @keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
+  .animate-fadeIn { 
+    animation: fadeIn 0.5s ease forwards; 
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 28rem;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1rem;
+    padding: 0.875rem 1.25rem;
+    border-radius: 0.75rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    z-index: 1100;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(2rem); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Tabs */
+  .tab-button {
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+  }
+  .tab-button.active {
+    color: #2563EB;
+    border-bottom-color: #2563EB;
+  }
+  .tab-pane.hidden {
+    display: none;
+  }
+
+  /* Cards de mensagens */
+  .mensagem-card {
+    transition: all 0.2s ease;
+    border-left: 4px solid #E5E7EB;
+  }
+  .mensagem-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  .mensagem-card.mensagem-do-dia {
+    border-left-color: #10B981;
+    background: linear-gradient(90deg, #F0FDF4 0%, white 100%);
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .loading-overlay.hidden { display: none; }
 </style>
 
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="spinner w-12 h-12 border-4 border-dashed rounded-full"></div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div id="confirmationModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3 class="text-xl font-bold mb-4 text-red-600">Confirmar Deleção</h3>
+    <p id="confirmationMessage" class="mb-6 text-gray-700">Tem certeza que deseja deletar esta mensagem?</p>
+    <div class="flex justify-end gap-3">
+      <button id="cancelDeleteButton" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+      <button id="confirmDeleteButton" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">Deletar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Edição -->
+<div id="editMensagemModal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width: 32rem;">
+    <h3 class="text-xl font-bold mb-4 text-blue-600">Editar Mensagem</h3>
+    <form id="editMensagemForm">
+      <input type="hidden" id="editIdMensagem">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Título</label>
+        <input type="text" id="editTitulo" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Referência</label>
+        <input type="text" id="editReferencia" class="w-full px-3 py-2 border rounded-lg bg-gray-100" readonly>
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Texto do Versículo</label>
+        <textarea id="editTextoVersiculo" rows="2" class="w-full px-3 py-2 border rounded-lg bg-gray-100" readonly></textarea>
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Mensagem/Reflexão</label>
+        <textarea id="editDescricao" rows="4" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required></textarea>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button type="submit" class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">Salvar</button>
+        <button type="button" id="cancelEditBtn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="w-full max-w-6xl mx-auto">
+  <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-10 animate-fadeIn">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-semibold text-gray-900 flex items-center">
+        <i class="fas fa-envelope-open-text text-indigo-600 mr-3"></i>
+        Mensagens Diárias
+      </h1>
+    </div>
+
+    <!-- TABS -->
+    <div class="flex border-b border-gray-200 mb-6">
+      <button id="tabCadastrar" class="tab-button px-4 py-2 font-medium text-gray-600 hover:text-blue-600 transition active">
+        <i class="fas fa-plus-circle mr-2"></i>Cadastrar
+      </button>
+      <button id="TabListar" class="tab-button px-4 py-2 font-medium text-gray-600 hover:text-blue-600 transition">
+        <i class="fas fa-list mr-2"></i>Mensagens Cadastradas
+      </button>
+      <button id="TabMensagemDia" class="tab-button px-4 py-2 font-medium text-gray-600 hover:text-blue-600 transition">
+        <i class="fas fa-calendar-day mr-2"></i>Mensagem do Dia
+      </button>
+    </div>
+
+    <!-- PAINEL 1: CADASTRAR -->
+    <div id="paneCadastrar" class="tab-pane">
+      <!-- Seletores -->
+      <div class="flex flex-col sm:flex-row gap-4 mb-8">
+        <div class="flex-1">
+          <label for="versao" class="block text-gray-700 text-sm font-bold mb-2">Versão</label>
+          <select id="versao" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Selecione uma versão</option>
+            <option value="acf">Almeida Corrigida Fiel (ACF)</option>
+            <option value="nvi">Nova Versão Internacional (NVI)</option>
+            <option value="aa">Almeida Atualizada (AA)</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label for="livro" class="block text-gray-700 text-sm font-bold mb-2">Livro</label>
+          <select id="livro" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" disabled>
+            <option value="">Selecione um livro</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label for="capitulo" class="block text-gray-700 text-sm font-bold mb-2">Capítulo</label>
+          <select id="capitulo" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" disabled>
+            <option value="">Selecione um capítulo</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Conteúdo Principal -->
+      <div class="flex flex-col lg:flex-row gap-6">
+        <div class="lg:w-2/3">
+          <div class="bg-white rounded-xl shadow-md p-5 border border-indigo-100">
+            <h2 id="versiculos-titulo" class="text-xl font-semibold text-indigo-700 mb-4">Selecione uma versão, livro e capítulo</h2>
+            <div id="versiculos-container" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <div class="lg:w-1/3">
+          <div class="bg-white rounded-xl shadow-md p-5 border border-indigo-100">
+            <h2 class="text-xl font-semibold text-indigo-700 mb-4">Nova Mensagem</h2>
+            <div class="space-y-4">
+              <div>
+                <label for="versiculo-selecionado" class="block text-gray-700 text-sm font-bold mb-2">Versículo Selecionado</label>
+                <input id="versiculo-selecionado" class="block w-full bg-gray-100 border border-gray-300 rounded-lg py-2 px-3 text-gray-700" readonly>
+              </div>
+              <div>
+                <label for="titulo-mensagem" class="block text-gray-700 text-sm font-bold mb-2">Título</label>
+                <input id="titulo-mensagem" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Digite o título">
+              </div>
+              <div>
+                <label for="texto-mensagem" class="block text-gray-700 text-sm font-bold mb-2">Mensagem</label>
+                <textarea id="texto-mensagem" class="block w-full bg-indigo-50 border border-indigo-200 rounded-lg py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" rows="6" placeholder="Digite a mensagem aqui..."></textarea>
+              </div>
+              <button id="salvar-mensagem" class="action-button bg-indigo-100 text-indigo-700 font-medium py-2 px-4 rounded-lg transition w-full disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-save mr-2"></i>Salvar Mensagem
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL 2: LISTAR MENSAGENS -->
+    <div id="paneListar" class="tab-pane hidden">
+      <div class="mb-4 flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-gray-800">
+          <i class="fas fa-database mr-2 text-blue-600"></i>Todas as Mensagens Cadastradas
+        </h2>
+        <button id="atualizarListaBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition text-sm">
+          <i class="fas fa-sync-alt mr-2"></i>Atualizar
+        </button>
+      </div>
+      
+      <!-- Busca -->
+      <div class="mb-4 flex gap-3">
+        <input type="text" id="buscaMensagens" placeholder="Buscar por título, livro ou texto..." class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+        <button id="btnBuscarMensagens" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+          <i class="fas fa-search mr-2"></i>Buscar
+        </button>
+        <button id="btnLimparBusca" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+          <i class="fas fa-eraser mr-2"></i>Limpar
+        </button>
+      </div>
+      
+      <div id="mensagensListContainer" class="space-y-3 max-h-[70vh] overflow-y-auto">
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-spinner fa-spin mr-2"></i> Carregando mensagens...
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL 3: MENSAGEM DO DIA -->
+    <div id="paneMensagemDia" class="tab-pane hidden">
+      <div class="bg-gradient-to-r from-indigo-50 to-white rounded-xl shadow-md p-8 border border-indigo-100">
+        <div class="text-center mb-6">
+          <i class="fas fa-calendar-alt text-indigo-600 text-4xl mb-2"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Mensagem de Hoje</h2>
+          <p class="text-gray-500" id="dataAtual"></p>
+        </div>
+        
+        <div id="mensagemDiaContainer" class="text-center">
+          <div class="py-8 text-gray-500">
+            <i class="fas fa-spinner fa-spin mr-2"></i> Carregando mensagem do dia...
+          </div>
+        </div>
+        
+        <div class="mt-6 text-center">
+          <button id="forcarNovaMensagemBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">
+            <i class="fas fa-sync-alt mr-2"></i>Forçar Nova Mensagem (Admin)
+          </button>
+          <p class="text-xs text-gray-400 mt-2">Recalcula a mensagem com base na data atual</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-let bibleData = null;
-let currentVersion = '';
-const API_URL = '';
+(function() {
+  const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? `http://${window.location.hostname}:${window.location.port || 3000}`
+    : 'https://o-migrante.onrender.com';
 
-function showFeedback(message, isError = true) {
-    const feedbackDiv = document.createElement('div');
-    feedbackDiv.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${isError ? 'bg-red-500' : 'bg-green-500'} text-white z-50 transition-opacity duration-300`;
-    feedbackDiv.textContent = message;
-    document.body.appendChild(feedbackDiv);
-    setTimeout(() => feedbackDiv.remove(), 3000);
-}
+  let bibleData = null;
+  let currentVersion = '';
+  let todasMensagens = [];
+  let mensagemIdToDelete = null;
+  let mensagemIdToEdit = null;
 
-async function loadBibleXML(version) {
-    try {
-        showFeedback(`Carregando versão ${getVersionName(version)}...`, false);
-        const response = await fetch(`/biblias/pt_${version}.xml`);
-        if (!response.ok) throw new Error(`Failed to load XML: ${response.status}`);
-        const xmlString = await response.text();
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
-        if (xmlDoc.getElementsByTagName('parsererror').length > 0) throw new Error('Failed to parse XML');
-        bibleData = xmlDoc;
-        currentVersion = version;
-        populateBooks();
-        document.getElementById('livro').disabled = false;
-        showFeedback(`Versão ${getVersionName(version)} carregada!`, false);
-    } catch (error) {
-        console.error('Erro ao carregar Bíblia:', error);
-        showFeedback(`Erro ao carregar versão ${getVersionName(version)}. Verifique se o arquivo existe.`, true);
-        bibleData = null;
-    }
-}
+  // ============================================
+  // FUNÇÕES DE FEEDBACK E UTILITÁRIOS
+  // ============================================
+  function showFeedback(message, isError = true) {
+    const existingFeedback = document.querySelector('.toast');
+    if (existingFeedback) existingFeedback.remove();
 
-function getVersionName(version) {
-    const versions = { 
-        'acf': 'Almeida Corrigida Fiel', 
-        'nvi': 'Nova Versão Internacional', 
-        'aa': 'Almeida Atualizada' 
-    };
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.background = isError ? '#DC2626' : '#10B981';
+    toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'} mr-2"></i>${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  function toggleLoading(isLoading) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.toggle('hidden', !isLoading);
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function getVersionName(version) {
+    const versions = { 'acf': 'Almeida Corrigida Fiel', 'nvi': 'Nova Versão Internacional', 'aa': 'Almeida Atualizada' };
     return versions[version] || version;
-}
+  }
 
-function populateBooks() {
+  // ============================================
+  // TAB NAVIGATION
+  // ============================================
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+    document.getElementById(`pane${tabId}`).classList.remove('hidden');
+    
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    if (tabId === 'Cadastrar') document.getElementById('tabCadastrar').classList.add('active');
+    else if (tabId === 'Listar') document.getElementById('TabListar').classList.add('active');
+    else if (tabId === 'MensagemDia') document.getElementById('TabMensagemDia').classList.add('active');
+  }
+
+  // ============================================
+  // FUNÇÕES DA BÍBLIA (CADASTRO)
+  // ============================================
+  async function loadBibleXML(version) {
+    try {
+      showFeedback(`Carregando versão ${getVersionName(version)}...`, false);
+      const response = await fetch(`/biblias/pt_${version}.xml`);
+      if (!response.ok) throw new Error(`Failed to load XML: ${response.status}`);
+      const xmlString = await response.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+      if (xmlDoc.getElementsByTagName('parsererror').length > 0) throw new Error('Failed to parse XML');
+      bibleData = xmlDoc;
+      currentVersion = version;
+      populateBooks();
+      document.getElementById('livro').disabled = false;
+      showFeedback(`Versão ${getVersionName(version)} carregada!`, false);
+    } catch (error) {
+      console.error('Erro ao carregar Bíblia:', error);
+      showFeedback(`Erro ao carregar versão ${getVersionName(version)}.`, true);
+      bibleData = null;
+    }
+  }
+
+  function populateBooks() {
     if (!bibleData) return;
     const bookSelect = document.getElementById('livro');
     bookSelect.innerHTML = '<option value="">Selecione um livro</option>';
     const books = bibleData.querySelectorAll('b');
     books.forEach(book => {
-        const option = document.createElement('option');
-        option.value = book.getAttribute('id');
-        option.textContent = book.getAttribute('n');
-        bookSelect.appendChild(option);
+      const option = document.createElement('option');
+      option.value = book.getAttribute('id');
+      option.textContent = book.getAttribute('n');
+      bookSelect.appendChild(option);
     });
     document.getElementById('capitulo').innerHTML = '<option value="">Selecione um capítulo</option>';
     document.getElementById('capitulo').disabled = true;
     document.getElementById('versiculos-container').innerHTML = '';
     document.getElementById('versiculos-titulo').textContent = `Bíblia ${getVersionName(currentVersion)} - Selecione um livro`;
-}
+  }
 
-function populateChapters() {
+  function populateChapters() {
     const bookId = document.getElementById('livro').value;
     if (!bookId || !bibleData) return;
     const chapterSelect = document.getElementById('capitulo');
@@ -169,17 +420,17 @@ function populateChapters() {
     if (!book) return;
     const chapters = book.querySelectorAll('c');
     chapters.forEach(chapter => {
-        const option = document.createElement('option');
-        option.value = chapter.getAttribute('n');
-        option.textContent = chapter.getAttribute('n');
-        chapterSelect.appendChild(option);
+      const option = document.createElement('option');
+      option.value = chapter.getAttribute('n');
+      option.textContent = chapter.getAttribute('n');
+      chapterSelect.appendChild(option);
     });
     document.getElementById('versiculos-container').innerHTML = '';
     const bookName = document.getElementById('livro').options[document.getElementById('livro').selectedIndex].text;
     document.getElementById('versiculos-titulo').textContent = `Bíblia ${getVersionName(currentVersion)} - ${bookName}`;
-}
+  }
 
-function showVerses() {
+  function showVerses() {
     const bookId = document.getElementById('livro').value;
     const bookName = document.getElementById('livro').options[document.getElementById('livro').selectedIndex].text;
     const chapterNum = document.getElementById('capitulo').value;
@@ -192,53 +443,51 @@ function showVerses() {
     if (!chapter) return;
     const verses = chapter.querySelectorAll('v');
     verses.forEach(verse => {
-        const verseDiv = document.createElement('div');
-        verseDiv.className = 'versiculo-card p-3 rounded-lg cursor-pointer hover:bg-indigo-50';
-        verseDiv.innerHTML = `<strong>${verse.getAttribute('n')}.</strong> ${verse.textContent.substring(0, 200)}${verse.textContent.length > 200 ? '...' : ''}`;
-        verseDiv.addEventListener('click', () => {
-            document.querySelectorAll('.versiculo-card').forEach(card => card.classList.remove('versiculo-selecionado'));
-            verseDiv.classList.add('versiculo-selecionado');
-            document.getElementById('versiculo-selecionado').value = `${getVersionName(currentVersion)} - ${bookName} ${chapterNum}:${verse.getAttribute('n')} - ${verse.textContent}`;
-            updateSaveButton();
-        });
-        container.appendChild(verseDiv);
+      const verseDiv = document.createElement('div');
+      verseDiv.className = 'versiculo-card p-3 rounded-lg cursor-pointer hover:bg-indigo-50';
+      verseDiv.innerHTML = `<strong>${verse.getAttribute('n')}.</strong> ${verse.textContent.substring(0, 200)}${verse.textContent.length > 200 ? '...' : ''}`;
+      verseDiv.addEventListener('click', () => {
+        document.querySelectorAll('.versiculo-card').forEach(card => card.classList.remove('versiculo-selecionado'));
+        verseDiv.classList.add('versiculo-selecionado');
+        document.getElementById('versiculo-selecionado').value = `${getVersionName(currentVersion)} - ${bookName} ${chapterNum}:${verse.getAttribute('n')} - ${verse.textContent}`;
+        updateSaveButton();
+      });
+      container.appendChild(verseDiv);
     });
-}
+  }
 
-function updateSaveButton() {
+  function updateSaveButton() {
     const versiculo = document.getElementById('versiculo-selecionado').value;
     const titulo = document.getElementById('titulo-mensagem').value.trim();
     const mensagem = document.getElementById('texto-mensagem').value.trim();
     const saveBtn = document.getElementById('salvar-mensagem');
     saveBtn.disabled = !(versiculo && titulo && mensagem);
-}
+  }
 
-async function saveMensagem() {
+  async function saveMensagem() {
     const selectedVerse = document.getElementById('versiculo-selecionado').value;
     const titulo = document.getElementById('titulo-mensagem').value.trim();
     const descricao = document.getElementById('texto-mensagem').value.trim();
     
     if (!selectedVerse || !titulo || !descricao) {
-        showFeedback("Preencha todos os campos.", true);
-        return;
+      showFeedback("Preencha todos os campos.", true);
+      return;
     }
     
-    // Parse do versículo selecionado
     const parts = selectedVerse.split(' - ');
     if (parts.length < 2) {
-        showFeedback("Formato do versículo inválido.", true);
-        return;
+      showFeedback("Formato do versículo inválido.", true);
+      return;
     }
     
     const versionName = parts[0];
     const reference = parts[1];
     const text = parts.slice(2).join(' - ');
     
-    // Parse da referência (ex: "João 3:16")
     const referenceMatch = reference.match(/(.+)\s+(\d+):(\d+)/);
     if (!referenceMatch) {
-        showFeedback("Erro ao processar referência do versículo.", true);
-        return;
+      showFeedback("Erro ao processar referência do versículo.", true);
+      return;
     }
     
     const book = referenceMatch[1].trim();
@@ -246,82 +495,334 @@ async function saveMensagem() {
     const verse = parseInt(referenceMatch[3]);
     
     const mensagemData = {
-        versao: currentVersion,
-        livro: book,
-        capitulo: chapter,
-        versiculo: verse,
-        texto_versiculo: text,
-        titulo: titulo,
-        descricao: descricao
+      versao: currentVersion,
+      livro: book,
+      capitulo: chapter,
+      versiculo: verse,
+      texto_versiculo: text,
+      titulo: titulo,
+      descricao: descricao
     };
     
+    toggleLoading(true);
     try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/mensagens', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(mensagemData)
-        });
-        
-        const result = await response.json();
-        if (response.ok && result.success) {
-            showFeedback("Mensagem salva com sucesso!", false);
-            // Limpar formulário
-            document.getElementById('texto-mensagem').value = '';
-            document.getElementById('titulo-mensagem').value = '';
-            document.getElementById('versiculo-selecionado').value = '';
-            document.getElementById('salvar-mensagem').disabled = true;
-            document.querySelectorAll('.versiculo-card').forEach(card => card.classList.remove('versiculo-selecionado'));
-        } else {
-            showFeedback(result.message || "Erro ao salvar mensagem.", true);
-        }
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/mensagens`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(mensagemData)
+      });
+      
+      const result = await response.json();
+      if (response.ok && result.success) {
+        showFeedback("Mensagem salva com sucesso!", false);
+        document.getElementById('texto-mensagem').value = '';
+        document.getElementById('titulo-mensagem').value = '';
+        document.getElementById('versiculo-selecionado').value = '';
+        document.getElementById('salvar-mensagem').disabled = true;
+        document.querySelectorAll('.versiculo-card').forEach(card => card.classList.remove('versiculo-selecionado'));
+        carregarMensagens(); // Atualizar lista
+      } else {
+        showFeedback(result.message || "Erro ao salvar mensagem.", true);
+      }
     } catch (error) {
-        console.error('Erro ao salvar mensagem:', error);
-        showFeedback("Erro ao salvar mensagem. Verifique sua conexão.", true);
+      console.error('Erro ao salvar mensagem:', error);
+      showFeedback("Erro ao salvar mensagem. Verifique sua conexão.", true);
+    } finally {
+      toggleLoading(false);
     }
-}
+  }
 
-// Inicialização simplificada (sem verificação extra de token)
-document.addEventListener("DOMContentLoaded", () => {
-    // Verificar se token existe
+  // ============================================
+  // CRUD DE MENSAGENS
+  // ============================================
+  async function carregarMensagens(busca = '') {
+    toggleLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      let url = `${API_BASE_URL}/mensagens`;
+      if (busca) {
+        url += `?busca=${encodeURIComponent(busca)}`;
+      }
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Erro ao carregar mensagens');
+      
+      const data = await response.json();
+      todasMensagens = data.mensagens || [];
+      renderizarListaMensagens(todasMensagens);
+    } catch (error) {
+      console.error('Erro:', error);
+      showFeedback('Erro ao carregar mensagens: ' + error.message, true);
+      document.getElementById('mensagensListContainer').innerHTML = `
+        <div class="text-center py-8 text-red-500">
+          <i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar mensagens
+        </div>
+      `;
+    } finally {
+      toggleLoading(false);
+    }
+  }
+
+  function renderizarListaMensagens(mensagens) {
+    const container = document.getElementById('mensagensListContainer');
+    
+    if (!mensagens || mensagens.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-info-circle mr-2"></i> Nenhuma mensagem cadastrada.
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = mensagens.map(msg => `
+      <div class="mensagem-card bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-400 hover:shadow-lg transition">
+        <div class="flex justify-between items-start flex-wrap gap-2">
+          <div class="flex-1">
+            <h3 class="font-bold text-lg text-gray-800">${escapeHtml(msg.título || msg.titulo)}</h3>
+            <p class="text-sm text-indigo-600 mt-1">
+              <i class="fas fa-book-open mr-1"></i> ${escapeHtml(msg.livro)} ${msg.capítulo || msg.capitulo}:${msg.versículo || msg.versiculo} (${getVersionName(msg.versao)})
+            </p>
+            <p class="text-gray-600 text-sm mt-2 italic">"${escapeHtml((msg.texto_versículo || msg.texto_versiculo || '').substring(0, 100))}..."</p>
+            <p class="text-gray-700 mt-2">${escapeHtml((msg.descrição || msg.descricao || '').substring(0, 150))}${(msg.descrição || msg.descricao || '').length > 150 ? '...' : ''}</p>
+            <p class="text-xs text-gray-400 mt-2">
+              <i class="fas fa-calendar-alt mr-1"></i> Criado em: ${new Date(msg.criado_em).toLocaleDateString('pt-BR')}
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editarMensagem(${msg.id_mensagem})" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button onclick="confirmarDeletarMensagem(${msg.id_mensagem})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
+              <i class="fas fa-trash"></i> Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Funções Globais para os botões
+  window.confirmarDeletarMensagem = (id) => {
+    mensagemIdToDelete = id;
+    const msg = todasMensagens.find(m => m.id_mensagem === id);
+    const messageEl = document.getElementById('confirmationMessage');
+    if (messageEl) {
+      messageEl.textContent = `Tem certeza que deseja deletar a mensagem "${msg?.título || msg?.titulo}"? Esta ação é irreversível.`;
+    }
+    document.getElementById('confirmationModal').classList.remove('hidden');
+  };
+
+  window.editarMensagem = async (id) => {
+    const msg = todasMensagens.find(m => m.id_mensagem === id);
+    if (!msg) {
+      showFeedback("Mensagem não encontrada!", true);
+      return;
+    }
+    
+    mensagemIdToEdit = id;
+    document.getElementById('editIdMensagem').value = id;
+    document.getElementById('editTitulo').value = msg.título || msg.titulo || '';
+    document.getElementById('editReferencia').value = `${msg.livro} ${msg.capítulo || msg.capitulo}:${msg.versículo || msg.versiculo} (${getVersionName(msg.versao)})`;
+    document.getElementById('editTextoVersiculo').value = msg.texto_versículo || msg.texto_versiculo || '';
+    document.getElementById('editDescricao').value = msg.descrição || msg.descricao || '';
+    
+    document.getElementById('editMensagemModal').classList.remove('hidden');
+  };
+
+  async function deletarMensagem(id) {
+    toggleLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/mensagens/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Erro ao deletar mensagem');
+      
+      showFeedback("Mensagem deletada com sucesso!", false);
+      carregarMensagens();
+      carregarMensagemDoDia();
+    } catch (error) {
+      console.error('Erro:', error);
+      showFeedback("Erro ao deletar mensagem: " + error.message, true);
+    } finally {
+      toggleLoading(false);
+    }
+  }
+
+  async function atualizarMensagem(id, dados) {
+    toggleLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/mensagens/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dados)
+      });
+      
+      if (!response.ok) throw new Error('Erro ao atualizar mensagem');
+      
+      showFeedback("Mensagem atualizada com sucesso!", false);
+      carregarMensagens();
+      carregarMensagemDoDia();
+    } catch (error) {
+      console.error('Erro:', error);
+      showFeedback("Erro ao atualizar mensagem: " + error.message, true);
+    } finally {
+      toggleLoading(false);
+    }
+  }
+
+  async function carregarMensagemDoDia() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/mensagens/diaria`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          document.getElementById('mensagemDiaContainer').innerHTML = `
+            <div class="py-8 text-gray-500">
+              <i class="fas fa-info-circle text-4xl mb-2"></i>
+              <p>Nenhuma mensagem disponível para hoje.</p>
+              <p class="text-sm mt-2">Cadastre mensagens no painel "Cadastrar"</p>
+            </div>
+          `;
+          return;
+        }
+        throw new Error('Erro ao carregar mensagem do dia');
+      }
+      
+      const data = await response.json();
+      const msg = data.mensagem;
+      
+      document.getElementById('mensagemDiaContainer').innerHTML = `
+        <div class="bg-green-50 rounded-xl p-6 border border-green-200">
+          <h3 class="text-2xl font-bold text-gray-800 mb-3">${escapeHtml(msg.título || msg.titulo)}</h3>
+          <p class="text-indigo-600 mb-2">
+            <i class="fas fa-book-open mr-1"></i> ${escapeHtml(msg.livro)} ${msg.capítulo || msg.capitulo}:${msg.versículo || msg.versiculo} (${getVersionName(msg.versao)})
+          </p>
+          <p class="text-gray-600 italic mb-4">"${escapeHtml(msg.texto_versículo || msg.texto_versiculo)}"</p>
+          <p class="text-gray-700">${escapeHtml(msg.descrição || msg.descricao)}</p>
+        </div>
+      `;
+    } catch (error) {
+      console.error('Erro:', error);
+      document.getElementById('mensagemDiaContainer').innerHTML = `
+        <div class="py-8 text-red-500">
+          <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+          <p>Erro ao carregar mensagem do dia.</p>
+        </div>
+      `;
+    }
+  }
+
+  async function forcarNovaMensagem() {
+    await carregarMensagemDoDia();
+    showFeedback("Mensagem do dia recarregada!", false);
+  }
+
+  // ============================================
+  // EVENT LISTENERS
+  // ============================================
+  document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem('token');
     if (!token) {
-        showFeedback("Você não está autenticado. Redirecionando...", true);
-        setTimeout(() => {
-            window.location.href = "/";
-        }, 1500);
-        return;
+      showFeedback("Você não está autenticado. Redirecionando...", true);
+      setTimeout(() => window.location.href = "/", 1500);
+      return;
     }
     
-    // Configurar event listeners
-    document.getElementById('versao').addEventListener('change', (e) => {
-        if (e.target.value) {
-            loadBibleXML(e.target.value);
-        } else {
-            document.getElementById('livro').innerHTML = '<option value="">Selecione um livro</option>';
-            document.getElementById('livro').disabled = true;
-            document.getElementById('capitulo').innerHTML = '<option value="">Selecione um capítulo</option>';
-            document.getElementById('capitulo').disabled = true;
-            document.getElementById('versiculos-container').innerHTML = '';
-            document.getElementById('versiculos-titulo').textContent = 'Selecione uma versão, livro e capítulo';
-        }
+    // Data atual
+    document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
     });
     
+    // TABs
+    document.getElementById('tabCadastrar').addEventListener('click', () => switchTab('Cadastrar'));
+    document.getElementById('TabListar').addEventListener('click', () => {
+      switchTab('Listar');
+      carregarMensagens();
+    });
+    document.getElementById('TabMensagemDia').addEventListener('click', () => {
+      switchTab('MensagemDia');
+      carregarMensagemDoDia();
+    });
+    
+    // Cadastro
+    document.getElementById('versao').addEventListener('change', (e) => {
+      if (e.target.value) loadBibleXML(e.target.value);
+      else {
+        document.getElementById('livro').innerHTML = '<option value="">Selecione um livro</option>';
+        document.getElementById('livro').disabled = true;
+        document.getElementById('capitulo').innerHTML = '<option value="">Selecione um capítulo</option>';
+        document.getElementById('capitulo').disabled = true;
+        document.getElementById('versiculos-container').innerHTML = '';
+        document.getElementById('versiculos-titulo').textContent = 'Selecione uma versão, livro e capítulo';
+      }
+    });
     document.getElementById('livro').addEventListener('change', populateChapters);
     document.getElementById('capitulo').addEventListener('change', showVerses);
     document.getElementById('salvar-mensagem').addEventListener('click', saveMensagem);
     document.getElementById('titulo-mensagem').addEventListener('input', updateSaveButton);
     document.getElementById('texto-mensagem').addEventListener('input', updateSaveButton);
     
-    // Logout
-    document.getElementById('logoutButton').addEventListener('click', () => {
-        if (confirm('Tem certeza que deseja sair?')) {
-            localStorage.removeItem('token');
-            window.location.href = "/";
-        }
+    // Lista de Mensagens
+    document.getElementById('atualizarListaBtn').addEventListener('click', () => carregarMensagens());
+    document.getElementById('btnBuscarMensagens').addEventListener('click', () => {
+      const busca = document.getElementById('buscaMensagens').value.trim();
+      carregarMensagens(busca);
     });
-});
+    document.getElementById('btnLimparBusca').addEventListener('click', () => {
+      document.getElementById('buscaMensagens').value = '';
+      carregarMensagens();
+    });
+    
+    // Mensagem do Dia
+    document.getElementById('forcarNovaMensagemBtn').addEventListener('click', forcarNovaMensagem);
+    
+    // Modal de Confirmação
+    document.getElementById('cancelDeleteButton').addEventListener('click', () => {
+      document.getElementById('confirmationModal').classList.add('hidden');
+      mensagemIdToDelete = null;
+    });
+    document.getElementById('confirmDeleteButton').addEventListener('click', () => {
+      document.getElementById('confirmationModal').classList.add('hidden');
+      if (mensagemIdToDelete) {
+        deletarMensagem(mensagemIdToDelete);
+        mensagemIdToDelete = null;
+      }
+    });
+    
+    // Modal de Edição
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+      document.getElementById('editMensagemModal').classList.add('hidden');
+    });
+    document.getElementById('editMensagemForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const dados = {
+        titulo: document.getElementById('editTitulo').value,
+        descricao: document.getElementById('editDescricao').value
+      };
+      await atualizarMensagem(mensagemIdToEdit, dados);
+      document.getElementById('editMensagemModal').classList.add('hidden');
+    });
+    
+    // Carregar dados iniciais
+    carregarMensagens();
+    carregarMensagemDoDia();
+  });
+})();
 </script>

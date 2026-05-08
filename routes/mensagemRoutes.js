@@ -81,4 +81,28 @@ router.get('/diaria', authenticateToken, async (req, res) => {
     }
 });
 
+// DELETE /:id - Excluir mensagem
+router.delete('/:id', authenticateToken, checkAdmin, async (req, res) => {
+  try {
+    await db.query('DELETE FROM mensagensdiarias WHERE id_mensagem = ?', [req.params.id]);
+    res.json({ success: true, message: 'Mensagem excluída com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// PUT /:id - Atualizar mensagem
+router.put('/:id', authenticateToken, checkAdmin, async (req, res) => {
+  const { titulo, descricao } = req.body;
+  try {
+    await db.query(
+      'UPDATE mensagensdiarias SET título = ?, descrição = ? WHERE id_mensagem = ?',
+      [titulo, descricao, req.params.id]
+    );
+    res.json({ success: true, message: 'Mensagem atualizada com sucesso!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
