@@ -341,20 +341,21 @@
         userPositionCard.classList.remove('hidden');
         document.getElementById('userPosicao').textContent = `#${data.userPosition}`;
         
-        // Buscar o XP do usuário diretamente da API de perfil
+        // Extrair ID do token
         try {
-          const perfilResponse = await fetch(`${API_BASE_URL}/usuarios/perfil`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (perfilResponse.ok) {
-            const perfilData = await perfilResponse.json();
-            const xp = perfilData.usuario?.xp_total || 0;
-            document.getElementById('userXP').textContent = `${xp} XP`;
+          const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+          const currentUserId = tokenPayload.id;
+          
+          // Buscar o usuário no ranking
+          const userInRanking = data.ranking.find(u => u.id_usuario === currentUserId);
+          if (userInRanking) {
+            document.getElementById('userXP').textContent = `${userInRanking.xp_total} XP`;
           } else {
-            document.getElementById('userXP').textContent = `? XP`;
+            // Se não estiver no ranking, usar 0 (mas mostrar que está fora)
+            document.getElementById('userXP').textContent = `0 XP (fora do top ${data.ranking.length})`;
           }
         } catch (e) {
-          console.warn('Erro ao buscar perfil', e);
+          console.warn('Erro ao extrair ID do token', e);
           document.getElementById('userXP').textContent = `? XP`;
         }
       } else {
@@ -366,7 +367,7 @@
       document.getElementById('rankingGlobalContainer').innerHTML = `<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar ranking</div>`;
     }
   }
-  
+
   async function carregarRankingNiveis() {
     try {
       const token = localStorage.getItem('token');
