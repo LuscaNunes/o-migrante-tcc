@@ -1,6 +1,7 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const rankingService = require('../services/rankingService');
+const db = require('../config/database'); // 🔥 ADICIONAR ESTA LINHA
 const router = express.Router();
 
 // GET /ranking/global - Ranking global geral
@@ -58,31 +59,34 @@ router.get('/posicao/:usuarioId', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /ranking/minha-posicao - Posição e XP do usuário logado
+// 🔥 NOVA ROTA: GET /ranking/minha-posicao - Posição e XP do usuário logado
 router.get('/minha-posicao', authenticateToken, async (req, res) => {
   try {
     const usuario_id = req.user.id;
     
-    // Buscar posição
+    // Buscar posição usando o service existente
     const position = await rankingService.getUserRankPosition(usuario_id);
     
-    // Buscar XP do usuário
+    // Buscar XP do usuário diretamente no banco
     const [userData] = await db.query(
       'SELECT xp_total, nome FROM Usuarios WHERE id_usuario = ?',
       [usuario_id]
     );
     
+    if (userData.length === 0) {
+      return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+    }
+    
     res.json({
       success: true,
       posicao: position.posicao,
-      xp_total: userData[0]?.xp_total || 0,
-      nome: userData[0]?.nome
+      xp_total: userData[0].xp_total || 0,
+      nome: userData[0].nome
     });
   } catch (error) {
     console.error('Erro ao buscar posição do usuário:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 
 module.exports = router;
