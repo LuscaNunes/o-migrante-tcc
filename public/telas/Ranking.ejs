@@ -319,13 +319,36 @@
   }
 
   async function carregarRankingGlobal() {
-  try {
-    const token = localStorage.getItem('token');
-    
-    // Buscar ranking global
-    const response = await fetch(`${API_BASE_URL}/ranking/global`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    try {
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+        throw new Error('Token não encontrado');
+        }
+        
+        // 🔥 MÉTODO SEGURO: Buscar perfil do usuário primeiro para obter o ID
+        let usuarioId = null;
+        let userXP = 0;
+        
+        try {
+        const perfilResponse = await fetch(`${API_BASE_URL}/usuarios/perfil`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (perfilResponse.ok) {
+            const perfilData = await perfilResponse.json();
+            usuarioId = perfilData.usuario?.id_usuario;
+            userXP = perfilData.usuario?.xp_total || 0;
+            console.log('Usuário logado ID:', usuarioId, 'XP:', userXP);
+        }
+        } catch (e) {
+        console.warn('Erro ao buscar perfil para obter ID:', e);
+        }
+        
+        // Buscar ranking global
+        const response = await fetch(`${API_BASE_URL}/ranking/global`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+        });
         
         if (!response.ok) throw new Error('Erro ao carregar ranking');
         
@@ -338,21 +361,44 @@
         document.getElementById('mediaXP').textContent = data.stats.mediaXP || 0;
         }
         
-        // 🔥 CORREÇÃO: Buscar o usuário logado dentro do ranking
-        const tokenPayload = JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
-        const usuarioId = tokenPayload.id;
+        // 🔥 Buscar a posição do usuário no ranking
+        const userPositionCard = document.getElementById('userPositionCard');
         
-        // Procurar o usuário no ranking
+        if (usuarioId && data.ranking) {
         const usuarioNoRanking = data.ranking.find(user => user.id_usuario === usuarioId);
         
-        const userPositionCard = document.getElementById('userPositionCard');
         if (usuarioNoRanking) {
-        userPositionCard.classList.remove('hidden');
-        document.getElementById('userPosicao').textContent = `#${usuarioNoRanking.posicao || usuarioNoRanking.position}`;
-        // 🔥 Usar o XP do ranking, não do perfil
-        document.getElementById('userXP').textContent = `${usuarioNoRanking.xp_total || 0} XP`;
+            userPositionCard.classList.remove('hidden');
+            const posicao = usuarioNoRanking.posicao || usuarioNoRanking.position || '?';
+            document.getElementById('userPosicao').textContent = `#${posicao}`;
+            document.getElementById('userXP').textContent = `${usuarioNoRanking.xp_total || userXP} XP`;
+            return;
+        }
+        }
+        
+        // Fallback: se não encontrou no ranking, tentar via endpoint específico
+        try {
+        const posicaoResponse = await fetch(`${API_BASE_URL}/ranking/posicao`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (posicaoResponse.ok) {
+            const posicaoData = await posicaoResponse.json();
+            userPositionCard.classList.remove('hidden');
+            document.getElementById('userPosicao').textContent = `#${posicaoData.posicao || '?'}`;
+            document.getElementById('userXP').textContent = `${posicaoData.xp_total || userXP} XP`;
         } else {
-        userPositionCard.classList.add('hidden');
+            // Mostrar card apenas com XP, sem posição
+            userPositionCard.classList.remove('hidden');
+            document.getElementById('userPosicao').textContent = '?';
+            document.getElementById('userXP').textContent = `${userXP} XP`;
+        }
+        } catch (e) {
+        console.warn('Erro ao buscar posição específica:', e);
+        // Mostrar card apenas com XP
+        userPositionCard.classList.remove('hidden');
+        document.getElementById('userPosicao').textContent = '?';
+        document.getElementById('userXP').textContent = `${userXP} XP`;
         }
     } catch (error) {
         console.error('Erro:', error);
@@ -360,7 +406,6 @@
         document.getElementById('rankingGlobalContainer').innerHTML = `<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar ranking</div>`;
     }
     }
-
 
   async function carregarRankingNiveis() {
     try {
