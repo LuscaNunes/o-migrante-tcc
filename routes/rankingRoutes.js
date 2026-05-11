@@ -58,4 +58,38 @@ router.get('/posicao/:usuarioId', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /ranking/posicao - Retorna posição e XP do usuário logado
+router.get('/posicao', authenticateToken, async (req, res) => {
+  try {
+    const usuario_id = req.user.id;
+    
+    // Buscar XP do usuário
+    const [userData] = await db.query(
+      'SELECT xp_total, nome FROM Usuarios WHERE id_usuario = ?',
+      [usuario_id]
+    );
+    
+    if (userData.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    
+    // Contar quantos usuários têm XP maior que o seu
+    const [posicaoData] = await db.query(
+      'SELECT COUNT(*) as total FROM Usuarios WHERE xp_total > (SELECT xp_total FROM Usuarios WHERE id_usuario = ?)',
+      [usuario_id]
+    );
+    
+    const posicao = posicaoData[0].total + 1;
+    
+    res.json({
+      posicao: posicao,
+      xp_total: userData[0].xp_total || 0,
+      nome: userData[0].nome
+    });
+  } catch (err) {
+    console.error('Erro ao buscar posição:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
