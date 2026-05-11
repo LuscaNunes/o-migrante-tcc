@@ -908,6 +908,7 @@
         const nome = document.getElementById('editName')?.value.trim() || '';
         const email = document.getElementById('editEmail')?.value.trim() || '';
         const senha = document.getElementById('editPassword')?.value.trim() || '';
+        
         let valid = true;
         
         ['editNameError','editEmailError','editPasswordError'].forEach(id => {
@@ -931,37 +932,66 @@
           valid = false; 
         }
         
-        const curName = document.getElementById('fullName')?.textContent || '';
-        const curEmail = document.getElementById('emailInfo')?.textContent || '';
-        if (nome === curName && (!email || email === curEmail) && !senha) {
-          showFeedback('Nenhuma alteração feita.', true);
-          return;
-        }
         if (!valid) return;
         
-        const body = { nome };
-        if (email && email !== curEmail) body.email = email;
-        if (senha) body.senha = senha;
+        // 🔥 CORREÇÃO: Construir objeto apenas com campos alterados
+        const body = {};
+        
+        // Verificar se o nome mudou
+        const curName = document.getElementById('fullName')?.textContent || '';
+        if (nome !== curName) {
+          body.nome = nome;
+        }
+        
+        // Verificar se o email mudou
+        const curEmail = document.getElementById('emailInfo')?.textContent || '';
+        if (email && email !== curEmail) {
+          body.email = email;
+        }
+        
+        // Verificar se a senha foi preenchida
+        if (senha) {
+          body.senha = senha;
+        }
+        
+        // Se nada mudou
+        if (Object.keys(body).length === 0) {
+          showFeedback('Nenhuma alteração feita.', true);
+          closeModal();
+          return;
+        }
         
         try {
-          const r = await makeAuthenticatedRequest('/usuarios/atualizar', { method: 'PUT', body: JSON.stringify(body) });
+          const r = await makeAuthenticatedRequest('/usuarios/atualizar', { 
+            method: 'PUT', 
+            body: JSON.stringify(body) 
+          });
           const d = await r.json();
+          
           if (d.success) {
-            const userName = document.getElementById('userName');
-            const fullName = document.getElementById('fullName');
-            const userEmail = document.getElementById('userEmail');
-            const emailInfo = document.getElementById('emailInfo');
-            
-            if (userName) userName.textContent = nome;
-            if (fullName) fullName.textContent = nome;
-            if (email && email !== curEmail) {
-              if (userEmail) userEmail.textContent = email;
-              if (emailInfo) emailInfo.textContent = email;
+            // Atualizar apenas os campos que foram alterados
+            if (body.nome) {
+              const userName = document.getElementById('userName');
+              const fullName = document.getElementById('fullName');
+              if (userName) userName.textContent = body.nome;
+              if (fullName) fullName.textContent = body.nome;
             }
+            
+            if (body.email) {
+              const userEmail = document.getElementById('userEmail');
+              const emailInfo = document.getElementById('emailInfo');
+              if (userEmail) userEmail.textContent = body.email;
+              if (emailInfo) emailInfo.textContent = body.email;
+            }
+            
             showFeedback('Perfil atualizado!', false);
             closeModal();
-          } else showFeedback(d.message || 'Erro ao atualizar.', true);
-        } catch (e) { showFeedback('Erro: ' + e.message, true); }
+          } else {
+            showFeedback(d.message || 'Erro ao atualizar.', true);
+          }
+        } catch (e) { 
+          showFeedback('Erro: ' + e.message, true); 
+        }
       });
     }
 
