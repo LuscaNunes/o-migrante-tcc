@@ -202,26 +202,57 @@ router.get('/perfil', authenticateToken, async (req, res) => {
  */
 router.delete('/:id', authenticateToken, checkAdmin, async (req, res) => {
   try {
+    const usuarioId = req.params.id;
+    
     // Verificar se o usuário existe
-    const [check] = await db.query('SELECT id_usuario FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
+    const [check] = await db.query('SELECT id_usuario, nome, tipo FROM Usuarios WHERE id_usuario = ?', [usuarioId]);
     
     if (check.length === 0) {
       return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
     }
     
-    // Impedir admin de deletar a si mesmo (opcional mas recomendado)
-    if (parseInt(req.params.id) === req.user.id) {
+    // Impedir admin de deletar a si mesmo
+    if (parseInt(usuarioId) === req.user.id) {
       return res.status(400).json({ success: false, message: 'Você não pode deletar seu próprio usuário.' });
     }
     
-    // Deletar usuário (ON DELETE CASCADE cuida das tabelas relacionadas)
-    const [result] = await db.query('DELETE FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
+    // 🔥 INICIAR TRANSAÇÃO (para garantir consistência)
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
     
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+    try {
+      // 1. Deletar registros relacionados primeiro (ON DELETE CASCADE vai cuidar da maioria)
+      // Mas por segurança, deletamos explicitamente
+      
+      await connection.query('DELETE FROM ProgressoUsuario WHERE usuario_id = ?', [usuarioId]);
+      await connection.query('DELETE FROM Amizades WHERE id_usuario1 = ? OR id_usuario2 = ?', [usuarioId, usuarioId]);
+      await connection.query('DELETE FROM Curtidas WHERE usuario_id = ?', [usuarioId]);
+      await connection.query('DELETE FROM Comentarios WHERE usuario_id = ?', [usuarioId]);
+      await connection.query('DELETE FROM Anotacoes WHERE usuario_id = ?', [usuarioId]);
+      await connection.query('DELETE FROM perguntas WHERE usuario_id = ?', [usuarioId]);
+      await connection.query('DELETE FROM niveis WHERE usuario_id = ?', [usuarioId]);
+      await connection.query('DELETE FROM mensagensdiarias WHERE usuario_id = ?', [usuarioId]);
+      
+      // 2. Finalmente deletar o usuário
+      const [result] = await connection.query('DELETE FROM Usuarios WHERE id_usuario = ?', [usuarioId]);
+      
+      if (result.affectedRows === 0) {
+        throw new Error('Usuário não encontrado durante deleção');
+      }
+      
+      // Commit da transação
+      await connection.commit();
+      
+      res.json({ success: true, message: 'Usuário e todos os seus dados foram deletados com sucesso!' });
+      
+    } catch (err) {
+      // Rollback em caso de erro
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
     }
     
-    res.json({ success: true, message: 'Usuário deletado com sucesso!' });
   } catch (err) {
     console.error('Erro ao deletar usuário:', err);
     res.status(500).json({ success: false, message: 'Erro ao deletar usuário: ' + err.message });
