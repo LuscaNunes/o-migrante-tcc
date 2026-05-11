@@ -195,37 +195,6 @@ router.get('/perfil', authenticateToken, async (req, res) => {
 });
 // REMOVIDO: A rota /app/painel foi removida por estar fora de lugar aqui (já está em server.js).
 
-/**
- * Rota para deletar um usuário
- * DELETE /usuarios/:id
- * Requer autenticação e permissão de admin
- */
-router.delete('/:id', authenticateToken, checkAdmin, async (req, res) => {
-  try {
-    // Verificar se o usuário existe
-    const [check] = await db.query('SELECT id_usuario FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
-    
-    if (check.length === 0) {
-      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-    }
-    
-    // Impedir admin de deletar a si mesmo (opcional mas recomendado)
-    if (parseInt(req.params.id) === req.user.id) {
-      return res.status(400).json({ success: false, message: 'Você não pode deletar seu próprio usuário.' });
-    }
-    
-    // Deletar usuário (ON DELETE CASCADE cuida das tabelas relacionadas)
-    const [result] = await db.query('DELETE FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-    }
-    
-    res.json({ success: true, message: 'Usuário deletado com sucesso!' });
-  } catch (err) {
-    console.error('Erro ao deletar usuário:', err);
-    res.status(500).json({ success: false, message: 'Erro ao deletar usuário: ' + err.message });
-  }
-});
+
 
 module.exports = router;
