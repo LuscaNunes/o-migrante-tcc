@@ -117,16 +117,28 @@ router.put('/:id', authenticateToken, checkAdmin, async (req, res) => {
  * Aceita atualização parcial (apenas os campos enviados)
  */
 router.put('/atualizar', authenticateToken, async (req, res) => {
-	const { nome, email, senha } = req.body;
-	const usuario_id = req.user.id;
+  console.log('=== ROTA /atualizar ACIONADA ===');
+  console.log('Headers:', req.headers);
+  console.log('Body recebido:', req.body);
+  console.log('Usuário ID:', req.user?.id);
+  console.log('Usuário nome:', req.user?.nome);
+  
+  const { nome, email, senha } = req.body;
+  const usuario_id = req.user.id;
 
-	// 🔥 CORREÇÃO: Verificar se pelo menos um campo foi enviado
-	if (!nome && !email && !senha) {
-		return res.status(400).json({ 
-			success: false, 
-			message: 'Pelo menos um campo (nome, email ou senha) deve ser enviado para atualização.' 
-		});
-	}
+  console.log('Dados extraídos:', { nome, email, senha: senha ? '***' : undefined });
+
+  // 🔥 CORREÇÃO: Verificar se pelo menos um campo foi enviado
+  if (!nome && !email && !senha) {
+    console.log('ERRO: Nenhum campo enviado');
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Pelo menos um campo (nome, email ou senha) deve ser enviado para atualização.' 
+    });
+  }
+
+  // ... resto do código
+});
 
 	try {
 		// Buscar dados atuais do usuário
