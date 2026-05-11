@@ -319,46 +319,72 @@
   }
 
   async function carregarRankingGlobal() {
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      throw new Error('Token não encontrado');
+    }
+    
+    // 🔥 Buscar ranking global (que contém o XP correto de todos)
+    const response = await fetch(`${API_BASE_URL}/ranking/global`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!response.ok) throw new Error('Erro ao carregar ranking');
+    
+    const data = await response.json();
+    renderRanking('rankingGlobalContainer', data.ranking, 'global');
+    
+    if (data.stats) {
+      document.getElementById('totalUsuarios').textContent = data.stats.totalUsuarios || 0;
+      document.getElementById('totalXP').textContent = data.stats.totalXP || 0;
+      document.getElementById('mediaXP').textContent = data.stats.mediaXP || 0;
+    }
+    
+    // 🔥 CORREÇÃO: Buscar o usuário logado no próprio ranking
+    // Para isso, precisamos do ID do usuário logado
+    let usuarioId = null;
+    
     try {
-        const token = localStorage.getItem('token');
-        
-        // Buscar ranking global
-        const response = await fetch(`${API_BASE_URL}/ranking/global`, {
+      // Tentar pegar ID do usuário pelo token (sem decodificar atob)
+      const perfilResponse = await fetch(`${API_BASE_URL}/usuarios/perfil`, {
         headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (!response.ok) throw new Error('Erro ao carregar ranking');
-        
-        const data = await response.json();
-        renderRanking('rankingGlobalContainer', data.ranking, 'global');
-        
-        if (data.stats) {
-        document.getElementById('totalUsuarios').textContent = data.stats.totalUsuarios || 0;
-        document.getElementById('totalXP').textContent = data.stats.totalXP || 0;
-        document.getElementById('mediaXP').textContent = data.stats.mediaXP || 0;
-        }
-        
-        // 🔥 Buscar posição e XP do usuário via endpoint dedicado
-        const posicaoResponse = await fetch(`${API_BASE_URL}/ranking/posicao`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        const userPositionCard = document.getElementById('userPositionCard');
-        
-        if (posicaoResponse.ok) {
-        const posicaoData = await posicaoResponse.json();
+      });
+      
+      if (perfilResponse.ok) {
+        const perfilData = await perfilResponse.json();
+        usuarioId = perfilData.usuario?.id_usuario;
+      }
+    } catch (e) {
+      console.warn('Erro ao buscar perfil:', e);
+    }
+    
+    const userPositionCard = document.getElementById('userPositionCard');
+    
+    if (usuarioId && data.ranking) {
+      // 🔥 Buscar o usuário no ranking para pegar o XP correto
+      const usuarioNoRanking = data.ranking.find(user => user.id_usuario === usuarioId);
+      
+      if (usuarioNoRanking) {
         userPositionCard.classList.remove('hidden');
-        document.getElementById('userPosicao').textContent = `#${posicaoData.posicao}`;
-        document.getElementById('userXP').textContent = `${posicaoData.xp_total} XP`;
-        } else {
-        userPositionCard.classList.add('hidden');
-        }
-        
-    } catch (error) {
-        console.error('Erro:', error);
-        showFeedback('Erro ao carregar ranking global: ' + error.message, true);
+        const posicao = usuarioNoRanking.posicao || usuarioNoRanking.position || '?';
+        document.getElementById('userPosicao').textContent = `#${posicao}`;
+        // 🔥 Usar o XP do ranking, não do perfil!
+        document.getElementById('userXP').textContent = `${usuarioNoRanking.xp_total || 0} XP`;
+        return;
+      }
     }
-    }
+    
+    // Fallback: mostrar apenas se não encontrou
+    userPositionCard.classList.add('hidden');
+    
+  } catch (error) {
+    console.error('Erro:', error);
+    showFeedback('Erro ao carregar ranking global: ' + error.message, true);
+    document.getElementById('rankingGlobalContainer').innerHTML = `<div class="text-center py-8 text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i> Erro ao carregar ranking</div>`;
+  }
+}
 
   async function carregarRankingNiveis() {
     try {
