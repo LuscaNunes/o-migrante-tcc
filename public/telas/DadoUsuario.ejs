@@ -903,97 +903,104 @@
     }
 
     if (editForm) {
-      editForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        const nome = document.getElementById('editName')?.value.trim() || '';
-        const email = document.getElementById('editEmail')?.value.trim() || '';
-        const senha = document.getElementById('editPassword')?.value.trim() || '';
-        
-        let valid = true;
-        
-        ['editNameError','editEmailError','editPasswordError'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.classList.add('hidden');
-        });
-        
-        if (!nome) { 
-          const err = document.getElementById('editNameError');
-          if (err) err.classList.remove('hidden');
-          valid = false; 
-        }
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { 
-          const err = document.getElementById('editEmailError');
-          if (err) err.classList.remove('hidden');
-          valid = false; 
-        }
-        if (senha && senha.length < 6) { 
-          const err = document.getElementById('editPasswordError');
-          if (err) err.classList.remove('hidden');
-          valid = false; 
-        }
-        
-        if (!valid) return;
-        
-        // 🔥 CORREÇÃO: Construir objeto apenas com campos alterados
-        const body = {};
-        
-        // Verificar se o nome mudou
-        const curName = document.getElementById('fullName')?.textContent || '';
-        if (nome !== curName) {
-          body.nome = nome;
-        }
-        
-        // Verificar se o email mudou
-        const curEmail = document.getElementById('emailInfo')?.textContent || '';
-        if (email && email !== curEmail) {
-          body.email = email;
-        }
-        
-        // Verificar se a senha foi preenchida
-        if (senha) {
-          body.senha = senha;
-        }
-        
-        // Se nada mudou
-        if (Object.keys(body).length === 0) {
-          showFeedback('Nenhuma alteração feita.', true);
-          closeModal();
-          return;
-        }
-        
-        try {
-          const r = await makeAuthenticatedRequest('/usuarios/atualizar', { 
-            method: 'PUT', 
-            body: JSON.stringify(body) 
-          });
-          const d = await r.json();
-          
-          if (d.success) {
-            // Atualizar apenas os campos que foram alterados
-            if (body.nome) {
-              const userName = document.getElementById('userName');
-              const fullName = document.getElementById('fullName');
-              if (userName) userName.textContent = body.nome;
-              if (fullName) fullName.textContent = body.nome;
-            }
-            
-            if (body.email) {
-              const userEmail = document.getElementById('userEmail');
-              const emailInfo = document.getElementById('emailInfo');
-              if (userEmail) userEmail.textContent = body.email;
-              if (emailInfo) emailInfo.textContent = body.email;
-            }
-            
-            showFeedback('Perfil atualizado!', false);
-            closeModal();
-          } else {
-            showFeedback(d.message || 'Erro ao atualizar.', true);
-          }
-        } catch (e) { 
-          showFeedback('Erro: ' + e.message, true); 
-        }
-      });
+  editForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const nome = document.getElementById('editName')?.value.trim() || '';
+    const email = document.getElementById('editEmail')?.value.trim() || '';
+    const senha = document.getElementById('editPassword')?.value.trim() || '';
+    
+    let valid = true;
+    
+    ['editNameError','editEmailError','editPasswordError'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
+    
+    // 🔥 CORREÇÃO: Nome NÃO é mais obrigatório!
+    // Só valida se foi preenchido (se veio algo, precisa ter pelo menos 2 chars)
+    if (nome && nome.length < 2) { 
+      const err = document.getElementById('editNameError');
+      if (err) {
+        err.textContent = 'O nome deve ter pelo menos 2 caracteres.';
+        err.classList.remove('hidden');
+      }
+      valid = false; 
     }
+    
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { 
+      const err = document.getElementById('editEmailError');
+      if (err) err.classList.remove('hidden');
+      valid = false; 
+    }
+    
+    if (senha && senha.length < 6) { 
+      const err = document.getElementById('editPasswordError');
+      if (err) err.classList.remove('hidden');
+      valid = false; 
+    }
+    
+    if (!valid) return;
+    
+    // 🔥 CORREÇÃO: Construir objeto apenas com campos preenchidos
+    const body = {};
+    
+    // Verificar se o nome foi preenchido E mudou
+    const curName = document.getElementById('fullName')?.textContent || '';
+    if (nome && nome !== curName) {
+      body.nome = nome;
+    }
+    
+    // Verificar se o email foi preenchido E mudou
+    const curEmail = document.getElementById('emailInfo')?.textContent || '';
+    if (email && email !== curEmail) {
+      body.email = email;
+    }
+    
+    // Verificar se a senha foi preenchida
+    if (senha) {
+      body.senha = senha;
+    }
+    
+    // Se nada mudou
+    if (Object.keys(body).length === 0) {
+      showFeedback('Nenhuma alteração feita.', true);
+      closeModal();
+      return;
+    }
+    
+    try {
+      const r = await makeAuthenticatedRequest('/usuarios/atualizar', { 
+        method: 'PUT', 
+        body: JSON.stringify(body) 
+      });
+      const d = await r.json();
+      
+      if (d.success) {
+        // Atualizar apenas os campos que foram alterados
+        if (body.nome) {
+          const userName = document.getElementById('userName');
+          const fullName = document.getElementById('fullName');
+          if (userName) userName.textContent = body.nome;
+          if (fullName) fullName.textContent = body.nome;
+        }
+        
+        if (body.email) {
+          const userEmail = document.getElementById('userEmail');
+          const emailInfo = document.getElementById('emailInfo');
+          if (userEmail) userEmail.textContent = body.email;
+          if (emailInfo) emailInfo.textContent = body.email;
+        }
+        
+        showFeedback('Perfil atualizado!', false);
+        closeModal();
+      } else {
+        showFeedback(d.message || 'Erro ao atualizar.', true);
+      }
+    } catch (e) { 
+      showFeedback('Erro: ' + e.message, true); 
+    }
+  });
+}
 
     function populateUser(user) {
       const userNameEl = document.getElementById('userName');
