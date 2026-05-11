@@ -570,6 +570,24 @@
 </div>
 
 <script>
+
+  // Verificar token antes de enviar
+    const token = localStorage.getItem('token');
+    console.log('Token existe?', !!token);
+    console.log('Token:', token);
+
+    // Verificar autenticação primeiro
+    const authCheck = await fetch(`${API_BASE_URL}/auth/verifyToken`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    console.log('Auth check status:', authCheck.status);
+
+    if (!authCheck.ok) {
+      showFeedback('Sua sessão expirou. Faça login novamente.', true);
+      setTimeout(() => window.location.href = '/', 2000);
+      return;
+    }
+    
   (function() {
     const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? `http://${window.location.hostname}:${window.location.port || 3000}`
