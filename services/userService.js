@@ -96,58 +96,91 @@ async function atualizarUsuario(id, { nome, email, tipo, xp_total, fase_atual })
 /**
  * Atualiza o perfil do usuário autenticado
  * @param {number} usuario_id - ID do usuário
- * @param {Object} dados - Dados a atualizar (nome, email, senha)
- * @returns {Promise<void>}
+ * @param {Object} dados - Dados a atualizar (nome, email, senha) - todos opcionais
+ * @returns {Promise<Object>} Campos atualizados
  */
 async function atualizarPerfil(usuario_id, { nome, email, senha }) {
-  if (!nome) {
-    throw new Error('O nome é obrigatório');
+  // 🔥 CORREÇÃO: Verificar se pelo menos um campo foi enviado
+  if (!nome && !email && !senha) {
+    throw new Error('Pelo menos um campo (nome, email ou senha) deve ser enviado para atualização');
   }
 
   try {
-    // CORRIGIDO: Removido .promise()
-    const [currentUser] = await db.query('SELECT email FROM Usuarios WHERE id_usuario = ?', [usuario_id]);
+    // Buscar dados atuais do usuário
+    const [currentUser] = await db.query(
+      'SELECT nome, email FROM Usuarios WHERE id_usuario = ?', 
+      [usuario_id]
+    );
+    
     if (currentUser.length === 0) {
       throw new Error('Usuário não encontrado');
     }
 
-    const finalEmail = email || currentUser[0].email;
+    const updates = [];
+    const queryParams = [];
 
+    // Validar e adicionar nome se foi enviado
+    if (nome) {
+      if (nome.trim().length < 2) {
+        throw new Error('O nome deve ter pelo menos 2 caracteres');
+      }
+      updates.push('nome = ?');
+      queryParams.push(nome.trim());
+    }
+
+    // Validar e adicionar email se foi enviado
     if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         throw new Error('Email inválido');
       }
-      // CORRIGIDO: Removido .promise()
+      
+      // Verificar se email já está em uso por outro usuário
       const [existingUser] = await db.query(
         'SELECT id_usuario FROM Usuarios WHERE email = ? AND id_usuario != ?',
         [email, usuario_id]
       );
       if (existingUser.length > 0) {
-        throw new Error('Este email já está em uso');
+        throw new Error('Este email já está em uso por outro usuário');
       }
+      updates.push('email = ?');
+      queryParams.push(email);
     }
 
-    const queryParams = [nome, finalEmail];
-    let updateQuery = 'UPDATE Usuarios SET nome = ?, email = ?';
-
+    // Validar e adicionar senha se foi enviada
     if (senha) {
       if (senha.length < 6) {
         throw new Error('A senha deve ter pelo menos 6 caracteres');
       }
       const hashedPassword = await bcrypt.hash(senha, 10);
+      updates.push('senha = ?');
       queryParams.push(hashedPassword);
-      updateQuery += ', senha = ?';
     }
 
-    queryParams.push(usuario_id);
-    updateQuery += ' WHERE id_usuario = ?';
+    // Se não há nada para atualizar
+    if (updates.length === 0) {
+      throw new Error('Nenhum dado válido para atualizar');
+    }
 
-    // CORRIGIDO: Removido .promise()
+    // Adicionar o ID do usuário no final
+    queryParams.push(usuario_id);
+    
+    // Montar e executar a query
+    const updateQuery = `UPDATE Usuarios SET ${updates.join(', ')} WHERE id_usuario = ?`;
     const [result] = await db.query(updateQuery, queryParams);
+
     if (result.affectedRows === 0) {
       throw new Error('Usuário não encontrado');
     }
+
+    // Retornar quais campos foram atualizados
+    const updatedFields = [];
+    if (nome) updatedFields.push('nome');
+    if (email) updatedFields.push('email');
+    if (senha) updatedFields.push('senha');
+
+    return { updatedFields };
+    
   } catch (error) {
     throw new Error('Erro ao atualizar perfil: ' + error.message);
   }
