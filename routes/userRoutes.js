@@ -128,7 +128,7 @@ router.put('/atualizar', authenticateToken, async (req, res) => {
 
   console.log('Dados extraídos:', { nome, email, senha: senha ? '***' : undefined });
 
-  // 🔥 CORREÇÃO: Verificar se pelo menos um campo foi enviado
+  // Verificar se pelo menos um campo foi enviado
   if (!nome && !email && !senha) {
     console.log('ERRO: Nenhum campo enviado');
     return res.status(400).json({ 
@@ -137,109 +137,106 @@ router.put('/atualizar', authenticateToken, async (req, res) => {
     });
   }
 
-  // ... resto do código
-});
+  try {
+    // Buscar dados atuais do usuário
+    const [currentUser] = await db.query(
+      'SELECT nome, email FROM Usuarios WHERE id_usuario = ?', 
+      [usuario_id]
+    );
+    
+    if (currentUser.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+    }
 
-	try {
-		// Buscar dados atuais do usuário
-		const [currentUser] = await db.query(
-			'SELECT nome, email FROM Usuarios WHERE id_usuario = ?', 
-			[usuario_id]
-		);
-		
-		if (currentUser.length === 0) {
-			return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-		}
+    // Construir a query dinamicamente baseada nos campos enviados
+    const updates = [];
+    const queryParams = [];
 
-		// 🔥 Construir a query dinamicamente baseada nos campos enviados
-		const updates = [];
-		const queryParams = [];
+    // Validar e adicionar nome se foi enviado
+    if (nome) {
+      if (nome.trim().length < 2) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'O nome deve ter pelo menos 2 caracteres.' 
+        });
+      }
+      updates.push('nome = ?');
+      queryParams.push(nome.trim());
+    }
 
-		// Validar e adicionar nome se foi enviado
-		if (nome) {
-			if (nome.trim().length < 2) {
-				return res.status(400).json({ 
-					success: false, 
-					message: 'O nome deve ter pelo menos 2 caracteres.' 
-				});
-			}
-			updates.push('nome = ?');
-			queryParams.push(nome.trim());
-		}
+    // Validar e adicionar email se foi enviado
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'Email inválido.' });
+      }
+      
+      // Verificar se email já está em uso por outro usuário
+      const [existingUser] = await db.query(
+        'SELECT id_usuario FROM Usuarios WHERE email = ? AND id_usuario != ?',
+        [email, usuario_id]
+      );
+      if (existingUser.length > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Este email já está em uso por outro usuário.' 
+        });
+      }
+      updates.push('email = ?');
+      queryParams.push(email);
+    }
 
-		// Validar e adicionar email se foi enviado
-		if (email) {
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			if (!emailRegex.test(email)) {
-				return res.status(400).json({ success: false, message: 'Email inválido.' });
-			}
-			
-			// Verificar se email já está em uso por outro usuário
-			const [existingUser] = await db.query(
-				'SELECT id_usuario FROM Usuarios WHERE email = ? AND id_usuario != ?',
-				[email, usuario_id]
-			);
-			if (existingUser.length > 0) {
-				return res.status(400).json({ 
-					success: false, 
-					message: 'Este email já está em uso por outro usuário.' 
-				});
-			}
-			updates.push('email = ?');
-			queryParams.push(email);
-		}
+    // Validar e adicionar senha se foi enviada
+    if (senha) {
+      if (senha.length < 6) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'A senha deve ter pelo menos 6 caracteres.' 
+        });
+      }
+      const hashedPassword = await bcrypt.hash(senha, 10);
+      updates.push('senha = ?');
+      queryParams.push(hashedPassword);
+    }
 
-		// Validar e adicionar senha se foi enviada
-		if (senha) {
-			if (senha.length < 6) {
-				return res.status(400).json({ 
-					success: false, 
-					message: 'A senha deve ter pelo menos 6 caracteres.' 
-				});
-			}
-			const hashedPassword = await bcrypt.hash(senha, 10);
-			updates.push('senha = ?');
-			queryParams.push(hashedPassword);
-		}
+    // Se não há nada para atualizar
+    if (updates.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Nenhum dado válido para atualizar.' 
+      });
+    }
 
-		// Se não há nada para atualizar (não deve acontecer pelo primeiro if)
-		if (updates.length === 0) {
-			return res.status(400).json({ 
-				success: false, 
-				message: 'Nenhum dado válido para atualizar.' 
-			});
-		}
+    // Adicionar o ID do usuário no final
+    queryParams.push(usuario_id);
+    
+    // Montar e executar a query
+    const updateQuery = `UPDATE Usuarios SET ${updates.join(', ')} WHERE id_usuario = ?`;
+    const [result] = await db.query(updateQuery, queryParams);
 
-		// Adicionar o ID do usuário no final
-		queryParams.push(usuario_id);
-		
-		// Montar e executar a query
-		const updateQuery = `UPDATE Usuarios SET ${updates.join(', ')} WHERE id_usuario = ?`;
-		const [result] = await db.query(updateQuery, queryParams);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+    }
 
-		if (result.affectedRows === 0) {
-			return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-		}
+    // Retornar quais campos foram atualizados
+    const updatedFields = [];
+    if (nome) updatedFields.push('nome');
+    if (email) updatedFields.push('email');
+    if (senha) updatedFields.push('senha');
 
-		// 🔥 Retornar quais campos foram atualizados
-		const updatedFields = [];
-		if (nome) updatedFields.push('nome');
-		if (email) updatedFields.push('email');
-		if (senha) updatedFields.push('senha');
+    res.json({ 
+      success: true, 
+      message: `Perfil atualizado com sucesso! Campo(s) atualizado(s): ${updatedFields.join(', ')}`,
+      updatedFields
+    });
 
-		res.json({ 
-			success: true, 
-			message: `Perfil atualizado com sucesso! Campo(s) atualizado(s): ${updatedFields.join(', ')}`,
-			updatedFields
-		});
-
-	} catch (error) {
-		console.error('Erro ao atualizar perfil:', error);
-		res.status(500).json({ 
-			success: false, 
-			message: 'Erro ao atualizar perfil. Tente novamente mais tarde.' 
-		});
-	}
+  } catch (error) {
+    console.error('Erro ao atualizar perfil:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro ao atualizar perfil. Tente novamente mais tarde.' 
+    });
+  }
 });
 
 /**
