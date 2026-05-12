@@ -6,18 +6,19 @@ require('dotenv').config();
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Defined' : 'Undefined');
 
 // Módulos
-const db = require('./config/database');
-const { authenticateToken, checkAdmin } = require('./middleware/auth');
+const db = require('./src/config/database');
+const { authenticateToken, checkAdmin } = require('./src/middleware/auth');
 
 // Rotas da API
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const nivelRoutes = require('./routes/nivelRoutes');
-const perguntaRoutes = require('./routes/perguntaRoutes');
-const progressoRoutes = require('./routes/progressoRoutes');
-const anotacaoRoutes = require('./routes/anotacaoRoutes');
-const mensagemRoutes = require('./routes/mensagemRoutes');
-const amizadeRoutes = require('./routes/amizadeRoutes');
+const authRoutes = require('./src/routes/authRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const nivelRoutes = require('./src/routes/nivelRoutes');
+const perguntaRoutes = require('./src/routes/perguntaRoutes');
+const progressoRoutes = require('./src/routes/progressoRoutes');
+const anotacaoRoutes = require('./src/routes/anotacaoRoutes');
+const mensagemRoutes = require('./src/routes/mensagemRoutes');
+const amizadeRoutes = require('./src/routes/amizadeRoutes');
+const rankingRoutes = require('./src/routes/rankingRoutes');
 
 const app = express();
 
@@ -356,7 +357,7 @@ app.get('/app/jogo/:tipo', authenticateToken, async (req, res) => {
 });
 
 // Rotas da API de Ranking
-const rankingRoutes = require('./routes/rankingRoutes');
+const rankingRoutes = require('./src/routes/rankingRoutes');
 app.use('/ranking', authenticateToken, rankingRoutes);
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
