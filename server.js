@@ -63,7 +63,7 @@ app.use('/auth', authRoutes);    
 
 // Servir arquivos estáticos PÚBLICOS (CSS, JS, etc.)
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/biblia', express.static(path.join(__dirname, 'public', 'biblia')));
+app.use('/biblias', express.static(path.join(__dirname, 'src', 'public', 'biblias')));
 
 // --- 2. APLICAÇÃO DO MIDDLEWARE DE AUTENTICAÇÃO ---
 
