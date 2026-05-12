@@ -41,23 +41,33 @@
     </div>
 </div>
 
-<!-- Modal de Perguntas -->
+<!-- Modal de Perguntas (Quiz) -->
 <div id="questionsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-y-auto p-6">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold" id="questionsModalTitle">Perguntas do Nível</h3>
+            <h3 class="text-xl font-semibold" id="questionsModalTitle">Perguntas do Nível (Quiz)</h3>
             <button class="closeQuestionsModal text-gray-500 hover:text-gray-700">&times;</button>
         </div>
         <div id="questionsList"></div>
     </div>
 </div>
 
+<!-- Modal de Complete a Frase -->
+<div id="completarModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-y-auto p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold" id="completarModalTitle">Perguntas de Complete a Frase</h3>
+            <button class="closeCompletarModal text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div id="completarList"></div>
+    </div>
+</div>
 
-<!-- Modal de Editar Pergunta -->
+<!-- Modal de Editar Pergunta (Quiz) -->
 <div id="editQuestionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold">Editar Pergunta</h3>
+            <h3 class="text-xl font-semibold">Editar Pergunta (Quiz)</h3>
             <button class="closeEditModal text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         <form id="editQuestionForm">
@@ -98,6 +108,42 @@
     </div>
 </div>
 
+<!-- Modal de Editar Complete a Frase -->
+<div id="editCompletarModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">Editar Complete a Frase</h3>
+            <button class="closeEditCompletarModal text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        <form id="editCompletarForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Frase Incompleta:</label>
+                <textarea id="editCompletarTexto" rows="3" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required></textarea>
+                <p class="text-xs text-gray-500 mt-1">Use {_______} para indicar a lacuna</p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Palavra Correta:</label>
+                <input type="text" id="editCompletarResposta" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 bg-green-50" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opções de Palavras (separadas por vírgula):</label>
+                <input type="text" id="editCompletarOpcoes" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            
+            <div class="flex gap-2 mt-6">
+                <button type="submit" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+                <button type="button" id="cancelEditCompletarBtn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition font-medium">
+                    <i class="fas fa-times mr-2"></i>Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
     .nivel-item {
         transition: all 0.3s ease;
@@ -129,6 +175,16 @@
         border-radius: 8px;
     }
     .pergunta-card:hover {
+        background: #f3f4f6;
+    }
+    .completar-card {
+        border-left: 3px solid #10b981;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+    .completar-card:hover {
         background: #f3f4f6;
     }
     .opcao-item {
@@ -167,6 +223,7 @@ function escapeHtml(text) {
 
 let currentNivelId = null;
 let currentEditPerguntaId = null;
+let currentEditCompletarId = null;
 let niveisOrdenados = [];
 
 // ============================================
@@ -230,7 +287,10 @@ function renderizarNiveis(niveis) {
                         <i class="fas fa-info-circle mr-1"></i>Detalhes
                     </button>
                     <button onclick="mostrarPerguntas(${nivel.id}, '${escapeHtml(nivel.titulo)}')" class="bg-purple-500 text-white px-3 py-1 rounded-lg hover:bg-purple-600 transition text-sm">
-                        <i class="fas fa-question-circle mr-1"></i>Perguntas
+                        <i class="fas fa-question-circle mr-1"></i>Quiz
+                    </button>
+                    <button onclick="mostrarCompletar(${nivel.id}, '${escapeHtml(nivel.titulo)}')" class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition text-sm">
+                        <i class="fas fa-puzzle-piece mr-1"></i>Complete a Frase
                     </button>
                     <button onclick="mostrarModalSituacao(${nivel.id}, '${escapeHtml(nivel.titulo)}', ${nivel.ativo})" class="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition text-sm">
                         <i class="fas fa-toggle-${nivel.ativo ? 'on' : 'off'} mr-1"></i>Situação
@@ -438,13 +498,13 @@ async function alterarStatusNivel(nivelId, ativo, posicao) {
 }
 
 // ============================================
-// MODAL DE PERGUNTAS
+// MODAL DE PERGUNTAS (QUIZ)
 // ============================================
 async function mostrarPerguntas(nivelId, titulo) {
     currentNivelId = nivelId;
     const modal = document.getElementById('questionsModal');
     const questionsList = document.getElementById('questionsList');
-    document.getElementById('questionsModalTitle').innerHTML = `<i class="fas fa-question-circle mr-2"></i>Perguntas - ${escapeHtml(titulo)}`;
+    document.getElementById('questionsModalTitle').innerHTML = `<i class="fas fa-question-circle mr-2"></i>Perguntas do Quiz - ${escapeHtml(titulo)}`;
     
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -460,11 +520,10 @@ async function mostrarPerguntas(nivelId, titulo) {
         const perguntas = data.perguntas || data;
         
         if (!perguntas || perguntas.length === 0) {
-            questionsList.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhuma pergunta cadastrada.</div>';
+            questionsList.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhuma pergunta de Quiz cadastrada.</div>';
             return;
         }
         
-        // CORRIGIDO: compara o texto da resposta com cada opção
         questionsList.innerHTML = perguntas.map(p => `
             <div class="pergunta-card">
                 <div class="flex justify-between items-start flex-wrap gap-2">
@@ -505,9 +564,71 @@ async function mostrarPerguntas(nivelId, titulo) {
     });
 }
 
+// ============================================
+// MODAL DE COMPLETE A FRASE
+// ============================================
+async function mostrarCompletar(nivelId, titulo) {
+    currentNivelId = nivelId;
+    const modal = document.getElementById('completarModal');
+    const completarList = document.getElementById('completarList');
+    document.getElementById('completarModalTitle').innerHTML = `<i class="fas fa-puzzle-piece mr-2"></i>Complete a Frase - ${escapeHtml(titulo)}`;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    completarList.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando...</div>';
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/completar?nivel_id=${nivelId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        const perguntas = data.perguntas || [];
+        
+        if (!perguntas || perguntas.length === 0) {
+            completarList.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhuma pergunta de Complete a Frase cadastrada.</div>';
+            return;
+        }
+        
+        completarList.innerHTML = perguntas.map(p => `
+            <div class="completar-card">
+                <div class="flex justify-between items-start flex-wrap gap-2">
+                    <div class="flex-1">
+                        <p class="font-semibold mb-2">📝 ${escapeHtml(p.texto_frase)}</p>
+                        <div class="mt-2 text-sm">
+                            <div class="flex items-center mb-1">
+                                <span class="w-28 text-gray-600">Resposta correta:</span>
+                                <span class="text-green-600 font-medium">✓ ${escapeHtml(p.resposta_correta)}</span>
+                            </div>
+                            <div class="flex items-center flex-wrap">
+                                <span class="w-28 text-gray-600">Opções:</span>
+                                <span class="text-gray-700">${p.palavras_opcoes ? escapeHtml(p.palavras_opcoes.join(', ')) : ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editarCompletar(${p.id})" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button onclick="excluirCompletar(${p.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        completarList.innerHTML = `<div class="text-red-500 text-center py-4">Erro: ${error.message}</div>`;
+    }
+    
+    document.querySelectorAll('#completarModal .closeCompletarModal').forEach(btn => {
+        btn.onclick = () => modal.classList.add('hidden');
+    });
+}
 
 // ============================================
-// EDITAR PERGUNTA
+// EDITAR PERGUNTA (QUIZ)
 // ============================================
 window.editarPergunta = async (perguntaId) => {
     try {
@@ -519,7 +640,6 @@ window.editarPergunta = async (perguntaId) => {
         
         currentEditPerguntaId = perguntaId;
         
-        // Preencher todos os campos
         document.getElementById('editTexto').value = pergunta.texto;
         document.getElementById('editRespostaCorreta').value = pergunta.resposta_correta;
         document.getElementById('editOpcao1').value = pergunta.opcao1;
@@ -547,7 +667,6 @@ document.getElementById('editQuestionForm')?.addEventListener('submit', async (e
         opcao3: document.getElementById('editOpcao3').value
     };
     
-    // Validar se todos os campos estão preenchidos
     if (!dados.texto || !dados.resposta_correta || !dados.opcao1 || !dados.opcao2 || !dados.opcao3) {
         showFeedback("Preencha todos os campos!", false);
         return;
@@ -573,7 +692,6 @@ document.getElementById('editQuestionForm')?.addEventListener('submit', async (e
         showFeedback("Pergunta atualizada com sucesso!", true);
         document.getElementById('editQuestionModal').classList.add('hidden');
         
-        // Recarregar a lista de perguntas
         if (currentNivelId) {
             const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
             if (nivel) mostrarPerguntas(currentNivelId, nivel.titulo);
@@ -586,7 +704,84 @@ document.getElementById('editQuestionForm')?.addEventListener('submit', async (e
 });
 
 // ============================================
-// EXCLUIR PERGUNTA
+// EDITAR COMPLETE A FRASE
+// ============================================
+window.editarCompletar = async (perguntaId) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/completar/${perguntaId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const pergunta = await response.json();
+        
+        currentEditCompletarId = perguntaId;
+        
+        document.getElementById('editCompletarTexto').value = pergunta.texto_frase;
+        document.getElementById('editCompletarResposta').value = pergunta.resposta_correta;
+        document.getElementById('editCompletarOpcoes').value = pergunta.palavras_opcoes ? pergunta.palavras_opcoes.join(', ') : '';
+        
+        document.getElementById('editCompletarModal').classList.remove('hidden');
+        document.getElementById('editCompletarModal').classList.add('flex');
+        document.getElementById('completarModal').classList.add('hidden');
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showFeedback("Erro ao carregar pergunta: " + error.message, false);
+    }
+};
+
+document.getElementById('editCompletarForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const dados = {
+        texto_frase: document.getElementById('editCompletarTexto').value,
+        resposta_correta: document.getElementById('editCompletarResposta').value,
+        palavras_opcoes: document.getElementById('editCompletarOpcoes').value.split(',').map(p => p.trim())
+    };
+    
+    if (!dados.texto_frase || !dados.resposta_correta || !dados.palavras_opcoes.length) {
+        showFeedback("Preencha todos os campos!", false);
+        return;
+    }
+    
+    if (!dados.texto_frase.includes('{_______}')) {
+        showFeedback("A frase deve conter {_______} para indicar a lacuna!", false);
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/completar/${currentEditCompletarId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error || "Erro ao salvar");
+        }
+        
+        showFeedback("Pergunta atualizada com sucesso!", true);
+        document.getElementById('editCompletarModal').classList.add('hidden');
+        
+        if (currentNivelId) {
+            const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+            if (nivel) mostrarCompletar(currentNivelId, nivel.titulo);
+        }
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showFeedback("Erro ao salvar: " + error.message, false);
+    }
+});
+
+// ============================================
+// EXCLUIR PERGUNTA (QUIZ)
 // ============================================
 window.excluirPergunta = async (perguntaId) => {
     if (!confirm("Excluir esta pergunta? Esta ação não pode ser desfeita.")) return;
@@ -612,6 +807,32 @@ window.excluirPergunta = async (perguntaId) => {
 };
 
 // ============================================
+// EXCLUIR COMPLETE A FRASE
+// ============================================
+window.excluirCompletar = async (perguntaId) => {
+    if (!confirm("Excluir esta pergunta? Esta ação não pode ser desfeita.")) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/completar/${perguntaId}`, {
+            method: "DELETE",
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error("Erro ao excluir");
+        
+        showFeedback("Pergunta excluída!", true);
+        
+        if (currentNivelId) {
+            const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+            if (nivel) mostrarCompletar(currentNivelId, nivel.titulo);
+        }
+    } catch (error) {
+        showFeedback("Erro: " + error.message, false);
+    }
+};
+
+// ============================================
 // FECHAR MODAIS
 // ============================================
 document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
@@ -622,12 +843,30 @@ document.getElementById('cancelEditBtn')?.addEventListener('click', () => {
     }
 });
 
+document.getElementById('cancelEditCompletarBtn')?.addEventListener('click', () => {
+    document.getElementById('editCompletarModal').classList.add('hidden');
+    if (currentNivelId) {
+        const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+        if (nivel) mostrarCompletar(currentNivelId, nivel.titulo);
+    }
+});
+
 document.querySelectorAll('#editQuestionModal .closeEditModal').forEach(btn => {
     btn.onclick = () => {
         document.getElementById('editQuestionModal').classList.add('hidden');
         if (currentNivelId) {
             const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
             if (nivel) mostrarPerguntas(currentNivelId, nivel.titulo);
+        }
+    };
+});
+
+document.querySelectorAll('#editCompletarModal .closeEditCompletarModal').forEach(btn => {
+    btn.onclick = () => {
+        document.getElementById('editCompletarModal').classList.add('hidden');
+        if (currentNivelId) {
+            const nivel = niveisOrdenados.find(n => n.id === currentNivelId);
+            if (nivel) mostrarCompletar(currentNivelId, nivel.titulo);
         }
     };
 });

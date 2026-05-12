@@ -359,6 +359,11 @@ app.get('/app/jogo/:tipo', authenticateToken, async (req, res) => {
 // Rotas da API de Ranking
 const rankingRoutes = require('./src/routes/rankingRoutes');
 app.use('/ranking', authenticateToken, rankingRoutes);
+
+
+// Adicionar com os outros imports
+const completarRoutes = require('./src/routes/completarRoutes');
+app.use('/completar', authenticateToken, completarRoutes);
 // Se houver outros arquivos HTML em public/telas, crie rotas app.get similares para eles.
 
 // =======================================================

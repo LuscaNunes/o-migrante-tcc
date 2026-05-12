@@ -45,7 +45,6 @@
             </div>
         </form>
         
-        <!-- Mensagem de feedback para cadastro de nível -->
         <div id="feedbackNivel" class="mt-4 hidden"></div>
     </div>
     
@@ -67,7 +66,20 @@
                 <option value="">Carregando níveis...</option>
             </select>
         </div>
+
+        <!-- Seletor de Tipo de Pergunta -->
+        <div class="mb-6">
+            <label for="tipoPergunta" class="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Pergunta *
+            </label>
+            <select id="tipoPergunta" required
+                    class="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="quiz">Múltipla Escolha (Quiz)</option>
+                <option value="completar">Complete a Frase (Drag & Drop)</option>
+            </select>
+        </div>
         
+        <!-- Formulário para Quiz (Múltipla Escolha) -->
         <form id="formCadastroPergunta" class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Texto da Pergunta *</label>
@@ -117,8 +129,44 @@
                 </button>
             </div>
         </form>
+
+        <!-- Formulário para Complete a Frase (Drag & Drop) - Inicialmente escondido -->
+        <form id="formCadastroCompletar" class="space-y-4 hidden">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Frase Incompleta *</label>
+                <textarea id="textoFrase" rows="3" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder='Ex: A linguagem {_______} é primariamente usada para estilização web. Use {_______} para indicar a lacuna'></textarea>
+                <p class="text-xs text-gray-500 mt-1">Use <code class="bg-gray-100 px-1">{_______}</code> para marcar onde a palavra deve ser encaixada</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Palavra Correta *</label>
+                <input type="text" id="palavraCorreta" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-green-50"
+                       placeholder="Ex: CSS">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Opções de Palavras (separadas por vírgula) *</label>
+                <input type="text" id="opcoesPalavras" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Ex: Python, CSS, JavaScript, HTML">
+                <p class="text-xs text-gray-500 mt-1">Inclua a palavra correta entre as opções. Mínimo 2 opções.</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" 
+                        class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                    <i class="fas fa-save"></i> Salvar Complete a Frase
+                </button>
+                <button type="button" id="btnLimparCompletar"
+                        class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition flex items-center gap-2">
+                    <i class="fas fa-eraser"></i> Limpar
+                </button>
+            </div>
+        </form>
         
-        <!-- Mensagem de feedback para cadastro de pergunta -->
         <div id="feedbackPergunta" class="mt-4 hidden"></div>
     </div>
     
@@ -136,9 +184,27 @@
             </button>
         </div>
         
-        <div id="listaPerguntas" class="space-y-4">
+        <!-- Abas para alternar entre os tipos de pergunta -->
+        <div class="flex border-b border-gray-200 mb-4">
+            <button id="tabQuiz" class="tab-button px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition border-b-2 border-transparent">
+                <i class="fas fa-question-circle mr-1"></i> Quiz
+            </button>
+            <button id="tabCompletar" class="tab-button px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition border-b-2 border-transparent">
+                <i class="fas fa-puzzle-piece mr-1"></i> Complete a Frase
+            </button>
+        </div>
+        
+        <!-- Lista de perguntas do tipo Quiz -->
+        <div id="listaPerguntasQuiz" class="space-y-4">
             <div class="text-center text-gray-500 py-8">
-                <i class="fas fa-info-circle mr-2"></i> Selecione um nível para ver as perguntas
+                <i class="fas fa-info-circle mr-2"></i> Selecione um nível para ver as perguntas do Quiz
+            </div>
+        </div>
+        
+        <!-- Lista de perguntas do tipo Complete a Frase -->
+        <div id="listaPerguntasCompletar" class="space-y-4 hidden">
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-info-circle mr-2"></i> Selecione um nível para ver as perguntas de Complete a Frase
             </div>
         </div>
     </div>
@@ -147,6 +213,7 @@
 <script>
 let niveis = [];
 let nivelSelecionado = null;
+let abaAtual = 'quiz'; // 'quiz' ou 'completar'
 
 // Função para mostrar feedback
 function showFeedback(elementId, message, isSuccess = true) {
@@ -169,6 +236,52 @@ function escapeHtml(text) {
 }
 
 // ============================================
+// ALTERNAR ENTRE FORMULÁRIOS
+// ============================================
+function toggleFormulario() {
+    const tipo = document.getElementById('tipoPergunta').value;
+    const formQuiz = document.getElementById('formCadastroPergunta');
+    const formCompletar = document.getElementById('formCadastroCompletar');
+    
+    if (tipo === 'quiz') {
+        formQuiz.classList.remove('hidden');
+        formCompletar.classList.add('hidden');
+    } else {
+        formQuiz.classList.add('hidden');
+        formCompletar.classList.remove('hidden');
+    }
+}
+
+// ============================================
+// ALTERNAR ENTRE ABAS
+// ============================================
+function toggleAba(aba) {
+    abaAtual = aba;
+    const listaQuiz = document.getElementById('listaPerguntasQuiz');
+    const listaCompletar = document.getElementById('listaPerguntasCompletar');
+    const tabQuiz = document.getElementById('tabQuiz');
+    const tabCompletar = document.getElementById('tabCompletar');
+    
+    if (aba === 'quiz') {
+        listaQuiz.classList.remove('hidden');
+        listaCompletar.classList.add('hidden');
+        tabQuiz.classList.add('border-blue-500', 'text-blue-600');
+        tabQuiz.classList.remove('border-transparent', 'text-gray-600');
+        tabCompletar.classList.remove('border-blue-500', 'text-blue-600');
+        tabCompletar.classList.add('border-transparent', 'text-gray-600');
+        if (nivelSelecionado) carregarPerguntasQuiz(nivelSelecionado);
+    } else {
+        listaQuiz.classList.add('hidden');
+        listaCompletar.classList.remove('hidden');
+        tabCompletar.classList.add('border-blue-500', 'text-blue-600');
+        tabCompletar.classList.remove('border-transparent', 'text-gray-600');
+        tabQuiz.classList.remove('border-blue-500', 'text-blue-600');
+        tabQuiz.classList.add('border-transparent', 'text-gray-600');
+        if (nivelSelecionado) carregarPerguntasCompletar(nivelSelecionado);
+    }
+}
+
+// ============================================
 // CADASTRO DE NÍVEL
 // ============================================
 async function cadastrarNivel(event) {
@@ -180,8 +293,6 @@ async function cadastrarNivel(event) {
         descricao: document.getElementById('nivelDescricao').value.trim(),
         xp_total: parseInt(document.getElementById('nivelXpTotal').value)
     };
-    
-    // Removido: posicao, requisito_xp, ativo - esses campos não existem na tabela
     
     if (!dados.titulo || !dados.descricao || !dados.xp_total) {
         showFeedback('feedbackNivel', 'Preencha todos os campos do nível!', false);
@@ -206,11 +317,9 @@ async function cadastrarNivel(event) {
         
         showFeedback('feedbackNivel', result.message || 'Nível cadastrado com sucesso!', true);
         
-        // Limpar formulário
         document.getElementById('formCadastroNivel').reset();
         document.getElementById('nivelXpTotal').value = '100';
         
-        // Recarregar lista de níveis
         await carregarNiveis();
         
     } catch (error) {
@@ -218,8 +327,9 @@ async function cadastrarNivel(event) {
         showFeedback('feedbackNivel', error.message, false);
     }
 }
+
 // ============================================
-// CADASTRO DE PERGUNTA
+// CADASTRO DE PERGUNTA (QUIZ)
 // ============================================
 async function cadastrarPergunta(event) {
     event.preventDefault();
@@ -263,12 +373,88 @@ async function cadastrarPergunta(event) {
         
         showFeedback('feedbackPergunta', result.message || 'Pergunta cadastrada com sucesso!', true);
         
-        // Limpar formulário
         document.getElementById('formCadastroPergunta').reset();
         
-        // Recarregar perguntas do nível atual
-        if (nivelSelecionado) {
-            await carregarPerguntas(nivelSelecionado);
+        if (nivelSelecionado && abaAtual === 'quiz') {
+            await carregarPerguntasQuiz(nivelSelecionado);
+        }
+        
+    } catch (error) {
+        console.error('Erro ao cadastrar pergunta:', error);
+        showFeedback('feedbackPergunta', error.message, false);
+    }
+}
+
+// ============================================
+// CADASTRO DE COMPLETE A FRASE
+// ============================================
+async function cadastrarCompletar(event) {
+    event.preventDefault();
+    
+    const token = localStorage.getItem('token');
+    
+    if (!nivelSelecionado) {
+        showFeedback('feedbackPergunta', 'Selecione um nível primeiro!', false);
+        return;
+    }
+    
+    const textoFrase = document.getElementById('textoFrase').value.trim();
+    const palavraCorreta = document.getElementById('palavraCorreta').value.trim();
+    const opcoesPalavras = document.getElementById('opcoesPalavras').value.trim();
+    
+    if (!textoFrase || !palavraCorreta || !opcoesPalavras) {
+        showFeedback('feedbackPergunta', 'Preencha todos os campos!', false);
+        return;
+    }
+    
+    // Verificar se a frase tem o placeholder
+    if (!textoFrase.includes('{_______}')) {
+        showFeedback('feedbackPergunta', 'A frase deve conter {_______} para indicar a lacuna!', false);
+        return;
+    }
+    
+    // Converter opções em array
+    const palavrasArray = opcoesPalavras.split(',').map(p => p.trim());
+    if (palavrasArray.length < 2) {
+        showFeedback('feedbackPergunta', 'Informe pelo menos 2 opções de palavras!', false);
+        return;
+    }
+    
+    // Verificar se a palavra correta está nas opções
+    if (!palavrasArray.includes(palavraCorreta)) {
+        showFeedback('feedbackPergunta', 'A palavra correta deve estar entre as opções!', false);
+        return;
+    }
+    
+    const dados = {
+        nivel_id: parseInt(nivelSelecionado),
+        texto_frase: textoFrase,
+        resposta_correta: palavraCorreta,
+        palavras_opcoes: palavrasArray
+    };
+    
+    try {
+        const response = await fetch('/completar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.message || 'Erro ao cadastrar pergunta');
+        }
+        
+        showFeedback('feedbackPergunta', result.message || 'Pergunta de Complete a Frase cadastrada com sucesso!', true);
+        
+        document.getElementById('formCadastroCompletar').reset();
+        
+        if (nivelSelecionado && abaAtual === 'completar') {
+            await carregarPerguntasCompletar(nivelSelecionado);
         }
         
     } catch (error) {
@@ -309,13 +495,13 @@ async function carregarNiveis() {
 }
 
 // ============================================
-// CARREGAR PERGUNTAS DO NÍVEL
+// CARREGAR PERGUNTAS DO QUIZ
 // ============================================
-async function carregarPerguntas(nivelId) {
+async function carregarPerguntasQuiz(nivelId) {
     if (!nivelId) return;
     
-    const container = document.getElementById('listaPerguntas');
-    container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando perguntas...</div>';
+    const container = document.getElementById('listaPerguntasQuiz');
+    container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando perguntas do Quiz...</div>';
     
     try {
         const token = localStorage.getItem('token');
@@ -334,7 +520,7 @@ async function carregarPerguntas(nivelId) {
             container.innerHTML = `
                 <div class="text-center text-gray-500 py-8">
                     <i class="fas fa-info-circle mr-2"></i> 
-                    Nenhuma pergunta cadastrada para este nível.
+                    Nenhuma pergunta de Quiz cadastrada para este nível.
                 </div>
             `;
             return;
@@ -386,10 +572,78 @@ async function carregarPerguntas(nivelId) {
 }
 
 // ============================================
+// CARREGAR PERGUNTAS DE COMPLETE A FRASE
+// ============================================
+async function carregarPerguntasCompletar(nivelId) {
+    if (!nivelId) return;
+    
+    const container = document.getElementById('listaPerguntasCompletar');
+    container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando perguntas de Complete a Frase...</div>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/completar?nivel_id=${nivelId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar perguntas');
+        
+        const data = await response.json();
+        const perguntas = data.perguntas || [];
+        
+        if (perguntas.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-info-circle mr-2"></i> 
+                    Nenhuma pergunta de Complete a Frase cadastrada para este nível.
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = perguntas.map(pergunta => `
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800 mb-2">
+                            <i class="fas fa-puzzle-piece text-green-500 mr-2"></i>
+                            ${escapeHtml(pergunta.texto_frase)}
+                        </p>
+                        <div class="mt-3 text-sm">
+                            <div class="flex items-center mb-1">
+                                <span class="w-24 text-gray-600">Resposta:</span>
+                                <span class="text-green-600 font-medium">✓ ${escapeHtml(pergunta.resposta_correta)}</span>
+                            </div>
+                            <div class="flex items-center flex-wrap">
+                                <span class="w-24 text-gray-600">Opções:</span>
+                                <span class="text-gray-700">${escapeHtml(pergunta.palavras_opcoes?.join(', ') || '')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-400 ml-4">
+                        ID: ${pergunta.id}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar perguntas:', error);
+        container.innerHTML = `
+            <div class="text-center text-red-500 py-8">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Erro ao carregar perguntas. Tente novamente.
+            </div>
+        `;
+    }
+}
+
+// ============================================
 // EVENT LISTENERS
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Verificar token
     const token = localStorage.getItem('token');
     if (!token) {
         alert('Você precisa estar logado!');
@@ -397,16 +651,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // Carregar níveis
     carregarNiveis();
     
-    // Evento: Selecionar nível
+    // Alternar entre tipos de formulário
+    document.getElementById('tipoPergunta').addEventListener('change', toggleFormulario);
+    
+    // Abas
+    document.getElementById('tabQuiz').addEventListener('click', () => toggleAba('quiz'));
+    document.getElementById('tabCompletar').addEventListener('click', () => toggleAba('completar'));
+    
+    // Selecionar nível
     document.getElementById('nivelSelect').addEventListener('change', (e) => {
         nivelSelecionado = e.target.value;
         if (nivelSelecionado) {
-            carregarPerguntas(nivelSelecionado);
+            if (abaAtual === 'quiz') {
+                carregarPerguntasQuiz(nivelSelecionado);
+            } else {
+                carregarPerguntasCompletar(nivelSelecionado);
+            }
         } else {
-            document.getElementById('listaPerguntas').innerHTML = `
+            document.getElementById('listaPerguntasQuiz').innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-info-circle mr-2"></i> Selecione um nível para ver as perguntas
+                </div>
+            `;
+            document.getElementById('listaPerguntasCompletar').innerHTML = `
                 <div class="text-center text-gray-500 py-8">
                     <i class="fas fa-info-circle mr-2"></i> Selecione um nível para ver as perguntas
                 </div>
@@ -414,28 +683,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Evento: Cadastrar nível
+    // Cadastrar nível
     document.getElementById('formCadastroNivel').addEventListener('submit', cadastrarNivel);
     
-    // Evento: Cadastrar pergunta
+    // Cadastrar pergunta (Quiz)
     document.getElementById('formCadastroPergunta').addEventListener('submit', cadastrarPergunta);
     
-    // Evento: Limpar formulário de nível
+    // Cadastrar Complete a Frase
+    document.getElementById('formCadastroCompletar').addEventListener('submit', cadastrarCompletar);
+    
+    // Limpar formulário de nível
     document.getElementById('btnLimparNivel').addEventListener('click', () => {
         document.getElementById('formCadastroNivel').reset();
         document.getElementById('nivelXpTotal').value = '100';
     });
     
-    // Evento: Limpar formulário de pergunta
+    // Limpar formulário de pergunta (Quiz)
     document.getElementById('btnLimparPergunta').addEventListener('click', () => {
         document.getElementById('formCadastroPergunta').reset();
     });
     
-    // Evento: Atualizar perguntas
+    // Limpar formulário de Complete a Frase
+    document.getElementById('btnLimparCompletar').addEventListener('click', () => {
+        document.getElementById('formCadastroCompletar').reset();
+    });
+    
+    // Atualizar perguntas
     document.getElementById('btnAtualizarPerguntas').addEventListener('click', () => {
         if (nivelSelecionado) {
-            carregarPerguntas(nivelSelecionado);
-            showFeedback('feedbackPergunta', 'Perguntas atualizadas!', true);
+            if (abaAtual === 'quiz') {
+                carregarPerguntasQuiz(nivelSelecionado);
+                showFeedback('feedbackPergunta', 'Perguntas do Quiz atualizadas!', true);
+            } else {
+                carregarPerguntasCompletar(nivelSelecionado);
+                showFeedback('feedbackPergunta', 'Perguntas de Complete a Frase atualizadas!', true);
+            }
         }
     });
 });

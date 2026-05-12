@@ -1,0 +1,540 @@
+<%
+  // Esta página será injetada no layout.ejs como 'body'
+  // Recebe: user, nivel_id, ordem
+%>
+
+<style>
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-error { animation: shake 0.3s ease-in-out; }
+  .animate-success { animation: pop 0.4s ease-out; }
+  
+  .drag-word {
+    transition: all 0.2s ease;
+    cursor: grab;
+    user-select: none;
+  }
+  
+  .drag-word:active { cursor: grabbing; }
+  .drag-word.dragging { opacity: 0.5; cursor: grabbing; }
+  
+  .drop-zone {
+    transition: all 0.2s ease;
+    display: inline-block;
+    min-width: 120px;
+    padding: 4px 12px;
+    margin: 0 4px;
+    background-color: white;
+    border: 2px dashed #3b82f6;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    color: #2563eb;
+  }
+  
+  .drop-zone.drag-over {
+    background-color: #dbeafe;
+    border-color: #3b82f6;
+    transform: scale(1.02);
+  }
+  
+  .correct-drop {
+    background-color: #22c55e !important;
+    border-color: #16a34a !important;
+    color: white !important;
+    animation: pop 0.4s ease-out;
+  }
+  
+  .wrong-drop {
+    background-color: #ef4444 !important;
+    border-color: #dc2626 !important;
+    color: white !important;
+    animation: shake 0.3s ease-in-out;
+  }
+  
+  .word-placed {
+    opacity: 0.5;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    background-color: #6b7280 !important;
+  }
+
+  .indicador-progresso {
+    transition: all 0.3s ease-in-out;
+  }
+</style>
+
+<!-- Indicadores de Progresso -->
+<div class="fixed top-4 left-0 right-0 flex justify-center space-x-2 z-10">
+  <% for (let i = 0; i < 5; i++) { %>
+    <div class="w-4 h-4 bg-gray-500 rounded-full indicador-progresso"></div>
+  <% } %>
+</div>
+
+<div class="min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+    <!-- Cabeçalho -->
+    <div class="mb-6">
+      <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Complete a Frase</span>
+      <h2 id="perguntaNumero" class="text-sm text-gray-500 mt-1">Pergunta 1 de 5</h2>
+    </div>
+
+    <!-- Frase Incompleta -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-xl border-2 border-gray-200">
+      <p id="fraseTexto" class="text-lg text-slate-700 leading-relaxed">Carregando...</p>
+    </div>
+
+    <!-- Palavras para Arrastar -->
+    <div class="mb-6">
+      <h3 class="text-sm font-semibold text-gray-600 mb-3">📦 Arraste a palavra correta para o espaço acima:</h3>
+      <div id="words-container" class="flex flex-wrap gap-3 justify-center"></div>
+    </div>
+
+    <!-- Feedback -->
+    <div id="feedback" class="mt-4 text-center font-bold h-12 transition-all duration-300 opacity-0"></div>
+  </div>
+</div>
+
+<!-- Resultado Final -->
+<div id="resultadoContainer" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4">
+    <div class="text-center">
+      <i class="fas fa-trophy text-yellow-500 text-5xl mb-4"></i>
+      <h1 class="text-2xl font-bold text-slate-800 mb-4">Parabéns!</h1>
+      <p class="text-slate-600 mb-6">Você completou a missão com sucesso.</p>
+      <div class="space-y-2 mb-6">
+        <p class="text-lg font-semibold">Total de XP: <span class="text-green-600" id="xpTotal">0</span></p>
+        <p class="text-lg font-semibold">Total de Acertos: <span class="text-green-600" id="totalAcertos">0</span>/<span id="totalPerguntas">5</span></p>
+        <p class="text-lg font-semibold">Porcentagem: <span class="text-green-600" id="porcentagemAcertos">0</span>%</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button id="voltarMissoesButton" class="flex-1 bg-blue-500 text-white py-3 px-4 rounded-xl hover:bg-blue-600 transition font-medium">
+          <i class="fas fa-arrow-left mr-2"></i>Voltar às Missões
+        </button>
+        <button id="proximoButton" class="flex-1 bg-green-500 text-white py-3 px-4 rounded-xl hover:bg-green-600 transition font-medium">
+          Próximo <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? `http://${window.location.hostname}:${window.location.port || 3000}`
+    : 'https://o-migrante.onrender.com';
+
+  let perguntas = [];
+  let indicePerguntaAtual = 0;
+  let acertos = 0;
+  let respostasCorretas = [];
+  let currentPergunta = null;
+  let answered = false;
+  let aguardandoProximo = false;
+  let nivelId = null;
+  let ordem = null;
+  let xpTotal = 0;
+
+  function showFeedback(message, isError = true) {
+    const existingFeedback = document.querySelector('.feedback-toast');
+    if (existingFeedback) existingFeedback.remove();
+    
+    const div = document.createElement('div');
+    div.className = `feedback-toast fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-all duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white`;
+    div.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'} mr-2"></i>${message}`;
+    document.body.appendChild(div);
+    setTimeout(() => {
+      div.style.opacity = '0';
+      setTimeout(() => div.remove(), 300);
+    }, 3000);
+  }
+
+  function mostrarErro(mensagem) {
+    const container = document.querySelector('.max-w-2xl');
+    if (container) {
+      container.innerHTML = `
+        <div class="text-center py-8">
+          <i class="fas fa-exclamation-circle text-red-500 text-5xl mb-4"></i>
+          <p class="text-red-600">${mensagem}</p>
+          <button onclick="window.location.href='/app/painel-nivel?nivel_id=${nivelId}'" 
+                  class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg">
+            Voltar
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  function atualizarIndicadoresProgresso(indiceAtual) {
+    const indicadores = document.querySelectorAll('.indicador-progresso');
+    indicadores.forEach((indicador, index) => {
+      indicador.classList.remove('w-6', 'h-6', 'bg-blue-500', 'bg-green-500', 'bg-red-500');
+      indicador.classList.add('w-4', 'h-4', 'bg-gray-500');
+      if (index === indiceAtual) {
+        indicador.classList.remove('w-4', 'h-4', 'bg-gray-500');
+        indicador.classList.add('w-6', 'h-6', 'bg-blue-500');
+      }
+      if (index < indiceAtual) {
+        indicador.classList.remove('bg-gray-500');
+        indicador.classList.add(respostasCorretas[index] ? 'bg-green-500' : 'bg-red-500');
+      }
+    });
+  }
+
+  function extrairFraseComDropZone(frase) {
+    return frase.replace(/\{_______}/g, '<span class="drop-zone" data-filled="false">_______</span>');
+  }
+
+  function renderizarPalavras(palavras) {
+    const container = document.getElementById('words-container');
+    container.innerHTML = '';
+    
+    palavras.forEach(palavra => {
+      const wordDiv = document.createElement('div');
+      wordDiv.draggable = true;
+      wordDiv.className = 'drag-word px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md cursor-grab select-none';
+      wordDiv.textContent = palavra;
+      wordDiv.setAttribute('data-word', palavra);
+      container.appendChild(wordDiv);
+    });
+  }
+
+  function carregarPergunta() {
+    if (indicePerguntaAtual >= perguntas.length) {
+      finalizarQuiz();
+      return;
+    }
+
+    currentPergunta = perguntas[indicePerguntaAtual];
+    answered = false;
+    aguardandoProximo = false;
+
+    document.getElementById('perguntaNumero').textContent = `Pergunta ${indicePerguntaAtual + 1} de ${perguntas.length}`;
+    
+    // Extrair frase com drop zone
+    const fraseHtml = extrairFraseComDropZone(currentPergunta.texto_frase);
+    document.getElementById('fraseTexto').innerHTML = fraseHtml;
+    
+    // Renderizar palavras para arrastar
+    renderizarPalavras(currentPergunta.palavras_opcoes);
+    
+    // Resetar feedback
+    const feedback = document.getElementById('feedback');
+    feedback.innerHTML = '';
+    feedback.classList.remove('opacity-100', 'text-green-600', 'text-red-600');
+    feedback.classList.add('opacity-0');
+
+    atualizarIndicadoresProgresso(indicePerguntaAtual);
+    
+    // Configurar eventos de drag and drop
+    configurarDragDrop();
+  }
+
+  function configurarDragDrop() {
+    const dropZone = document.querySelector('.drop-zone');
+    let currentDraggedWord = null;
+
+    if (!dropZone) return;
+
+    // Resetar estado do drop zone
+    dropZone.innerHTML = '_______';
+    dropZone.classList.remove('correct-drop', 'wrong-drop');
+    dropZone.setAttribute('data-filled', 'false');
+    dropZone.style.pointerEvents = 'auto';
+
+    const dragWords = document.querySelectorAll('.drag-word');
+    
+    function handleDragStart(e) {
+      if (answered) {
+        e.preventDefault();
+        return false;
+      }
+      const word = e.target.closest('.drag-word');
+      if (word && !word.classList.contains('word-placed')) {
+        currentDraggedWord = word;
+        e.dataTransfer.setData('text/plain', word.getAttribute('data-word'));
+        e.dataTransfer.effectAllowed = 'copy';
+        word.classList.add('dragging');
+      } else {
+        e.preventDefault();
+      }
+    }
+
+    function handleDragEnd(e) {
+      const word = e.target.closest('.drag-word');
+      if (word) word.classList.remove('dragging');
+      currentDraggedWord = null;
+      dropZone.classList.remove('drag-over');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      if (!answered && dropZone.getAttribute('data-filled') === 'false') {
+        e.dataTransfer.dropEffect = 'copy';
+        dropZone.classList.add('drag-over');
+      }
+    }
+
+    function handleDragLeave() {
+      dropZone.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      
+      if (answered) return;
+      if (dropZone.getAttribute('data-filled') === 'true') return;
+      
+      const droppedWord = e.dataTransfer.getData('text/plain');
+      const draggedWordElement = currentDraggedWord;
+      
+      if (!draggedWordElement || draggedWordElement.classList.contains('word-placed')) return;
+      
+      const isCorrect = (droppedWord === currentPergunta.resposta_correta);
+      const feedbackDiv = document.getElementById('feedback');
+      
+      answered = true;
+      
+      if (isCorrect) {
+        acertos++;
+        respostasCorretas[indicePerguntaAtual] = true;
+        
+        dropZone.innerHTML = droppedWord;
+        dropZone.classList.add('correct-drop');
+        dropZone.setAttribute('data-filled', 'true');
+        
+        draggedWordElement.classList.add('word-placed');
+        draggedWordElement.draggable = false;
+        draggedWordElement.style.background = '#6b7280';
+        draggedWordElement.style.cursor = 'not-allowed';
+        
+        feedbackDiv.innerHTML = '✨ Parabéns, você acertou! ✨';
+        feedbackDiv.classList.add('text-green-600', 'opacity-100');
+        feedbackDiv.classList.remove('opacity-0');
+        
+        // Desabilitar palavras restantes
+        document.querySelectorAll('.drag-word:not(.word-placed)').forEach(word => {
+          word.draggable = false;
+          word.style.cursor = 'not-allowed';
+          word.style.opacity = '0.5';
+        });
+        
+        aguardandoProximo = true;
+        setTimeout(() => proximaPergunta(), 1500);
+        
+      } else {
+        respostasCorretas[indicePerguntaAtual] = false;
+        
+        dropZone.classList.add('wrong-drop');
+        
+        feedbackDiv.innerHTML = `❌ Resposta incorreta. A resposta certa era: "${currentPergunta.resposta_correta}"!`;
+        feedbackDiv.classList.add('text-red-600', 'opacity-100');
+        feedbackDiv.classList.remove('opacity-0');
+        
+        // Destacar resposta correta
+        document.querySelectorAll('.drag-word').forEach(word => {
+          if (word.getAttribute('data-word') === currentPergunta.resposta_correta) {
+            word.style.background = 'linear-gradient(to right, #22c55e, #16a34a)';
+          }
+        });
+        
+        setTimeout(() => dropZone.classList.remove('wrong-drop'), 500);
+        
+        // Desabilitar todas as palavras
+        document.querySelectorAll('.drag-word').forEach(word => {
+          word.draggable = false;
+          word.style.cursor = 'not-allowed';
+        });
+        
+        aguardandoProximo = true;
+        setTimeout(() => proximaPergunta(), 2000);
+      }
+    }
+
+    // Remover listeners antigos e adicionar novos
+    const newDropZone = document.querySelector('.drop-zone');
+    if (newDropZone) {
+      newDropZone.removeEventListener('dragover', handleDragOver);
+      newDropZone.removeEventListener('dragleave', handleDragLeave);
+      newDropZone.removeEventListener('drop', handleDrop);
+      
+      newDropZone.addEventListener('dragover', handleDragOver);
+      newDropZone.addEventListener('dragleave', handleDragLeave);
+      newDropZone.addEventListener('drop', handleDrop);
+    }
+    
+    document.querySelectorAll('.drag-word').forEach(word => {
+      word.removeEventListener('dragstart', handleDragStart);
+      word.removeEventListener('dragend', handleDragEnd);
+      word.addEventListener('dragstart', handleDragStart);
+      word.addEventListener('dragend', handleDragEnd);
+    });
+  }
+
+  function proximaPergunta() {
+    indicePerguntaAtual++;
+    if (indicePerguntaAtual < perguntas.length) {
+      carregarPergunta();
+    } else {
+      finalizarQuiz();
+    }
+  }
+
+  async function finalizarQuiz() {
+    let xpGanho = acertos;
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Salvar progresso
+      const salvarResponse = await fetch(`${API_BASE_URL}/progresso`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          nivel_id: parseInt(nivelId),
+          xp_ganho: xpGanho,
+          ordem: parseInt(ordem),
+          tipo_jogo: 'completar_frase'
+        })
+      });
+      
+      if (!salvarResponse.ok) {
+        throw new Error('Erro ao salvar progresso');
+      }
+      
+      // Esconder quiz e mostrar resultado
+      const quizContainer = document.querySelector('.max-w-2xl');
+      const indicadores = document.querySelector('.fixed.top-4');
+      if (indicadores) indicadores.classList.add('hidden');
+      if (quizContainer) quizContainer.classList.add('hidden');
+      
+      const resultadoDiv = document.getElementById('resultadoContainer');
+      if (resultadoDiv) resultadoDiv.classList.remove('hidden');
+      
+      document.getElementById('xpTotal').textContent = xpGanho;
+      document.getElementById('totalAcertos').textContent = `${acertos} de ${perguntas.length}`;
+      document.getElementById('totalPerguntas').textContent = perguntas.length;
+      const porcentagem = ((acertos / perguntas.length) * 100).toFixed(2);
+      document.getElementById('porcentagemAcertos').textContent = porcentagem;
+      
+    } catch (error) {
+      console.error('Erro ao finalizar quiz:', error);
+      showFeedback('Erro ao finalizar o jogo. Redirecionando...', true);
+      setTimeout(() => {
+        window.location.href = `/app/painel-nivel?nivel_id=${nivelId}`;
+      }, 3000);
+    }
+  }
+
+  async function buscarPerguntas() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/completar/aleatorias?nivel_id=${nivelId}&quantidade=5`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao buscar perguntas');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.perguntas || data.perguntas.length === 0) {
+        throw new Error('Nenhuma pergunta de completar frase encontrada para este nível');
+      }
+      
+      perguntas = data.perguntas;
+      xpTotal = data.xp_total || 30;
+      carregarPergunta();
+      
+    } catch (error) {
+      console.error('Erro:', error);
+      mostrarErro(error.message);
+    }
+  }
+
+  // Event Listeners
+  document.getElementById('voltarMissoesButton')?.addEventListener('click', () => {
+    window.location.href = `/app/painel-nivel?nivel_id=${nivelId}`;
+  });
+
+  document.getElementById('proximoButton')?.addEventListener('click', async () => {
+    const ordemNum = parseInt(ordem);
+    const nivelIdNum = parseInt(nivelId);
+    let proximaOrdem, proximoNivelId;
+
+    if (ordemNum === 12) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/niveis/${nivelIdNum + 1}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+          showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+          setTimeout(() => window.location.href = "/app/missao", 2000);
+          return;
+        }
+        proximoNivelId = nivelIdNum + 1;
+        proximaOrdem = 1;
+      } catch {
+        showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+        setTimeout(() => window.location.href = "/app/missao", 2000);
+        return;
+      }
+    } else {
+      proximoNivelId = nivelIdNum;
+      proximaOrdem = ordemNum + 1;
+    }
+
+    window.location.href = `/app/jogo/CompletarFrase?nivel_id=${proximoNivelId}&ordem=${proximaOrdem}`;
+  });
+
+  // Prevenir comportamento padrão de drag
+  document.body.addEventListener('dragover', (e) => e.preventDefault());
+  document.body.addEventListener('drop', (e) => e.preventDefault());
+
+  // Inicialização
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/';
+      return;
+    }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    nivelId = urlParams.get('nivel_id');
+    ordem = urlParams.get('ordem');
+    
+    if (!nivelId || !ordem) {
+      mostrarErro('Parâmetros inválidos');
+      return;
+    }
+    
+    buscarPerguntas();
+  });
+})();
+</script>

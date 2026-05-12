@@ -198,6 +198,7 @@
       }, 3000);
     }
 
+    // Dentro de redirectToPerguntas, você pode definir qual jogo cada fase terá
     function redirectToPerguntas(ordem) {
       if (!nivelId) {
         showFeedback("ID do nível inválido.");
@@ -206,11 +207,20 @@
 
       const botao = document.querySelector(`.nivel-button[data-ordem="${ordem}"]`);
       if (botao && botao.disabled) {
-        showFeedback("Complete as perguntas anteriores para acessar esta fase.");
+        showFeedback("Complete as fases anteriores para acessar esta.");
         return;
       }
 
-      window.location.href = `/app/jogo/Quiz?nivel_id=${nivelId}&ordem=${ordem}`;
+      // 🔥 AQUI VOCÊ DEFINE QUAL JOGO CADA FASE USA
+      // Exemplo: fase 1, 4, 7, 10 = Quiz; fases 2, 5, 8, 11 = CompletarFrase
+      let tipoJogo = 'Quiz';
+      
+      if (ordem == 2 || ordem == 5 || ordem == 8 || ordem == 11) {
+        tipoJogo = 'CompletarFrase';
+      }
+      // Adicione mais condições para outros jogos
+      
+      window.location.href = `/app/jogo/${tipoJogo}?nivel_id=${nivelId}&ordem=${ordem}`;
     }
 
     async function loadNivelData() {
