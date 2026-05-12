@@ -35,8 +35,17 @@ app.use(cookieParser());
 app.set('view engine', 'ejs');
 // Define um array de caminhos para que o Express procure templates.
 app.set('views', [
-    path.join(__dirname, 'admin', 'telas'),
-    path.join(__dirname, 'public', 'telas')
+    path.join(__dirname, 'src', 'views', 'auth'),
+    path.join(__dirname, 'src', 'views', 'layout'),
+    path.join(__dirname, 'src', 'views', 'user'),
+    path.join(__dirname, 'src', 'views', 'missoes'),
+    path.join(__dirname, 'src', 'views', 'jogos'),
+    path.join(__dirname, 'src', 'views', 'biblia'),
+    path.join(__dirname, 'src', 'views', 'admin', 'usuarios'),
+    path.join(__dirname, 'src', 'views', 'admin', 'perguntas'),
+    path.join(__dirname, 'src', 'views', 'admin', 'niveis'),
+    path.join(__dirname, 'src', 'views', 'admin', 'fases'),
+    path.join(__dirname, 'src', 'views', 'admin', 'mensagens'),
 ]);
 // =======================================================
 
@@ -313,6 +322,36 @@ app.get('/app/ranking', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Erro ao renderizar Ranking:', error);
     res.status(500).send('Erro interno ao carregar a página.');
+  }
+});
+
+// Rota dinâmica para os diferentes tipos de jogo
+app.get('/app/jogo/:tipo', authenticateToken, async (req, res) => {
+  try {
+    const { tipo } = req.params;
+    const { nivel_id, ordem } = req.query;
+    
+    // Verificar se o tipo de jogo existe
+    const jogosPermitidos = ['Quiz', 'CompletarFrase', 'AcheOTexto', 'Memorizacao'];
+    
+    if (!jogosPermitidos.includes(tipo)) {
+      return res.status(404).send('Jogo não encontrado');
+    }
+    
+    const bodyContent = await renderViewToString(req.app, `${tipo}`, { 
+      user: req.user,
+      nivel_id,
+      ordem
+    });
+    
+    res.render('layout', { 
+      title: `${tipo} - O Migrante`,
+      body: bodyContent,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Erro ao carregar jogo:', error);
+    res.status(500).send('Erro interno ao carregar o jogo.');
   }
 });
 
