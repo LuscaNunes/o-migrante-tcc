@@ -18,7 +18,7 @@ const progressoRoutes = require('./src/routes/progressoRoutes');
 const anotacaoRoutes = require('./src/routes/anotacaoRoutes');
 const mensagemRoutes = require('./src/routes/mensagemRoutes');
 const amizadeRoutes = require('./src/routes/amizadeRoutes');
-const rankingRoutes = require('./src/routes/rankingRoutes');
+
 
 const app = express();
 
