@@ -19,13 +19,24 @@ async function cadastrarPergunta(usuario_id, { nivel_id, texto_frase, resposta_c
         const [countResult] = await db.query('SELECT COUNT(*) as total FROM perguntas_completar WHERE nivel_id = ?', [nivel_id]);
         const ordem = countResult[0].total + 1;
 
+        // 🔥 CORREÇÃO: Garantir que palavras_opcoes seja um array JSON válido
+        let opcoesJson;
+        if (typeof palavras_opcoes === 'string') {
+            // Se veio como string separada por vírgula
+            opcoesJson = JSON.stringify(palavras_opcoes.split(',').map(p => p.trim()));
+        } else if (Array.isArray(palavras_opcoes)) {
+            opcoesJson = JSON.stringify(palavras_opcoes);
+        } else {
+            throw new Error('Formato inválido para opções de palavras');
+        }
+
         const sql = `
             INSERT INTO perguntas_completar 
             (nivel_id, texto_frase, resposta_correta, palavras_opcoes, ordem, usuario_id)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
         
-        const [result] = await db.query(sql, [nivel_id, texto_frase, resposta_correta, JSON.stringify(palavras_opcoes), ordem, usuario_id]);
+        const [result] = await db.query(sql, [nivel_id, texto_frase, resposta_correta, opcoesJson, ordem, usuario_id]);
         return result.insertId;
     } catch (err) {
         throw new Error('Erro ao cadastrar pergunta: ' + err.message);
@@ -41,22 +52,29 @@ async function buscarPerguntasAleatorias(nivel_id, quantidade = 5) {
     }
 
     try {
-        // Verificar se há perguntas
+        // 🔥 CORREÇÃO: Usar placeholder correto para quantidade
         const [check] = await db.query('SELECT COUNT(*) as total FROM perguntas_completar WHERE nivel_id = ?', [nivel_id]);
         
         if (check[0].total === 0) {
             throw new Error('Não há perguntas de completar frase para este nível');
         }
 
-        // Buscar perguntas aleatórias
+        // No buscarPerguntasAleatorias, substitua:
         const [perguntas] = await db.query(
-            'SELECT * FROM perguntas_completar WHERE nivel_id = ? ORDER BY RAND() LIMIT ?',
-            [nivel_id, quantidade]
+            `SELECT * FROM perguntas_completar WHERE nivel_id = ? ORDER BY RAND() LIMIT ${parseInt(quantidade)}`,
+            [nivel_id]
         );
 
-        // Parse das opções JSON
+        // Parse das opções JSON com segurança
         perguntas.forEach(p => {
-            p.palavras_opcoes = JSON.parse(p.palavras_opcoes);
+            try {
+                p.palavras_opcoes = typeof p.palavras_opcoes === 'string' 
+                    ? JSON.parse(p.palavras_opcoes) 
+                    : p.palavras_opcoes;
+            } catch (e) {
+                console.error('Erro ao parsear JSON:', p.palavras_opcoes);
+                p.palavras_opcoes = [];
+            }
         });
 
         // Buscar XP do nível
@@ -65,6 +83,7 @@ async function buscarPerguntasAleatorias(nivel_id, quantidade = 5) {
 
         return { perguntas, xp_total };
     } catch (err) {
+        console.error('Erro detalhado:', err);
         throw new Error('Erro ao buscar perguntas: ' + err.message);
     }
 }
@@ -80,8 +99,15 @@ async function buscarPerguntasPorNivel(nivel_id) {
         );
         
         perguntas.forEach(p => {
-            if (p.palavras_opcoes) {
-                p.palavras_opcoes = JSON.parse(p.palavras_opcoes);
+            try {
+                if (p.palavras_opcoes) {
+                    p.palavras_opcoes = typeof p.palavras_opcoes === 'string' 
+                        ? JSON.parse(p.palavras_opcoes) 
+                        : p.palavras_opcoes;
+                }
+            } catch (e) {
+                console.error('Erro ao parsear JSON:', p.palavras_opcoes);
+                p.palavras_opcoes = [];
             }
         });
         
@@ -100,8 +126,14 @@ async function buscarPerguntaPorId(id) {
         if (result.length === 0) {
             throw new Error('Pergunta não encontrada');
         }
-        if (result[0].palavras_opcoes) {
-            result[0].palavras_opcoes = JSON.parse(result[0].palavras_opcoes);
+        try {
+            if (result[0].palavras_opcoes) {
+                result[0].palavras_opcoes = typeof result[0].palavras_opcoes === 'string' 
+                    ? JSON.parse(result[0].palavras_opcoes) 
+                    : result[0].palavras_opcoes;
+            }
+        } catch (e) {
+            result[0].palavras_opcoes = [];
         }
         return result[0];
     } catch (err) {
@@ -114,9 +146,18 @@ async function buscarPerguntaPorId(id) {
  */
 async function atualizarPergunta(id, { texto_frase, resposta_correta, palavras_opcoes }) {
     try {
+        let opcoesJson;
+        if (typeof palavras_opcoes === 'string') {
+            opcoesJson = JSON.stringify(palavras_opcoes.split(',').map(p => p.trim()));
+        } else if (Array.isArray(palavras_opcoes)) {
+            opcoesJson = JSON.stringify(palavras_opcoes);
+        } else {
+            throw new Error('Formato inválido para opções de palavras');
+        }
+
         const [result] = await db.query(
             'UPDATE perguntas_completar SET texto_frase = ?, resposta_correta = ?, palavras_opcoes = ? WHERE id = ?',
-            [texto_frase, resposta_correta, JSON.stringify(palavras_opcoes), id]
+            [texto_frase, resposta_correta, opcoesJson, id]
         );
         
         if (result.affectedRows === 0) {
