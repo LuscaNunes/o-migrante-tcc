@@ -314,57 +314,80 @@
   }
   
   async function loadBibleXML(version) {
-    console.log(`Carregando Bíblia versão: ${version}`);
-    const versaoSelect = document.getElementById('versao');
-    const livroSelect = document.getElementById('livro');
-    const capituloSelect = document.getElementById('capitulo');
-    
-    try {
-      let response = await fetch(`/biblias/pt_${version}.xml`);
-      if (!response.ok) {
-        response = await fetch(`/pt_${version}.xml`);
-      }
-      if (!response.ok) {
-        throw new Error(`Arquivo não encontrado: ${response.status}`);
-      }
-      
-      const xmlString = await response.text();
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
-      
-      if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
-        throw new Error('Erro ao processar o arquivo XML');
-      }
-      
-      bibleData = xmlDoc;
-      currentVersion = version;
-      
-      livroSelect.innerHTML = '<option value="">Selecione um livro</option>';
-      const books = bibleData.querySelectorAll('b');
-      books.forEach(book => {
-        const option = document.createElement('option');
-        option.value = book.getAttribute('id');
-        option.textContent = book.getAttribute('n');
-        livroSelect.appendChild(option);
-      });
-      
-      livroSelect.disabled = false;
-      capituloSelect.innerHTML = '<option value="">Selecione um capítulo</option>';
-      capituloSelect.disabled = true;
-      
-      const container = document.getElementById('versiculos-container');
-      container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-info-circle text-4xl mb-2"></i><p>Selecione um livro</p></div>';
-      
-      showFeedback(`Versão ${getVersionName(version)} carregada com sucesso!`, false);
-    } catch (error) {
-      console.error('Erro ao carregar Bíblia:', error);
-      showFeedback(`Não foi possível carregar a versão ${version}.`, true);
-      versaoSelect.value = '';
-      livroSelect.disabled = true;
-      capituloSelect.disabled = true;
-    }
-  }
+  console.log(`Carregando Bíblia versão: ${version}`);
+  const versaoSelect = document.getElementById('versao');
+  const livroSelect = document.getElementById('livro');
+  const capituloSelect = document.getElementById('capitulo');
   
+  try {
+    // Tenta diferentes caminhos para encontrar o arquivo XML
+    let response = await fetch(`/biblias/pt_${version}.xml`);
+    
+    // Se não encontrar, tenta na raiz
+    if (!response.ok) {
+      console.log(`Tentando caminho alternativo: /pt_${version}.xml`);
+      response = await fetch(`/pt_${version}.xml`);
+    }
+    
+    // Se ainda não encontrar, tenta com src/public
+    if (!response.ok) {
+      console.log(`Tentando caminho alternativo: /src/public/biblias/pt_${version}.xml`);
+      response = await fetch(`/src/public/biblias/pt_${version}.xml`);
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Arquivo não encontrado: ${response.status}`);
+    }
+    
+    const xmlString = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+    
+    // Verificar se houve erro no parsing
+    const parseError = xmlDoc.getElementsByTagName('parsererror');
+    if (parseError.length > 0) {
+      console.error('Erro de parsing XML:', parseError[0].textContent);
+      throw new Error('Erro ao processar o arquivo XML');
+    }
+    
+    bibleData = xmlDoc;
+    currentVersion = version;
+    
+    // Popular lista de livros
+    livroSelect.innerHTML = '<option value="">Selecione um livro</option>';
+    const books = bibleData.querySelectorAll('b');
+    
+    if (books.length === 0) {
+      throw new Error('Nenhum livro encontrado no arquivo XML');
+    }
+    
+    books.forEach(book => {
+      const option = document.createElement('option');
+      option.value = book.getAttribute('id');
+      option.textContent = book.getAttribute('n');
+      livroSelect.appendChild(option);
+    });
+    
+    livroSelect.disabled = false;
+    capituloSelect.innerHTML = '<option value="">Selecione um capítulo</option>';
+    capituloSelect.disabled = true;
+    
+    const container = document.getElementById('versiculos-container');
+    container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-info-circle text-4xl mb-2"></i><p>Selecione um livro</p></div>';
+    
+    showFeedback(`Versão ${getVersionName(version)} carregada com sucesso!`, false);
+    
+  } catch (error) {
+    console.error('Erro ao carregar Bíblia:', error);
+    showFeedback(`Não foi possível carregar a versão ${version}. Verifique se o arquivo existe.`, true);
+    versaoSelect.value = '';
+    livroSelect.disabled = true;
+    capituloSelect.disabled = true;
+    bibleData = null;
+    currentVersion = '';
+  }
+}
+
   function getVersionName(version) {
     const versions = {
       'acf': 'Almeida Corrigida Fiel',
