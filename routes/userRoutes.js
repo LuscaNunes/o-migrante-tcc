@@ -64,53 +64,6 @@ router.get('/public/:id', authenticateToken, async (req, res) => {
 });
 
 /**
- * Rota para buscar um usuário por ID
- * GET /usuarios/:id
- * Requer autenticação e permissão de admin
- */
-router.get('/:id', authenticateToken, checkAdmin, async (req, res) => {
-	try {
-		// CORRIGIDO: Removido .promise()
-		const [results] = await db.query('SELECT * FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
-		if (results.length === 0) {
-			return res.status(404).send('Usuário não encontrado.');
-		}
-		res.send(results[0]);
-	} catch (err) {
-		console.error('Erro ao buscar usuário:', err);
-		res.status(500).send('Erro ao buscar usuário.');
-	}
-});
-
-/**
- * Rota para atualizar um usuário
- * PUT /usuarios/:id
- * Requer autenticação e permissão de admin
- */
-router.put('/:id', authenticateToken, checkAdmin, async (req, res) => {
-	const { nome, email, tipo, xp_total, fase_atual } = req.body;
-
-	if (!nome || !email || !tipo || !xp_total || !fase_atual) {
-		return res.status(400).json({ success: false, message: 'Preencha todos os campos.' });
-	}
-
-	try {
-		// CORRIGIDO: Removido .promise()
-		const [result] = await db.query(
-			'UPDATE Usuarios SET nome = ?, email = ?, tipo = ?, xp_total = ?, fase_atual = ? WHERE id_usuario = ?',
-			[nome, email, tipo, xp_total, fase_atual, req.params.id]
-		);
-		if (result.affectedRows === 0) {
-			return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
-		}
-		res.json({ success: true, message: 'Usuário atualizado com sucesso!' });
-	} catch (err) {
-		console.error('Erro ao editar usuário:', err);
-		res.status(500).json({ success: false, message: 'Erro ao editar usuário.' });
-	}
-});
-
-/**
  * Rota para atualizar o perfil do usuário autenticado
  * PUT /usuarios/atualizar
  * Requer autenticação
@@ -238,6 +191,57 @@ router.put('/atualizar', authenticateToken, async (req, res) => {
     });
   }
 });
+
+
+/**
+ * Rota para buscar um usuário por ID
+ * GET /usuarios/:id
+ * Requer autenticação e permissão de admin
+ */
+router.get('/:id', authenticateToken, checkAdmin, async (req, res) => {
+	try {
+		// CORRIGIDO: Removido .promise()
+		const [results] = await db.query('SELECT * FROM Usuarios WHERE id_usuario = ?', [req.params.id]);
+		if (results.length === 0) {
+			return res.status(404).send('Usuário não encontrado.');
+		}
+		res.send(results[0]);
+	} catch (err) {
+		console.error('Erro ao buscar usuário:', err);
+		res.status(500).send('Erro ao buscar usuário.');
+	}
+});
+
+
+/**
+ * Rota para atualizar um usuário
+ * PUT /usuarios/:id
+ * Requer autenticação e permissão de admin
+ */
+router.put('/:id', authenticateToken, checkAdmin, async (req, res) => {
+	const { nome, email, tipo, xp_total, fase_atual } = req.body;
+
+	if (!nome || !email || !tipo || !xp_total || !fase_atual) {
+		return res.status(400).json({ success: false, message: 'Preencha todos os campos.' });
+	}
+
+	try {
+		// CORRIGIDO: Removido .promise()
+		const [result] = await db.query(
+			'UPDATE Usuarios SET nome = ?, email = ?, tipo = ?, xp_total = ?, fase_atual = ? WHERE id_usuario = ?',
+			[nome, email, tipo, xp_total, fase_atual, req.params.id]
+		);
+		if (result.affectedRows === 0) {
+			return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+		}
+		res.json({ success: true, message: 'Usuário atualizado com sucesso!' });
+	} catch (err) {
+		console.error('Erro ao editar usuário:', err);
+		res.status(500).json({ success: false, message: 'Erro ao editar usuário.' });
+	}
+});
+
+
 
 /**
  * Rota para buscar o perfil do usuário autenticado
