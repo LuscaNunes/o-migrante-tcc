@@ -172,24 +172,53 @@ async function buscarNiveisAtivos() {
 }
 
 /**
- * Exclui um nível e suas perguntas associadas
+ * Exclui um nível e todos os seus dados relacionados
  * @param {number} id - ID do nível
  * @returns {Promise<void>}
  */
 async function excluirNivel(id) {
   const nivelId = parseInt(id);
   
+  if (!nivelId || isNaN(nivelId)) {
+    throw new Error('ID do nível inválido');
+  }
+
+  // Obter conexão para transação
+  const connection = await db.getConnection();
+  await connection.beginTransaction();
+
   try {
-    // Primeiro excluir perguntas relacionadas
-    await db.query('DELETE FROM perguntas WHERE nivel_id = ?', [nivelId]);
-    // Depois excluir o nível
-    const [result] = await db.query('DELETE FROM niveis WHERE id = ?', [nivelId]);
-    
-    if (result.affectedRows === 0) {
+    // Verificar se o nível existe
+    const [nivelCheck] = await connection.query('SELECT id FROM niveis WHERE id = ?', [nivelId]);
+    if (nivelCheck.length === 0) {
       throw new Error('Nível não encontrado');
     }
+
+    // 1. Deletar registros de progresso dos usuários (progressousuario)
+    await connection.query('DELETE FROM ProgressoUsuario WHERE nivel_id = ?', [nivelId]);
+    
+    // 2. Deletar perguntas do tipo Quiz
+    await connection.query('DELETE FROM perguntas WHERE nivel_id = ?', [nivelId]);
+    
+    // 3. Deletar perguntas do tipo Complete a Frase
+    await connection.query('DELETE FROM perguntas_completar WHERE nivel_id = ?', [nivelId]);
+    
+    // 4. Finalmente deletar o nível
+    const [result] = await connection.query('DELETE FROM niveis WHERE id = ?', [nivelId]);
+    
+    if (result.affectedRows === 0) {
+      throw new Error('Nível não encontrado durante deleção');
+    }
+    
+    // Commit da transação
+    await connection.commit();
+    
   } catch (err) {
+    // Rollback em caso de erro
+    await connection.rollback();
     throw new Error('Erro ao excluir nível: ' + err.message);
+  } finally {
+    connection.release();
   }
 }
 
