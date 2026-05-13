@@ -211,17 +211,12 @@
         return;
       }
 
-      // 🔥 AQUI VOCÊ DEFINE QUAL JOGO CADA FASE USA
-      // Exemplo: fase 1, 4, 7, 10 = Quiz; fases 2, 5, 8, 11 = CompletarFrase
-      let tipoJogo = 'Quiz';
-      
-      if (ordem == 2 || ordem == 5 || ordem == 8 || ordem == 11) {
-        tipoJogo = 'CompletarFrase';
-      }
-      // Adicione mais condições para outros jogos
+      // Lógica: Par (2,4,6,8,10,12) = Complete a Frase | Ímpar (1,3,5,7,9,11) = Quiz
+      const tipoJogo = (ordem % 2 === 0) ? 'CompletarFrase' : 'Quiz';
       
       window.location.href = `/app/jogo/${tipoJogo}?nivel_id=${nivelId}&ordem=${ordem}`;
     }
+
 
     async function loadNivelData() {
       try {
