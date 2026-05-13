@@ -435,29 +435,35 @@
     let proximaOrdem, proximoNivelId;
 
     if (ordemNum === 12) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/niveis/${nivelIdNum + 1}`, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
-        });
-        if (!response.ok) {
-          showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
-          setTimeout(() => window.location.href = "/app/missao", 2000);
-          return;
+        // Última fase do nível atual
+        try {
+            const response = await fetch(`${API_BASE_URL}/niveis/${nivelIdNum + 1}`, {
+                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (!response.ok) {
+                showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+                setTimeout(() => window.location.href = "/app/missao", 2000);
+                return;
+            }
+            proximoNivelId = nivelIdNum + 1;
+            proximaOrdem = 1;
+        } catch {
+            showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+            setTimeout(() => window.location.href = "/app/missao", 2000);
+            return;
         }
-        proximoNivelId = nivelIdNum + 1;
-        proximaOrdem = 1;
-      } catch {
-        showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
-        setTimeout(() => window.location.href = "/app/missao", 2000);
-        return;
-      }
     } else {
-      proximoNivelId = nivelIdNum;
-      proximaOrdem = ordemNum + 1;
+        // Próxima fase do mesmo nível
+        proximoNivelId = nivelIdNum;
+        proximaOrdem = ordemNum + 1;
     }
 
-    window.location.href = `/app/perguntas?nivel_id=${proximoNivelId}&ordem=${proximaOrdem}`;
+    // 🔥 CORREÇÃO: Usar a lógica de jogo (par = CompletarFrase, ímpar = Quiz)
+    const tipoJogo = (proximaOrdem % 2 === 0) ? 'CompletarFrase' : 'Quiz';
+    
+    window.location.href = `/app/jogo/${tipoJogo}?nivel_id=${proximoNivelId}&ordem=${proximaOrdem}`;
   });
+
 
   // Sair
   const sairButton = document.getElementById('sairButton');
