@@ -41,6 +41,44 @@
     </div>
 </div>
 
+<!-- Modal de Editar Nível -->
+<div id="editNivelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold">Editar Nível</h3>
+            <button class="closeEditNivelModal text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        <form id="editNivelForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Título do Nível *</label>
+                <input type="text" id="editNivelTitulo" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Descrição *</label>
+                <textarea id="editNivelDescricao" rows="4" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">XP Total *</label>
+                <input type="number" id="editNivelXpTotal" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            
+            <div class="flex gap-2 mt-6">
+                <button type="submit" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
+                    <i class="fas fa-save mr-2"></i>Salvar
+                </button>
+                <button type="button" id="cancelEditNivelBtn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition font-medium">
+                    <i class="fas fa-times mr-2"></i>Cancelar
+                </button>
+                <button type="button" id="excluirNivelBtn" class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition font-medium">
+                    <i class="fas fa-trash mr-2"></i>Excluir
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal de Perguntas (Quiz) -->
 <div id="questionsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-y-auto p-6">
@@ -203,6 +241,12 @@
         background-color: #f3f4f6;
         border: 1px solid #e5e7eb;
     }
+    .btn-editar-nivel {
+        background-color: #f59e0b;
+    }
+    .btn-editar-nivel:hover {
+        background-color: #d97706;
+    }
 </style>
 
 <script>
@@ -283,6 +327,9 @@ function renderizarNiveis(niveis) {
                     </div>
                 </div>
                 <div class="flex gap-2 flex-wrap">
+                    <button onclick="mostrarEditarNivel(${nivel.id})" class="bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 transition text-sm">
+                        <i class="fas fa-edit mr-1"></i>Editar Nível
+                    </button>
                     <button onclick="mostrarDetalhes(${nivel.id})" class="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm">
                         <i class="fas fa-info-circle mr-1"></i>Detalhes
                     </button>
@@ -410,6 +457,113 @@ function mostrarDetalhes(nivelId) {
         detalhes.classList.toggle('hidden');
     }
 }
+
+// ============================================
+// EDITAR NÍVEL
+// ============================================
+async function mostrarEditarNivel(nivelId) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/niveis/${nivelId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar nível');
+        
+        const nivel = await response.json();
+        currentNivelId = nivelId;
+        
+        document.getElementById('editNivelTitulo').value = nivel.titulo;
+        document.getElementById('editNivelDescricao').value = nivel.descricao || '';
+        document.getElementById('editNivelXpTotal').value = nivel.xp_total || 0;
+        
+        document.getElementById('editNivelModal').classList.remove('hidden');
+        document.getElementById('editNivelModal').classList.add('flex');
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showFeedback("Erro ao carregar nível: " + error.message, false);
+    }
+}
+
+document.getElementById('editNivelForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const dados = {
+        titulo: document.getElementById('editNivelTitulo').value.trim(),
+        descricao: document.getElementById('editNivelDescricao').value.trim(),
+        xp_total: parseInt(document.getElementById('editNivelXpTotal').value)
+    };
+    
+    if (!dados.titulo || !dados.descricao || !dados.xp_total) {
+        showFeedback("Preencha todos os campos!", false);
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/niveis/${currentNivelId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(dados)
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error || "Erro ao salvar");
+        }
+        
+        showFeedback("Nível atualizado com sucesso!", true);
+        document.getElementById('editNivelModal').classList.add('hidden');
+        carregarNiveis();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showFeedback("Erro ao salvar: " + error.message, false);
+    }
+});
+
+// ============================================
+// EXCLUIR NÍVEL
+// ============================================
+document.getElementById('excluirNivelBtn')?.addEventListener('click', async () => {
+    if (!confirm("Tem certeza que deseja excluir este nível? Todas as perguntas associadas também serão excluídas!")) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/niveis/${currentNivelId}`, {
+            method: "DELETE",
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error("Erro ao excluir nível");
+        
+        showFeedback("Nível excluído com sucesso!", true);
+        document.getElementById('editNivelModal').classList.add('hidden');
+        carregarNiveis();
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        showFeedback("Erro ao excluir: " + error.message, false);
+    }
+});
+
+// ============================================
+// FECHAR MODAL EDITAR NÍVEL
+// ============================================
+document.getElementById('cancelEditNivelBtn')?.addEventListener('click', () => {
+    document.getElementById('editNivelModal').classList.add('hidden');
+});
+
+document.querySelectorAll('#editNivelModal .closeEditNivelModal').forEach(btn => {
+    btn.onclick = () => {
+        document.getElementById('editNivelModal').classList.add('hidden');
+    };
+});
 
 // ============================================
 // MODAL DE SITUAÇÃO
