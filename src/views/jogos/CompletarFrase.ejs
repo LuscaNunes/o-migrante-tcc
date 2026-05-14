@@ -16,11 +16,6 @@
     100% { transform: scale(1); }
   }
 
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
   .animate-error { animation: shake 0.3s ease-in-out; }
   .animate-success { animation: pop 0.4s ease-out; }
   
@@ -28,10 +23,15 @@
     transition: all 0.2s ease;
     cursor: grab;
     user-select: none;
+    touch-action: none; /* Melhora o toque no mobile */
   }
   
   .drag-word:active { cursor: grabbing; }
-  .drag-word.dragging { opacity: 0.5; cursor: grabbing; }
+  .drag-word.dragging { 
+    opacity: 0.5; 
+    cursor: grabbing;
+    transform: scale(1.05);
+  }
   
   .drop-zone {
     transition: all 0.2s ease;
@@ -77,6 +77,30 @@
   .indicador-progresso {
     transition: all 0.3s ease-in-out;
   }
+
+  /* Estilos para mobile - botões maiores */
+  @media (max-width: 768px) {
+    .drag-word {
+      padding: 12px 20px !important;
+      font-size: 1rem !important;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .drop-zone {
+      min-width: 140px;
+      padding: 8px 16px;
+      font-size: 1rem;
+    }
+    
+    .max-w-2xl {
+      margin: 1rem;
+    }
+    
+    .p-6 {
+      padding: 1.25rem !important;
+    }
+  }
 </style>
 
 <!-- Indicadores de Progresso -->
@@ -87,7 +111,7 @@
 </div>
 
 <div class="min-h-screen flex items-center justify-center p-4">
-  <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+  <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-6 sm:p-8">
     <!-- Cabeçalho -->
     <div class="mb-6">
       <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Complete a Frase</span>
@@ -95,13 +119,13 @@
     </div>
 
     <!-- Frase Incompleta -->
-    <div class="mb-8 p-6 bg-gray-50 rounded-xl border-2 border-gray-200">
-      <p id="fraseTexto" class="text-lg text-slate-700 leading-relaxed">Carregando...</p>
+    <div class="mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl border-2 border-gray-200">
+      <p id="fraseTexto" class="text-base sm:text-lg text-slate-700 leading-relaxed">Carregando...</p>
     </div>
 
     <!-- Palavras para Arrastar -->
     <div class="mb-6">
-      <h3 class="text-sm font-semibold text-gray-600 mb-3">📦 Arraste a palavra correta para o espaço acima:</h3>
+      <h3 class="text-sm font-semibold text-gray-600 mb-3">📦 Toque e arraste a palavra correta:</h3>
       <div id="words-container" class="flex flex-wrap gap-3 justify-center"></div>
     </div>
 
@@ -152,6 +176,12 @@
   let nivelId = null;
   let ordem = null;
   let xpTotal = 0;
+
+  // Variáveis para touch
+  let draggedElement = null;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let originalPosition = null;
 
   function showFeedback(message, isError = true) {
     const existingFeedback = document.querySelector('.feedback-toast');
@@ -213,6 +243,12 @@
       wordDiv.className = 'drag-word px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium shadow-md cursor-grab select-none';
       wordDiv.textContent = palavra;
       wordDiv.setAttribute('data-word', palavra);
+      
+      // Adicionar suporte a toque
+      wordDiv.addEventListener('touchstart', handleTouchStart, { passive: false });
+      wordDiv.addEventListener('touchmove', handleTouchMove, { passive: false });
+      wordDiv.addEventListener('touchend', handleTouchEnd);
+      
       container.appendChild(wordDiv);
     });
   }
@@ -244,7 +280,7 @@
 
     atualizarIndicadoresProgresso(indicePerguntaAtual);
     
-    // Configurar eventos de drag and drop
+    // Configurar eventos de drag and drop (mouse)
     configurarDragDrop();
   }
 
@@ -254,7 +290,6 @@
 
     if (!dropZone) return;
 
-    // Resetar estado do drop zone
     dropZone.innerHTML = '_______';
     dropZone.classList.remove('correct-drop', 'wrong-drop');
     dropZone.setAttribute('data-filled', 'false');
@@ -309,68 +344,9 @@
       
       if (!draggedWordElement || draggedWordElement.classList.contains('word-placed')) return;
       
-      const isCorrect = (droppedWord === currentPergunta.resposta_correta);
-      const feedbackDiv = document.getElementById('feedback');
-      
-      answered = true;
-      
-      if (isCorrect) {
-        acertos++;
-        respostasCorretas[indicePerguntaAtual] = true;
-        
-        dropZone.innerHTML = droppedWord;
-        dropZone.classList.add('correct-drop');
-        dropZone.setAttribute('data-filled', 'true');
-        
-        draggedWordElement.classList.add('word-placed');
-        draggedWordElement.draggable = false;
-        draggedWordElement.style.background = '#6b7280';
-        draggedWordElement.style.cursor = 'not-allowed';
-        
-        feedbackDiv.innerHTML = '✨ Parabéns, você acertou! ✨';
-        feedbackDiv.classList.add('text-green-600', 'opacity-100');
-        feedbackDiv.classList.remove('opacity-0');
-        
-        // Desabilitar palavras restantes
-        document.querySelectorAll('.drag-word:not(.word-placed)').forEach(word => {
-          word.draggable = false;
-          word.style.cursor = 'not-allowed';
-          word.style.opacity = '0.5';
-        });
-        
-        aguardandoProximo = true;
-        setTimeout(() => proximaPergunta(), 1500);
-        
-      } else {
-        respostasCorretas[indicePerguntaAtual] = false;
-        
-        dropZone.classList.add('wrong-drop');
-        
-        feedbackDiv.innerHTML = `❌ Resposta incorreta. A resposta certa era: "${currentPergunta.resposta_correta}"!`;
-        feedbackDiv.classList.add('text-red-600', 'opacity-100');
-        feedbackDiv.classList.remove('opacity-0');
-        
-        // Destacar resposta correta
-        document.querySelectorAll('.drag-word').forEach(word => {
-          if (word.getAttribute('data-word') === currentPergunta.resposta_correta) {
-            word.style.background = 'linear-gradient(to right, #22c55e, #16a34a)';
-          }
-        });
-        
-        setTimeout(() => dropZone.classList.remove('wrong-drop'), 500);
-        
-        // Desabilitar todas as palavras
-        document.querySelectorAll('.drag-word').forEach(word => {
-          word.draggable = false;
-          word.style.cursor = 'not-allowed';
-        });
-        
-        aguardandoProximo = true;
-        setTimeout(() => proximaPergunta(), 2000);
-      }
+      processAnswer(droppedWord, draggedWordElement);
     }
 
-    // Remover listeners antigos e adicionar novos
     const newDropZone = document.querySelector('.drop-zone');
     if (newDropZone) {
       newDropZone.removeEventListener('dragover', handleDragOver);
@@ -390,6 +366,170 @@
     });
   }
 
+  // Função para processar a resposta (usada tanto por mouse quanto por touch)
+  function processAnswer(droppedWord, draggedWordElement) {
+    const isCorrect = (droppedWord === currentPergunta.resposta_correta);
+    const feedbackDiv = document.getElementById('feedback');
+    const dropZone = document.querySelector('.drop-zone');
+    
+    answered = true;
+    
+    if (isCorrect) {
+      acertos++;
+      respostasCorretas[indicePerguntaAtual] = true;
+      
+      dropZone.innerHTML = droppedWord;
+      dropZone.classList.add('correct-drop');
+      dropZone.setAttribute('data-filled', 'true');
+      
+      draggedWordElement.classList.add('word-placed');
+      draggedWordElement.draggable = false;
+      draggedWordElement.style.background = '#6b7280';
+      draggedWordElement.style.cursor = 'not-allowed';
+      
+      feedbackDiv.innerHTML = '✨ Parabéns, você acertou! ✨';
+      feedbackDiv.classList.add('text-green-600', 'opacity-100');
+      feedbackDiv.classList.remove('opacity-0');
+      
+      // Desabilitar palavras restantes
+      document.querySelectorAll('.drag-word:not(.word-placed)').forEach(word => {
+        word.draggable = false;
+        word.style.cursor = 'not-allowed';
+        word.style.opacity = '0.5';
+      });
+      
+      aguardandoProximo = true;
+      setTimeout(() => proximaPergunta(), 1500);
+      
+    } else {
+      respostasCorretas[indicePerguntaAtual] = false;
+      
+      dropZone.classList.add('wrong-drop');
+      
+      feedbackDiv.innerHTML = `❌ Resposta incorreta. A resposta certa era: "${currentPergunta.resposta_correta}"!`;
+      feedbackDiv.classList.add('text-red-600', 'opacity-100');
+      feedbackDiv.classList.remove('opacity-0');
+      
+      // Destacar resposta correta
+      document.querySelectorAll('.drag-word').forEach(word => {
+        if (word.getAttribute('data-word') === currentPergunta.resposta_correta) {
+          word.style.background = 'linear-gradient(to right, #22c55e, #16a34a)';
+        }
+      });
+      
+      setTimeout(() => dropZone.classList.remove('wrong-drop'), 500);
+      
+      // Desabilitar todas as palavras
+      document.querySelectorAll('.drag-word').forEach(word => {
+        word.draggable = false;
+        word.style.cursor = 'not-allowed';
+      });
+      
+      aguardandoProximo = true;
+      setTimeout(() => proximaPergunta(), 2000);
+    }
+  }
+
+  // Funções para Touch Events (Mobile)
+  function handleTouchStart(e) {
+    if (answered) return;
+    
+    const word = e.target.closest('.drag-word');
+    if (!word || word.classList.contains('word-placed')) return;
+    
+    e.preventDefault();
+    draggedElement = word;
+    draggedElement.classList.add('dragging');
+    
+    const touch = e.touches[0];
+    const rect = draggedElement.getBoundingClientRect();
+    dragOffsetX = touch.clientX - rect.left;
+    dragOffsetY = touch.clientY - rect.top;
+    
+    // Criar um clone flutuante para visualização durante o arrasto
+    originalPosition = {
+      parent: draggedElement.parentNode,
+      next: draggedElement.nextSibling,
+      rect: rect
+    };
+    
+    // Adicionar estilo para o elemento arrastado
+    draggedElement.style.position = 'fixed';
+    draggedElement.style.left = `${touch.clientX - dragOffsetX}px`;
+    draggedElement.style.top = `${touch.clientY - dragOffsetY}px`;
+    draggedElement.style.zIndex = '1000';
+    draggedElement.style.width = `${rect.width}px`;
+    draggedElement.style.opacity = '0.8';
+    
+    // Destacar drop zones
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+      zone.classList.add('drag-over');
+    });
+  }
+
+  function handleTouchMove(e) {
+    if (!draggedElement) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    draggedElement.style.left = `${touch.clientX - dragOffsetX}px`;
+    draggedElement.style.top = `${touch.clientY - dragOffsetY}px`;
+    
+    // Verificar colisão com drop zone
+    const dropZone = document.querySelector('.drop-zone');
+    if (dropZone && !answered && dropZone.getAttribute('data-filled') === 'false') {
+      const dropRect = dropZone.getBoundingClientRect();
+      const dragRect = draggedElement.getBoundingClientRect();
+      
+      if (dragRect.left < dropRect.right && dragRect.right > dropRect.left &&
+          dragRect.top < dropRect.bottom && dragRect.bottom > dropRect.top) {
+        dropZone.classList.add('drag-over');
+      } else {
+        dropZone.classList.remove('drag-over');
+      }
+    }
+  }
+
+  function handleTouchEnd(e) {
+    if (!draggedElement) return;
+    e.preventDefault();
+    
+    const dropZone = document.querySelector('.drop-zone');
+    let droppedWord = null;
+    
+    // Verificar se o elemento foi solto sobre o drop zone
+    if (dropZone && !answered && dropZone.getAttribute('data-filled') === 'false') {
+      const dropRect = dropZone.getBoundingClientRect();
+      const dragRect = draggedElement.getBoundingClientRect();
+      
+      if (dragRect.left < dropRect.right && dragRect.right > dropRect.left &&
+          dragRect.top < dropRect.bottom && dragRect.bottom > dropRect.top) {
+        droppedWord = draggedElement.getAttribute('data-word');
+      }
+    }
+    
+    // Limpar estilos
+    draggedElement.style.position = '';
+    draggedElement.style.left = '';
+    draggedElement.style.top = '';
+    draggedElement.style.zIndex = '';
+    draggedElement.style.width = '';
+    draggedElement.style.opacity = '';
+    draggedElement.classList.remove('dragging');
+    
+    // Remover destaque das drop zones
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+      zone.classList.remove('drag-over');
+    });
+    
+    // Processar resposta se houver
+    if (droppedWord && draggedElement && !draggedElement.classList.contains('word-placed')) {
+      processAnswer(droppedWord, draggedElement);
+    }
+    
+    draggedElement = null;
+  }
+
   function proximaPergunta() {
     indicePerguntaAtual++;
     if (indicePerguntaAtual < perguntas.length) {
@@ -405,7 +545,6 @@
     try {
       const token = localStorage.getItem('token');
       
-      // Salvar progresso
       const salvarResponse = await fetch(`${API_BASE_URL}/progresso`, {
         method: 'POST',
         headers: {
@@ -424,7 +563,6 @@
         throw new Error('Erro ao salvar progresso');
       }
       
-      // Esconder quiz e mostrar resultado
       const quizContainer = document.querySelector('.max-w-2xl');
       const indicadores = document.querySelector('.fixed.top-4');
       if (indicadores) indicadores.classList.add('hidden');
@@ -510,11 +648,9 @@
         proximaOrdem = ordemNum + 1;
     }
 
-    // 🔥 CORREÇÃO: Usar a mesma lógica de jogo (par = CompletarFrase, ímpar = Quiz)
     const tipoJogo = (proximaOrdem % 2 === 0) ? 'CompletarFrase' : 'Quiz';
-    console.log('Próxima ordem:', proximaOrdem, 'Tipo:', tipoJogo); // Adicione esta linha
     window.location.href = `/app/jogo/${tipoJogo}?nivel_id=${proximoNivelId}&ordem=${proximaOrdem}`;
-});
+  });
 
   // Prevenir comportamento padrão de drag
   document.body.addEventListener('dragover', (e) => e.preventDefault());
