@@ -5,13 +5,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>O Migrante - Login & Cadastro</title>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: "Quicksand", sans-serif;
+      font-family: "Inter", sans-serif;
     }
 
     body {
@@ -19,13 +20,12 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: #111;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       overflow: hidden;
       color: #fff;
     }
 
-    /* Anéis giratórios neon */
-
+    /* Anéis giratórios neon com cores do sistema */
     .ring {
       position: relative;
       width: 500px;
@@ -45,20 +45,23 @@
     .ring i:nth-child(1) {
       border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
       animation: animate 6s linear infinite;
+      border-color: #3b82f6;
     }
 
     .ring i:nth-child(2) {
       border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
       animation: animate 4s linear infinite;
+      border-color: #8b5cf6;
     }
 
     .ring i:nth-child(3) {
       border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
       animation: animate2 10s linear infinite;
+      border-color: #06b6d4;
     }
 
     .ring:hover i {
-      border: 6px solid var(--clr);
+      border-width: 6px;
       filter: drop-shadow(0 0 20px var(--clr));
     }
 
@@ -66,7 +69,6 @@
       from {
         transform: rotate(0deg);
       }
-
       to {
         transform: rotate(360deg);
       }
@@ -76,32 +78,32 @@
       from {
         transform: rotate(360deg);
       }
-
       to {
         transform: rotate(0deg);
       }
     }
 
-    .ring:hover i {
-      border-width: 7px;
-      filter: drop-shadow(0 0 30px var(--clr));
-    }
-
     .container {
       position: absolute;
-      width: min(340px, 85vw);
-      padding: 30px 20px;
+      width: min(380px, 90vw);
+      padding: 40px 30px;
       text-align: center;
       z-index: 10;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(59, 130, 246, 0.2);
     }
 
     h2 {
-      font-size: 2.4em;
+      font-size: 2.2em;
       font-weight: 700;
       margin-bottom: 30px;
-      background: linear-gradient(45deg, #00ff0a, #fffd44);
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .inputBx {
@@ -112,65 +114,66 @@
     .inputBx input {
       width: 100%;
       padding: 14px 20px;
-      background: transparent;
-      border: 2px solid rgba(255, 255, 255, 0.6);
-      border-radius: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
       outline: none;
       color: #fff;
-      font-size: 1.1em;
+      font-size: 1em;
       transition: 0.3s;
+      font-weight: 500;
     }
 
     .inputBx input:focus {
-      border-color: #00ff0a;
-      box-shadow: 0 0 20px rgba(0, 255, 10, 0.5);
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      background: rgba(59, 130, 246, 0.1);
     }
 
     .inputBx input::placeholder {
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(255, 255, 255, 0.5);
     }
 
-    /* BOTÃO COM EFEITO NEON PULSANTE QUANDO CARREGA */
+    /* Botão com efeito gradiente */
     button {
       position: relative;
       width: 100%;
-      padding: 16px;
-      background: linear-gradient(45deg, #ff357a, #fff172);
+      padding: 14px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
       border: none;
-      border-radius: 40px;
-      color: #111;
-      font-size: 1.2em;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1em;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.4s;
+      transition: all 0.3s ease;
       overflow: hidden;
+      margin-top: 10px;
     }
 
     button:hover {
-      transform: scale(1.05);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
     }
 
-    /* Efeito neon pulsante quando está carregando */
+    button:active {
+      transform: translateY(0);
+    }
+
+    /* Efeito de carregamento */
     button.loading {
-      background: transparent !important;
-      color: #fff !important;
-      border: 3px solid transparent !important;
-      animation: neonPulse 1.5s infinite alternate;
-      box-shadow: 0 0 30px rgba(0, 255, 10, 0.8);
+      background: rgba(59, 130, 246, 0.5);
+      cursor: not-allowed;
+      animation: pulse 1.5s infinite;
     }
 
-    @keyframes neonPulse {
-      0% {
-        box-shadow: 0 0 20px rgba(0, 255, 10, 0.6), inset 0 0 20px rgba(0, 255, 10, 0.3);
-      }
-
-      100% {
-        box-shadow: 0 0 50px rgba(0, 255, 10, 1), inset 0 0 40px rgba(0, 255, 10, 0.6);
-      }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
 
     .links {
-      margin-top: 20px;
+      margin-top: 24px;
       display: flex;
       justify-content: center;
       gap: 20px;
@@ -178,20 +181,23 @@
     }
 
     .links a {
-      color: #fff;
+      color: rgba(255, 255, 255, 0.7);
       text-decoration: none;
-      font-size: 0.95em;
+      font-size: 0.9em;
       transition: 0.3s;
     }
 
     .links a:hover {
-      color: #ff357a;
+      color: #3b82f6;
     }
 
     .error {
-      color: #ff357a;
-      margin-top: 10px;
-      font-size: 0.9em;
+      color: #ef4444;
+      margin-top: 12px;
+      font-size: 0.85em;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 8px;
+      border-radius: 8px;
     }
 
     .hidden {
@@ -209,19 +215,36 @@
       z-index: 1000;
       transform: translateX(120%);
       transition: transform 0.4s ease;
+      backdrop-filter: blur(10px);
     }
 
     #messageBox.show {
       transform: translateX(0);
     }
 
-    @media (max-width: 480px) {
-      h2 {
-        font-size: 2em;
-      }
+    /* Logo */
+    .logo-container {
+      margin-bottom: 10px;
+    }
 
+    .logo-icon {
+      font-size: 3em;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    @media (max-width: 480px) {
       .container {
-        width: 90vw;
+        padding: 30px 20px;
+      }
+      
+      h2 {
+        font-size: 1.8em;
+      }
+      
+      button {
+        padding: 12px;
       }
     }
   </style>
@@ -230,12 +253,15 @@
 <body>
 
   <div class="ring">
-    <i style="--clr:#00ff0a"></i>
-    <i style="--clr:#ff0057"></i>
-    <i style="--clr:#fffd44"></i>
+    <i style="--clr:#3b82f6"></i>
+    <i style="--clr:#8b5cf6"></i>
+    <i style="--clr:#06b6d4"></i>
 
     <!-- Login -->
     <div id="loginContainer" class="container">
+      <div class="logo-container">
+        <i class="fas fa-mountain logo-icon"></i>
+      </div>
       <h2>O Migrante</h2>
       <form id="loginForm">
         <div class="inputBx">
@@ -247,13 +273,16 @@
         <button type="submit" id="loginButton">Entrar</button>
         <p id="loginError" class="error hidden"></p>
         <div class="links">
-          <a href="#" id="showRegister">Cadastre-se</a>
+          <a href="#" id="showRegister">Criar conta</a>
         </div>
       </form>
     </div>
 
     <!-- Cadastro -->
     <div id="registerContainer" class="container hidden">
+      <div class="logo-container">
+        <i class="fas fa-mountain logo-icon"></i>
+      </div>
       <h2>Criar Conta</h2>
       <form id="registerForm">
         <div class="inputBx">
@@ -279,13 +308,15 @@
   </div>
 
   <script>
-    const API_BASE_URL = 'https://o-migrante.onrender.com';
+    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? `http://${window.location.hostname}:${window.location.port || 3000}`
+      : 'https://o-migrante.onrender.com';
 
     function showMessage(msg, success = false) {
       const box = document.getElementById('messageBox');
       const text = document.getElementById('messageText');
       text.textContent = msg;
-      box.className = success ? 'bg-green-600' : 'bg-red-600';
+      box.style.background = success ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)';
       box.classList.add('show');
       setTimeout(() => box.classList.remove('show'), 4000);
     }
@@ -350,6 +381,7 @@
             mostrarErro('registerError', data.message || 'Erro no cadastro.');
           }
         } catch (err) {
+          console.error('Erro:', err);
           mostrarErro('registerError', 'Erro de conexão. Tente novamente.');
         } finally {
           setLoading(registerBtn, false);
@@ -384,6 +416,7 @@
             mostrarErro('loginError', data.message || 'Email ou senha incorretos.');
           }
         } catch (err) {
+          console.error('Erro:', err);
           mostrarErro('loginError', 'Erro de conexão. Tente novamente.');
         } finally {
           setLoading(loginBtn, false);
