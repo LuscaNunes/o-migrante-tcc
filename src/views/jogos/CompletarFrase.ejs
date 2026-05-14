@@ -177,11 +177,11 @@
   let ordem = null;
   let xpTotal = 0;
 
-  // Variáveis para touch
+  // Variáveis para touch (versão com clone - mais fluida)
   let draggedElement = null;
   let dragOffsetX = 0;
   let dragOffsetY = 0;
-  let originalPosition = null;
+  let cloneElement = null;
 
   function showFeedback(message, isError = true) {
     const existingFeedback = document.querySelector('.feedback-toast');
@@ -265,14 +265,11 @@
 
     document.getElementById('perguntaNumero').textContent = `Pergunta ${indicePerguntaAtual + 1} de ${perguntas.length}`;
     
-    // Extrair frase com drop zone
     const fraseHtml = extrairFraseComDropZone(currentPergunta.texto_frase);
     document.getElementById('fraseTexto').innerHTML = fraseHtml;
     
-    // Renderizar palavras para arrastar
     renderizarPalavras(currentPergunta.palavras_opcoes);
     
-    // Resetar feedback
     const feedback = document.getElementById('feedback');
     feedback.innerHTML = '';
     feedback.classList.remove('opacity-100', 'text-green-600', 'text-red-600');
@@ -280,7 +277,6 @@
 
     atualizarIndicadoresProgresso(indicePerguntaAtual);
     
-    // Configurar eventos de drag and drop (mouse)
     configurarDragDrop();
   }
 
@@ -366,7 +362,6 @@
     });
   }
 
-  // Função para processar a resposta (usada tanto por mouse quanto por touch)
   function processAnswer(droppedWord, draggedWordElement) {
     const isCorrect = (droppedWord === currentPergunta.resposta_correta);
     const feedbackDiv = document.getElementById('feedback');
@@ -391,7 +386,6 @@
       feedbackDiv.classList.add('text-green-600', 'opacity-100');
       feedbackDiv.classList.remove('opacity-0');
       
-      // Desabilitar palavras restantes
       document.querySelectorAll('.drag-word:not(.word-placed)').forEach(word => {
         word.draggable = false;
         word.style.cursor = 'not-allowed';
@@ -410,7 +404,6 @@
       feedbackDiv.classList.add('text-red-600', 'opacity-100');
       feedbackDiv.classList.remove('opacity-0');
       
-      // Destacar resposta correta
       document.querySelectorAll('.drag-word').forEach(word => {
         if (word.getAttribute('data-word') === currentPergunta.resposta_correta) {
           word.style.background = 'linear-gradient(to right, #22c55e, #16a34a)';
@@ -419,7 +412,6 @@
       
       setTimeout(() => dropZone.classList.remove('wrong-drop'), 500);
       
-      // Desabilitar todas as palavras
       document.querySelectorAll('.drag-word').forEach(word => {
         word.draggable = false;
         word.style.cursor = 'not-allowed';
@@ -430,7 +422,7 @@
     }
   }
 
-  // Funções para Touch Events (Mobile)
+  // ========== TOUCH EVENTS OTIMIZADOS (COM CLONE) ==========
   function handleTouchStart(e) {
     if (answered) return;
     
@@ -439,27 +431,28 @@
     
     e.preventDefault();
     draggedElement = word;
-    draggedElement.classList.add('dragging');
     
     const touch = e.touches[0];
     const rect = draggedElement.getBoundingClientRect();
+    
     dragOffsetX = touch.clientX - rect.left;
     dragOffsetY = touch.clientY - rect.top;
     
-    // Criar um clone flutuante para visualização durante o arrasto
-    originalPosition = {
-      parent: draggedElement.parentNode,
-      next: draggedElement.nextSibling,
-      rect: rect
-    };
+    // Criar clone flutuante
+    cloneElement = draggedElement.cloneNode(true);
+    cloneElement.style.position = 'fixed';
+    cloneElement.style.left = `${touch.clientX - dragOffsetX}px`;
+    cloneElement.style.top = `${touch.clientY - dragOffsetY}px`;
+    cloneElement.style.zIndex = '9999';
+    cloneElement.style.width = `${rect.width}px`;
+    cloneElement.style.opacity = '0.85';
+    cloneElement.style.pointerEvents = 'none';
+    cloneElement.classList.add('dragging');
     
-    // Adicionar estilo para o elemento arrastado
-    draggedElement.style.position = 'fixed';
-    draggedElement.style.left = `${touch.clientX - dragOffsetX}px`;
-    draggedElement.style.top = `${touch.clientY - dragOffsetY}px`;
-    draggedElement.style.zIndex = '1000';
-    draggedElement.style.width = `${rect.width}px`;
-    draggedElement.style.opacity = '0.8';
+    document.body.appendChild(cloneElement);
+    
+    // Esconder original
+    draggedElement.style.opacity = '0';
     
     // Destacar drop zones
     document.querySelectorAll('.drop-zone').forEach(zone => {
@@ -468,18 +461,20 @@
   }
 
   function handleTouchMove(e) {
-    if (!draggedElement) return;
+    if (!cloneElement || !draggedElement) return;
     e.preventDefault();
     
     const touch = e.touches[0];
-    draggedElement.style.left = `${touch.clientX - dragOffsetX}px`;
-    draggedElement.style.top = `${touch.clientY - dragOffsetY}px`;
     
-    // Verificar colisão com drop zone
+    // Mover clone instantaneamente
+    cloneElement.style.left = `${touch.clientX - dragOffsetX}px`;
+    cloneElement.style.top = `${touch.clientY - dragOffsetY}px`;
+    
+    // Detectar colisão
     const dropZone = document.querySelector('.drop-zone');
     if (dropZone && !answered && dropZone.getAttribute('data-filled') === 'false') {
       const dropRect = dropZone.getBoundingClientRect();
-      const dragRect = draggedElement.getBoundingClientRect();
+      const dragRect = cloneElement.getBoundingClientRect();
       
       if (dragRect.left < dropRect.right && dragRect.right > dropRect.left &&
           dragRect.top < dropRect.bottom && dragRect.bottom > dropRect.top) {
@@ -488,45 +483,55 @@
         dropZone.classList.remove('drag-over');
       }
     }
+    
+    // Rolagem automática nas bordas
+    if (touch.clientY < 100) {
+      window.scrollBy(0, -10);
+    } else if (touch.clientY > window.innerHeight - 100) {
+      window.scrollBy(0, 10);
+    }
   }
 
   function handleTouchEnd(e) {
-    if (!draggedElement) return;
+    if (!cloneElement || !draggedElement) return;
     e.preventDefault();
     
     const dropZone = document.querySelector('.drop-zone');
     let droppedWord = null;
+    let isDropped = false;
     
-    // Verificar se o elemento foi solto sobre o drop zone
     if (dropZone && !answered && dropZone.getAttribute('data-filled') === 'false') {
       const dropRect = dropZone.getBoundingClientRect();
-      const dragRect = draggedElement.getBoundingClientRect();
+      const dragRect = cloneElement.getBoundingClientRect();
       
       if (dragRect.left < dropRect.right && dragRect.right > dropRect.left &&
           dragRect.top < dropRect.bottom && dragRect.bottom > dropRect.top) {
         droppedWord = draggedElement.getAttribute('data-word');
+        isDropped = true;
       }
     }
     
-    // Limpar estilos
-    draggedElement.style.position = '';
-    draggedElement.style.left = '';
-    draggedElement.style.top = '';
-    draggedElement.style.zIndex = '';
-    draggedElement.style.width = '';
-    draggedElement.style.opacity = '';
-    draggedElement.classList.remove('dragging');
+    // Remover clone
+    if (cloneElement && cloneElement.parentNode) {
+      cloneElement.parentNode.removeChild(cloneElement);
+    }
     
-    // Remover destaque das drop zones
+    // Restaurar original
+    if (draggedElement) {
+      draggedElement.style.opacity = '';
+    }
+    
+    // Limpar destaque
     document.querySelectorAll('.drop-zone').forEach(zone => {
       zone.classList.remove('drag-over');
     });
     
-    // Processar resposta se houver
-    if (droppedWord && draggedElement && !draggedElement.classList.contains('word-placed')) {
+    // Processar resposta
+    if (isDropped && droppedWord && draggedElement && !draggedElement.classList.contains('word-placed')) {
       processAnswer(droppedWord, draggedElement);
     }
     
+    cloneElement = null;
     draggedElement = null;
   }
 
@@ -632,14 +637,14 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
-                showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+                showFeedback("🎉 Vous completou todos os níveis disponíveis!", false);
                 setTimeout(() => window.location.href = "/app/missao", 2000);
                 return;
             }
             proximoNivelId = nivelIdNum + 1;
             proximaOrdem = 1;
         } catch {
-            showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+            showFeedback("🎉 Vous completou todos os níveis disponíveis!", false);
             setTimeout(() => window.location.href = "/app/missao", 2000);
             return;
         }
@@ -652,11 +657,9 @@
     window.location.href = `/app/jogo/${tipoJogo}?nivel_id=${proximoNivelId}&ordem=${proximaOrdem}`;
   });
 
-  // Prevenir comportamento padrão de drag
   document.body.addEventListener('dragover', (e) => e.preventDefault());
   document.body.addEventListener('drop', (e) => e.preventDefault());
 
-  // Inicialização
   document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     if (!token) {
