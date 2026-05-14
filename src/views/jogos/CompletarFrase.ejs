@@ -488,30 +488,33 @@
     let proximaOrdem, proximoNivelId;
 
     if (ordemNum === 12) {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/niveis/${nivelIdNum + 1}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-          showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
-          setTimeout(() => window.location.href = "/app/missao", 2000);
-          return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/niveis/${nivelIdNum + 1}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+                setTimeout(() => window.location.href = "/app/missao", 2000);
+                return;
+            }
+            proximoNivelId = nivelIdNum + 1;
+            proximaOrdem = 1;
+        } catch {
+            showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
+            setTimeout(() => window.location.href = "/app/missao", 2000);
+            return;
         }
-        proximoNivelId = nivelIdNum + 1;
-        proximaOrdem = 1;
-      } catch {
-        showFeedback("🎉 Você completou todos os níveis disponíveis!", false);
-        setTimeout(() => window.location.href = "/app/missao", 2000);
-        return;
-      }
     } else {
-      proximoNivelId = nivelIdNum;
-      proximaOrdem = ordemNum + 1;
+        proximoNivelId = nivelIdNum;
+        proximaOrdem = ordemNum + 1;
     }
 
-    window.location.href = `/app/jogo/CompletarFrase?nivel_id=${proximoNivelId}&ordem=${proximaOrdem}`;
-  });
+    // 🔥 CORREÇÃO: Usar a mesma lógica de jogo (par = CompletarFrase, ímpar = Quiz)
+    const tipoJogo = (proximaOrdem % 2 === 0) ? 'CompletarFrase' : 'Quiz';
+    console.log('Próxima ordem:', proximaOrdem, 'Tipo:', tipoJogo); // Adicione esta linha
+    window.location.href = `/app/jogo/${tipoJogo}?nivel_id=${proximoNivelId}&ordem=${proximaOrdem}`;
+});
 
   // Prevenir comportamento padrão de drag
   document.body.addEventListener('dragover', (e) => e.preventDefault());
