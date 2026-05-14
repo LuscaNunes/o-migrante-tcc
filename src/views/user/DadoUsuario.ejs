@@ -570,7 +570,22 @@
 </div>
 
 <script>
+  // Função para navegar com loading de 2 segundos
+  function navegarComLoading(url, duracao = 2000) {
+      window.location.href = `/loading?targetUrl=${encodeURIComponent(url)}&duration=${duracao}`;
+  }
 
+  // Exemplo: substituir o link do perfil para mostrar loading
+  document.addEventListener('DOMContentLoaded', () => {
+      // Se quiser que o perfil tenha loading ao entrar
+      const perfilLink = document.querySelector('a[href="/app/perfil"]');
+      if (perfilLink) {
+          perfilLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              navegarComLoading('/app/perfil', 2000);
+          });
+      }
+  });
   
   (function() {
     const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'

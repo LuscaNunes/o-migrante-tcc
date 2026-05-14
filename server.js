@@ -38,6 +38,7 @@ app.set('view engine', 'ejs');
 app.set('views', [
     path.join(__dirname, 'src', 'views', 'auth'),
     path.join(__dirname, 'src', 'views', 'layout'),
+    path.join(__dirname, 'src', 'views', 'layout', 'components'),
     path.join(__dirname, 'src', 'views', 'user'),
     path.join(__dirname, 'src', 'views', 'missoes'),
     path.join(__dirname, 'src', 'views', 'jogos'),
@@ -354,6 +355,16 @@ app.get('/app/jogo/:tipo', authenticateToken, async (req, res) => {
     console.error('Erro ao carregar jogo:', error);
     res.status(500).send('Erro interno ao carregar o jogo.');
   }
+});
+
+// Rota de loading (antes das rotas protegidas)
+app.get('/loading', (req, res) => {
+    const { targetUrl, duration, message } = req.query;
+    res.render('components/loading', { 
+        targetUrl: targetUrl || '/app/painel',
+        duration: parseInt(duration) || 2000,
+        message: message || 'Preparando sua experiência...'
+    });
 });
 
 // Rotas da API de Ranking
